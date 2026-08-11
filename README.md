@@ -7,6 +7,8 @@ Faculty of Information Technology 2, PTIT HCMC Campus
 (G1 Linked Lists · G2 Stacks & Queues · G3 Sorting · G4 Searching & Hash Tables ·
 G5 Trees & Heaps · G6 Graphs), confirm with the lecturer, then fill in the parts below.
 
+**Everyone: read [CONTRIBUTING.md](CONTRIBUTING.md) before your first commit.**
+
 ## Deliverables (all six)
 
 | Part | What | Where |
