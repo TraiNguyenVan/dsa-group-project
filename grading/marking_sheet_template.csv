@@ -1,0 +1,2 @@
+student_id,name,ex1,ex2,ex3,ex4,ex5,total,marker_A,marker_B,agreed,note
+B21DCCN045,Tran B,1,2.5,2,2,1,8.5,Hoa,Minh,8.5,"ex2: merge step loses duplicates, -0.5"
