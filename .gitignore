@@ -1,7 +1,7 @@
 # Build artifacts
-src/cpp/*.o
-src/cpp/demo
-src/cpp/*.out
+build/
+*.o
+*.out
 *.exe
 __pycache__/
 *.class

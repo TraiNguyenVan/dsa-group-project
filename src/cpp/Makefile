@@ -1,10 +1,15 @@
 CXX      := g++
 CXXFLAGS := -std=c++17 -Wall -O2
-TARGET   := demo
+# Build output lives at project root, not inside src/
+BUILDDIR := ../../build/cpp
+TARGET   := $(BUILDDIR)/demo
 SRC      := main.cpp
 
-$(TARGET): $(SRC)
+$(TARGET): $(SRC) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
 
 run: $(TARGET)
 	./$(TARGET)
@@ -16,6 +21,6 @@ edge: $(TARGET)
 	./$(TARGET) --oob
 
 clean:
-	rm -f $(TARGET) *.o
+	rm -rf $(BUILDDIR)
 
 .PHONY: run edge clean
