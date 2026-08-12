@@ -1,6 +1,7 @@
 CXX      := g++
 CXXFLAGS := -std=c++17 -Wall -O2
-BUILDDIR := build
+# Build output lives at project root, not inside src/
+BUILDDIR := ../../build/cpp
 TARGET   := $(BUILDDIR)/demo
 SRC      := main.cpp
 
