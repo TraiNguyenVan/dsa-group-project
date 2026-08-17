@@ -15,9 +15,9 @@
 using clock_type = std::chrono::high_resolution_clock;
 
 // Run `work` several times and return the fastest run in milliseconds.
-// Best-of-5 reduces noise from cold caches / scheduling.
+// Best-of-n reduces noise from cold caches / scheduling.
 template <typename Work>
-double best_of_5_ms(Work work, int repeats = 5) {
+double best_of_n_ms(Work work, int repeats = 5) {
     double best = 1e18;
     for (int run = 0; run < repeats; ++run) {
         auto start = clock_type::now();
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
     // ---- Time the reference operation (std::sort) ------------------------
     // Replace this lambda body with a call to YOUR structure's operation.
-    double ms = best_of_5_ms([&] {
+    double ms = best_of_n_ms([&] {
         std::sort(data.begin(), data.end());
     });
 
