@@ -8,42 +8,89 @@
 #include <chrono>
 #include <iostream>
 #include <vector>
-using namespace std;
-using namespace std::chrono;
 
-// The required timing pattern — report the BEST of 5 runs.
-template <typename F>
-double timeIt(F work, int repeats = 5) {
-    double best = 1e18;
-    for (int r = 0; r < repeats; ++r) {
-        auto t0 = high_resolution_clock::now();
-        work();
-        auto t1 = high_resolution_clock::now();
-        double ms = duration<double, milli>(t1 - t0).count();
-        best = min(best, ms);
+#include "linear_search.hpp"
+#include "binarySearch.hpp"
+// yes it is erroring this file so i comment it out for a bit, 
+// by the way does vscode show errors/autocomplete on bro laptop,wait,no,they just  show the red text:<, for real
+#include "interpolation_search.hpp"
+
+
+// when your algorithm found the target's index, use this to print it out
+void print(int index) {
+    
+    if (index == -1) {
+        cout << "Value not found!\n";
     }
-    return best;
+    else {
+        cout << "Value found at index " << index << "!\n";
+    }
 }
-
-// TODO: your structure implementation goes here.
 
 int main(int argc, char* argv[]) {
-    // TODO: CLI parsing for the live demo script:
-    //   default  -> run on the full dataset (n >= 100 000), print timings
-    //   --small  -> run on n = 50 subset, print output (correctness proof)
-    //   --empty  -> empty input edge case
-    //   --dups   -> duplicate keys edge case
-    //   --oob    -> out-of-range access edge case
 
-    vector<int> data(100000);
-    for (auto& x : data) x = rand();
+/*
+____________________________Data here______________________________________
+*/
+    // random data
+    const int n = 10;
+    int arr1[n] = {12, 4, 9, 22, 7, 15, 3, 18, 11, 6};
+    // sorted data
+    int arr2[n] = {2, 5, 8, 11, 14, 17, 20, 23, 26, 29};
+    vector<int> arr3 = {2, 5, 8, 11, 14, 17, 20, 23, 26, 29};
 
-    double ms = timeIt([&] {
-        sort(data.begin(), data.end());
-    });
-    cout << "n=" << data.size() << " best-of-5: " << ms << " ms\n";
+    // we are searching this value in the array
+    int val = 11;
 
-    // TODO: report input size n, operation count (if instrumented),
-    //       wall-clock time (best of 5), peak memory (if relevant).
+    // print the dataset out
+    cout << "Array for searching demo(Randomized): ";
+    for (int i = 0; i < n; ++i) {
+        cout << arr1[i] << (i + 1 < n ? " " : "");
+    }
+    cout << endl;
+    cout << "Array for searching demo(Sorted): ";
+    for (int i = 0; i < n; ++i) {
+        cout << arr2[i] << (i + 1 < n ? " " : "");
+    }
+    cout << endl;
+/*
+____________________________Algorithms here________________________________
+*/
+    // Linear Search
+    cout << "Searching with Linear Search " << val << "\n";
+    int index = linear_search(arr1, n, val);
+    print(index);
+
+    // Binary Search
+
+
+    // Need Sorted array
+    cout << "Searching with Binary Search: Target(" << val << ")\n";
+    int res = binarySearch(arr2, n, val );
+    if (res == -1) {
+        cout << "Target not found!\n";
+    }
+    else print(res);
+
+    // Interpolation search
+
+    // Interpolation search need Sorted array
+    cout << "Searching with Binary Search: Target(" << val << ")\n";
+    // Bro your algorithm is using std::vector which is not what are we
+    // uisng here, we are using primitive array which looks like this "int a[]"
+    // but now imma create a std::vector (arr3) to test it, for now,ok
+    int ans = interpolation_search(arr3, val);
+    if (ans!=-1){
+        cout<<"found:"<<res;
+    }
+    else{
+        cout<<"not found"<<val;
+    }
+ 
+    
     return 0;
 }
+
+
+// for real, only one main() function bro,
+// let  me mpove it to the right place for bro
