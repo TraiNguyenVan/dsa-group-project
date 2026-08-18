@@ -28,3 +28,6 @@ grading/*.csv
 
 # OS junk
 .DS_Store
+
+# IDE junk
+.vscode
