@@ -75,7 +75,7 @@ ____________________________Algorithms here________________________________
     // Interpolation search
 
     // Interpolation search need Sorted array
-    cout << "Searching with Binary Search: Target(" << val << ")\n";
+    cout << "Searching with Interpolation Search: Target(" << val << ")\n";
     // Bro your algorithm is using std::vector which is not what are we
     // uisng here, we are using primitive array which looks like this "int a[]"
     // but now imma create a std::vector (arr3) to test it, for now,ok
