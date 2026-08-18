@@ -81,7 +81,7 @@ ____________________________Algorithms here________________________________
     // but now imma create a std::vector (arr3) to test it, for now,ok
     int ans = interpolation_search(arr3, val);
     if (ans!=-1){
-        cout<<"found:"<<res;
+        cout<<"found:"<<ans;
     }
     else{
         cout<<"not found"<<val;
