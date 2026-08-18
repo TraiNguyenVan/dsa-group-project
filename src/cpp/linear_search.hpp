@@ -1,4 +1,5 @@
-// Simple implementation of linear search
+// Simple implementation of linear search 
+// By @TraiNguyenVan
 
 #include <iostream>
 
