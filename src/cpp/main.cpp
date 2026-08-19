@@ -1,3 +1,7 @@
+// Build and Run with:
+// g++ -std=c++17 src/cpp/main.cpp -I include -o build/cpp/main
+// build/cpp/main
+
 // Part C — C++ demo skeleton (PTIT INT1306_CLC group project)
 // Topic: TBD. Replace this skeleton with your real-world demo.
 // Rules: implement the structure yourself (STL comparison OK, substitution NOT).
@@ -10,9 +14,6 @@
 #include "binarySearch.hpp"
 #include "linear_search.hpp"
 #include "largest_element.hpp"
-// yes it is erroring this file so i comment it out for a bit,
-// by the way does vscode show errors/autocomplete on bro laptop,wait,no,they just  show the red
-// text:<, for real
 #include "interpolation_search.hpp"
 
 // when your algorithm found the target's index, use this to print it out
