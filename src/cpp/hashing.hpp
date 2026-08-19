@@ -1,131 +1,35 @@
-// =========================================================================
-// Algorithm: Open Hashing - Direct Chaining (Nối kết trực tiếp)
-// Source: Table 42 of Chương 3 - Hashing.docx
-// =========================================================================
+#include <iostream>
+using namespace std;
 
-struct Node {
-    int key;     // The actual value being stored
-    Node* next;  // Pointer to the next node in the chain
-};
+// hash function
+int hashFunction(int key, int size) { return key % size; }
 
-void add(Node*& L, int x) {
-    Node* p = L;
-    if (L == NULL) {
-        addTail(L, x);
-        return;
-    }
-    if (x < L->key) {
-        addHead(L, x);
-        return;
-    }
-    while (p != NULL) {
-        if (x <= p->key) {
-            addMid(L, p, x);
-            return;
-        }
-        p = p->next;
-    }
-    addTail(L, x);
-}
-void NoiKetTrucTiep(Hash& H, int x) {
-    int i = getIndex(H, x);
-    add(H.bucket[i], x);
-}
+/*
+-------------------------------PHẦN NÀY TRONG TEST 1------------------------
+Một hash function tốt cần có 3 yếu tố là : NHANH, INDEX HỢP LỆ, PHÂN BỐ TƯƠNG ĐỐI ĐỀU
+Nếu Hash xấu → nhiều collision → Hash Table chậm.
+Hash Function không đảm bảo mỗi key có một index khác nhau.
+Trong hash nếu có 3 key bị trùng nhau lúc này collision sẽ xuất hiện
+Khi tới BẢNG BĂM chúng ta có công thức của hash function là h(k)=k % 10
+ta có int table[10]; cái này gọi là hash table có nghĩa là table [0] tới table[9] đều được gọi là
+hash table khi ta chèn một phần tử X nào đó thì lúc này sẽ được tính là x % 10 = y thì cái y nó
+sẽ là table[y] của thằng x
+Tiếp theo chúng ta tới phần search thì search ở trong hash nó sẽ nhanh
+hơn rất nhiều chúng ta ko cần duyệt mảng từ đầu tới cuối mà chúng ta có thể lất số đó chia lấy dư
+với 10 thì chúng ta sẽ tìm được vị trí của nó luôn và đó gọi là hash table nhanh
+Và Insert với lại search sẽ sở hưu chung một cấu trúc : key -> hash -> index -> table[index]
+Nhưng khi này hash table vẫn chưa hoàn chỉnh có nghĩa là nếu 2 dữ liệu trùng trong một table thì
+nó sẽ ghi đè trực tiếp lên mà ko chèn vào => lúc này chúng ta có collision Vậy collision là x !=
+y nhưng h(x) = h(y) có nghĩa là chúng ta có 2 giá trị x và y khác nhau nhưng nó sẽ lưu chung vào
+một index và khôngbị ghi đè lên nhau
 
-// =========================================================================
-// Algorithm: Open Hashing - Coalesced Chaining (Nối kết hợp nhất)
-// Source: Table 43 of Chương 3 - Hashing.docx
-// =========================================================================
+-------------------------------PHẦN NÀY LÀ TEST 2----------------------------------------
+Khi này chúng ta sẽ đến với SEPARATE CHAINING
+Ví dụ nếu chung ta có 2 số x và y chung một table thì lúc này chúng ta sẽ cho table trỏ tới một danh
+sách có cả x và y khi này link list sẽ xuất hiện Lúc này chúng ta cần sẽ thay đổi cấu trúc của nó là
+chúng ta thêm tạo thêm một phần struct Node lúc này chúng ta sẽ hình dung là cái bucket của chúng ta
+sẽ được mở rộng lên không phải bị giới hạn bởi chỉ một phần tử trong đó mà chúng ta có thể chèn thêm
+2 3 thậm chí là n phần tử vào nó
 
-void NoiKetHopNhat(Hash& H, int x) {
-    if (isFull(H) == 1) {
-        cout << "\nkhong the them " << x << " vi bang bam da day!";
-        return;
-    }
-    int i = getIndex(H, x);
-    if (H.bucket[i].key == NULLKEY) {
-        H.bucket[i].key = x;
-        H.N++;
-    } else {
-        while (H.bucket[i].key != NULLKEY) {
-            while (H.bucket[i].next != NULLKEY) {
-                i = H.bucket[i].next;
-            }
-            for (int j = H.m - 1; j >= 0; j--)
-                if (H.bucket[j].key == NULLKEY) {
-                    H.bucket[i].next = j;
-                    H.bucket[j].key = x;
-                    H.N++;
-                    return;
-                }
-        }
-    }
-}
 
-// =========================================================================
-// Algorithm: Closed Hashing - Linear Probing (Dò tuyến tính)
-// Source: Table 44 of Chương 3 - Hashing.docx
-// =========================================================================
-
-void DoTuyenTinh(Hash& H, int x) {
-    if (isFull(H) == 1) {
-        cout << "\nBang bam bi day, khong them duoc";
-        return;
-    }
-    int i = getIndex(x);
-    while (true) {
-        if (H.bucket[i].key == NULLKEY) {
-            H.bucket[i].value = x;
-            H.bucket[i].key = 0;
-            H.N++;
-            return;
-        }
-        i++;
-        if (i >= M) i -= M;
-    }
-}
-
-// =========================================================================
-// Algorithm: Closed Hashing - Quadratic Probing (Dò bậc hai)
-// Source: Table 45 of Chương 3 - Hashing.docx
-// =========================================================================
-
-void DoBacHai(Hash& H, int x) {
-    if (isFull(H) == 1) {
-        cout << "\nBang bam bi day, khong them duoc";
-        return;
-    }
-    int index = getIndex(x);
-    int i = 0;
-    while (H.bucket[index].key != NULLKEY) {
-        index = (getIndex(x) + i * i) % M;
-        i++;
-        if (index > M) index = index - M;
-    }
-    H.bucket[index].value = x;
-    H.bucket[index].key = 0;
-    H.N++;
-}
-
-// =========================================================================
-// Algorithm: Closed Hashing - Double Hashing (Băm kép)
-// Source: Table 46 of Chương 3 - Hashing.docx
-// =========================================================================
-
-void BamKep(Hash& H, int x, int m) {
-    if (isFull(H, m) == 1) {
-        cout << "\nBang bam bi day, khong them duoc" << x << endl;
-        return;
-    }
-    int i = getIndex(x, m);
-    int index = i;
-    int j = abs((m - x) % m);
-    int so = 1;
-    while (H.bucket[index].key != NULLKEY) {
-        index = (i + so * j) % m;
-        so++;
-    }
-    H.bucket[index].value = x;
-    H.bucket[index].key = 0;
-    H.N++;
-}
+*/
