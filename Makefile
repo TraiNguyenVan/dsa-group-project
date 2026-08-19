@@ -1,9 +1,9 @@
 CXX      := g++
 CXXFLAGS := -std=c++17 -Wall -O2
 # Build output lives at project root, not inside src/
-BUILDDIR := ../../build/cpp
+BUILDDIR := ./build/cpp
 TARGET   := $(BUILDDIR)/demo
-SRC      := main.cpp
+SRC      := ./src/cpp/main.cpp
 
 $(TARGET): $(SRC) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
