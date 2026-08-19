@@ -24,8 +24,6 @@ int largest(int arr[], int n) {
 
 
 //Recursive Approach - O(n) Time and O(n) Space
-#include <iostream>
-using namespace std;
 
 //Tạo hàm findmax để tìm số lớn nhất bằng đệ quy
 //arr mảng cần tìm
@@ -52,9 +50,9 @@ int findMax(int arr[], int i, int n) {
     }
 }
 //tạo hàm largest để gọi đệ quy
-int largest(int arr[], int n) {
+int largestRescusion(int arr[], int n) {
     //Gọi findMax bắt đầu từ vị trí đầu tiên 0.
     return findMax(arr, 0, n);
 }
 
-//nfijnsinijdncwnojcncnjq
+
