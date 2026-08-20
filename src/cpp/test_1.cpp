@@ -27,8 +27,8 @@ class HashTable {
         int index = hashFunction(key);
         table[index] = key;
     }
-    // collison occur when hashFunction return the same index () on the same key
-    //Tinh xac suat the 2 so ngau nhien sau khi qua hashFunction tra ve 2 index bang nhau
+    // collison occur when hashFunction return the same index () on 2 different keys
+    // Tinh xac suat the 2 so ngau nhien sau khi qua hashFunction tra ve 2 index bang nhau
     bool search(int key) {
         int index = hashFunction(key);
         return (index != -1) ? index : 0;
