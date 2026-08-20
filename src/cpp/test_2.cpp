@@ -11,7 +11,7 @@
 //  empty slot (aka table[index] == -1) then save key to that table[index]
 
 // - for search operation: since hash function may return the same index ()
-// on 2 different keys, therefore we also use a while loop to iterate through
+// on different keys, therefore we also use a while loop to iterate through
 // indexes until it found the right bukket (aka table[index] == key)
 
 #include <iostream>
