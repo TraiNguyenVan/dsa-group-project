@@ -11,7 +11,12 @@ git checkout -b feature/<your-branch>
 ```
 
 - **Never commit on `main`.** Every change lives on a branch.
-- Branch naming: `feature/<lang>-<thing>` (e.g. `feature/cpp-quicksort`) or `fix/<thing>`.
+- Branch naming — pick the prefix that matches the work:
+  - `feature/<lang>-<thing>` — new functionality (e.g. `feature/cpp-quicksort`)
+  - `fix/<thing>` — bug fixes (e.g. `fix/interpolation-edge-case`)
+  - `docs/<thing>` — documentation-only changes (e.g. `docs/part-a-position`)
+  - `chore/<thing>` — tooling, CI, config, no behavior change (e.g. `chore/makefile-clean`)
+  - `refactor/<thing>` — code restructuring with no behavior change (e.g. `refactor/main-readability`)
 
 ## 2. Commit style
 
