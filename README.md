@@ -103,15 +103,15 @@ For Part C this output still has to grow into the reporting format the guide ask
 (§5.3): input size n, operation count, wall-clock time as best of 5 runs, and peak
 memory where relevant. None of that is emitted yet.
 
-### Hash tables (scratch, not in the Makefile)
+### Hash tables (scratch)
 
-The three collision strategies live in standalone files the Makefile does not build.
-Compile one directly:
+The three collision strategies live in `src/cpp/hashing/`, each with its own `main()`.
+`make all` builds them alongside the demo, or compile one directly:
 
 ```bash
-g++ -std=c++17 -Wall src/cpp/test_1.cpp -o build/cpp/test_1   # division method, no collision handling
-g++ -std=c++17 -Wall src/cpp/test_2.cpp -o build/cpp/test_2   # open addressing, linear probing
-g++ -std=c++17 -Wall src/cpp/test_3.cpp -o build/cpp/test_3   # separate chaining
+g++ -std=c++17 -Wall -I src/cpp src/cpp/hashing/division_method.cpp    -o build/cpp/division_method     # no collision handling
+g++ -std=c++17 -Wall -I src/cpp src/cpp/hashing/linear_probing.cpp     -o build/cpp/linear_probing      # open addressing
+g++ -std=c++17 -Wall -I src/cpp src/cpp/hashing/separate_chaining.cpp  -o build/cpp/separate_chaining   # separate chaining
 ```
 
 These are exploratory. They are not wired into the demo and are not edge-case hardened.

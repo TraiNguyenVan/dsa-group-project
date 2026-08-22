@@ -1,11 +1,11 @@
-// test_2.cpp — hash table experiment: linear probing
+// linear_probing.cpp — hash table experiment: linear probing
 // Author:  @TraiNguyenVan, @N25DECE074-truong-quang-tuan, @CapCapSever
 // Source:  n/a
 // AI use:  n/a
 
 // Build and run with:
-// g++ -std=c++17 src/cpp/test_2.cpp -I include -o build/cpp/test_2
-// build/cpp/test_2
+// g++ -std=c++17 src/cpp/hashing/linear_probing.cpp -I src/cpp -o build/cpp/linear_probing
+// build/cpp/linear_probing
 
 // Option 2: Linear Probing - Same as Option 1 but with collision handling, only use an array to
 // hold the table and a simple hash function that use mod operator to calculate key's hash(aka

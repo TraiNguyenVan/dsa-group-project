@@ -1,11 +1,11 @@
-// test_3.cpp — hash table experiment: separate chaining
+// separate_chaining.cpp — hash table experiment: separate chaining
 // Author:  @TraiNguyenVan, @N25DECE074-truong-quang-tuan, @CapCapSever
 // Source:  n/a
 // AI use:  n/a
 
 // Build and run with:
-// g++ -std=c++17 src/cpp/test_3.cpp -I include -o build/cpp/test_3
-// build/cpp/test_3
+// g++ -std=c++17 src/cpp/hashing/separate_chaining.cpp -I src/cpp -o build/cpp/separate_chaining
+// build/cpp/separate_chaining
 
 // Option 3: Separate Chaining
 #include <iostream>

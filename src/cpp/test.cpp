@@ -1,6 +1,8 @@
 #include <iostream>
+#include "hashing/hash_functions.hpp"
 
 int main() {
-    std::cout << "Trung bi gay\n";
+    sieve();
+    std::cout << prime[4] << "\n";
     return 0;
 }

@@ -1,20 +1,19 @@
-// Build and run with:
-// g++ -std=c++17 src/cpp/hashing/division_method.cpp -I src/cpp -o build/cpp/division_method
-// build/cpp/division_method
-
-// Option 1: Division Method - No collision handling, only use an array to hold the table
-// and a simple hash function that use mod operator to calculate key's hash(index)
-
+#ifndef HASH_HPP
+#define HASH_HPP
 #include <iostream>
+
+#include <vector>
 using namespace std;
 
-class HashTable {
+namespace HashTable {
+
+class DivisionMethod {
    private:
     static const int SIZE = 10;
     int table[SIZE];
 
    public:
-    HashTable() {
+    int HashTable() {
         for (int i = 0; i < SIZE; ++i) {
             table[i] = -1;
         }
@@ -42,14 +41,26 @@ class HashTable {
     }
 };
 
-int main() {
-    HashTable H;
-    H.insert(12);
-    H.insert(13);
-    H.insert(14);
-    H.insert(15);
-    H.insert(16);
-    H.insert(16);
-    H.print();
-    return 0;
-}
+// like iam looking ughh like how we do on our project🗿🗿❓
+// igig, i think only function in hpp and how it work in cpp? ughhh
+// sir my lapdih is about to die so imma push da code and bro yesyesyes pipilabu
+// poop1
+// like only me and bro how to git bro what now
+// can bro commit things
+// 🐧 can we do it here
+// yes bro have source control tab and a terminal
+// how did it just ask me if I want to see 114 possibilities? Am I Doctor Strange?
+// bro like when bro tab in empty space its gonna ask🐧 
+class LinearProbing {};
+
+class MidSquare {
+    private:
+        string square(string s);
+        int hashReturn(string s);
+    public:
+        string hash(string s);
+    //~~~~~~~~~~~~~~~~~~~~~~~~~
+};
+}  // namespace HashTable
+
+#endif
