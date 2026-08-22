@@ -1,6 +1,6 @@
 // Build and Run with:
-// g++ -std=c++17 src/cpp/main.cpp -I include -o build/cpp/main
-// build/cpp/main
+// g++ -std=c++17 src/cpp/main.cpp -I src/cpp -o build/cpp/demo
+// build/cpp/demo
 
 // Part C — C++ demo skeleton (PTIT INT1306_CLC group project)
 // Topic: TBD. Replace this skeleton with your real-world demo.
@@ -11,10 +11,10 @@
 #include <iostream>
 #include <vector>
 
-#include "binarySearch.hpp"
-#include "interpolation_search.hpp"
+#include "binary_search/binary_search.hpp"
+#include "interpolation_search/interpolation_search.hpp"
 #include "largest_element.hpp"
-#include "linear_search.hpp"
+#include "linear_search/linear_search.hpp"
 
 // when your algorithm found the target's index, use this to print it out
 void print(int index) {

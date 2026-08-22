@@ -1,6 +1,6 @@
 // Build and run with:
-// g++ -std=c++17 src/cpp/test_1.cpp -I include -o build/cpp/test_1
-// build/cpp/test_1
+// g++ -std=c++17 src/cpp/hashing/division_method.cpp -I src/cpp -o build/cpp/division_method
+// build/cpp/division_method
 
 // Option 1: Division Method - No collision handling, only use an array to hold the table
 // and a simple hash function that use mod operator to calculate key's hash(index)
