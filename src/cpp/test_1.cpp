@@ -20,7 +20,9 @@ class HashTable {
         }
     }
 
-    int hashFunction(int key) { return key % SIZE; }
+    int hashFunction(int key) {
+        return key % SIZE;
+    }
     // phần insert này thì là đề trực tiếp dữ liệu lên cái đã có
     //
     void insert(int key) {
@@ -34,7 +36,9 @@ class HashTable {
         return (index != -1) ? index : 0;
     }
     void print() {
-        for (int i = 0; i < SIZE; i++) cout << i << ": " << table[i] << '\n';
+        for (int i = 0; i < SIZE; i++) {
+            cout << i << ": " << table[i] << '\n';
+        }
     }
 };
 

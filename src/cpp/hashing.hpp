@@ -1,8 +1,18 @@
+// hashing.hpp — hash function and hash table experiments
+// Author:  @N25DECE074-truong-quang-tuan
+// Source:  n/a
+// AI use:  n/a
+#ifndef HASHING_HPP
+#define HASHING_HPP
+
 #include <iostream>
 using namespace std;
 
 // hash function
-int hashFunction(int key, int size) { return key % size; }
+// inline: definition lives in this header, so more than one .cpp may include it
+inline int hashFunction(int key, int size) {
+    return key % size;
+}
 
 /*
 -------------------------------PHẦN NÀY TRONG TEST 1------------------------
@@ -33,3 +43,5 @@ sẽ được mở rộng lên không phải bị giới hạn bởi chỉ một
 
 
 */
+
+#endif  // HASHING_HPP
