@@ -13,6 +13,7 @@ git checkout -b feature/<your-branch>
 - **Never commit on `main`.** Every change lives on a branch.
 - Branch naming — pick the prefix that matches the work:
   - `feature/<lang>-<thing>` — new functionality (e.g. `feature/cpp-quicksort`)
+  - `experiment/<thing>` — throwaway experiments, benchmarks, or spikes (e.g. `experiment/pivot-strategy-benchmark`)
   - `fix/<thing>` — bug fixes (e.g. `fix/interpolation-edge-case`)
   - `docs/<thing>` — documentation-only changes (e.g. `docs/part-a-position`)
   - `chore/<thing>` — tooling, CI, config, no behavior change (e.g. `chore/makefile-clean`)
