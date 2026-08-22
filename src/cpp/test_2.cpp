@@ -1,9 +1,15 @@
+// test_2.cpp — hash table experiment: linear probing
+// Author:  @TraiNguyenVan, @N25DECE074-truong-quang-tuan, @CapCapSever
+// Source:  n/a
+// AI use:  n/a
+
 // Build and run with:
 // g++ -std=c++17 src/cpp/test_2.cpp -I include -o build/cpp/test_2
 // build/cpp/test_2
 
-// Option 2: Linear Probing - Same as Option 1 but with collision handling, only use an array to hold the table
-// and a simple hash function that use mod operator to calculate key's hash(aka index)
+// Option 2: Linear Probing - Same as Option 1 but with collision handling, only use an array to
+// hold the table and a simple hash function that use mod operator to calculate key's hash(aka
+// index)
 
 // How collision was handled:
 
@@ -29,7 +35,9 @@ class HashTable {
         }
     }
 
-    int hashFunction(int key) { return key % SIZE; }
+    int hashFunction(int key) {
+        return key % SIZE;
+    }
     // tìm chỗ còn trống để nhét phần tử dư vào và chạy tới lúc ko còn thì nó tự hủy đúng nghĩa =)))
 
     void insert(int key) {
@@ -46,7 +54,9 @@ class HashTable {
         int index = hashFunction(key);
 
         while (table[index] != -1) {
-            if (table[index] == key) return true;
+            if (table[index] == key) {
+                return true;
+            }
 
             index = (index + 1) % SIZE;
         }
@@ -54,7 +64,9 @@ class HashTable {
         return false;
     }
     void print() {
-        for (int i = 0; i < SIZE; i++) cout << i << ": " << table[i] << '\n';
+        for (int i = 0; i < SIZE; i++) {
+            cout << i << ": " << table[i] << '\n';
+        }
     }
 };
 int main() {

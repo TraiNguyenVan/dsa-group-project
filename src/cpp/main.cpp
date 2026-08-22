@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "binarySearch.hpp"
-#include "linear_search.hpp"
-#include "largest_element.hpp"
 #include "interpolation_search.hpp"
+#include "largest_element.hpp"
+#include "linear_search.hpp"
 
 // when your algorithm found the target's index, use this to print it out
 void print(int index) {
