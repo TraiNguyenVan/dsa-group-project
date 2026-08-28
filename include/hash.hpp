@@ -8,27 +8,37 @@ namespace HashTable {
 
 class LinearProbing {
 private:
-    static const int SIZE = 10;
-    int table[SIZE];
+    int size;
+    int* table;
 
 public:
-    LinearProbing() {
-        for (int i = 0; i < SIZE; ++i) {
+    LinearProbing(int capacity) : size(capacity), table(new int[capacity]) {
+        for (int i = 0; i < size; ++i) {
             table[i] = -1;
         }
     }
-    int hashFunction(int key) {
-        return key % SIZE;
+
+    ~LinearProbing() {
+        delete[] table;
     }
+
+    LinearProbing(const LinearProbing&) = delete;
+    LinearProbing& operator=(const LinearProbing&) = delete;
+
+    int hashFunction(int key) {
+        return key % size;
+    }
+
     void insert(int key) {
         int index = hashFunction(key);
 
         while (table[index] != -1) {
-            index = (index + 1) % SIZE;
+            index = (index + 1) % size;
         }
 
         table[index] = key;
     }
+
     bool search(int key) {
         int index = hashFunction(key);
 
@@ -37,13 +47,14 @@ public:
                 return true;
             }
 
-            index = (index + 1) % SIZE;
+            index = (index + 1) % size;
         }
 
         return false;
     }
+
     void print() {
-        for (int i = 0; i < SIZE; i++) {
+        for (int i = 0; i < size; i++) {
             cout << i << ": " << table[i] << '\n';
         }
     }
