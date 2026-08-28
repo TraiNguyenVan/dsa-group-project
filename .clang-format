@@ -6,6 +6,7 @@ Standard: c++17
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
+AccessModifierOffset: -4
 ColumnLimit: 100
 
 # One statement per line, always braced — keeps algorithm bodies readable for graders
