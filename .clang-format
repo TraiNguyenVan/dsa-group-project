@@ -1,0 +1,29 @@
+BasedOnStyle: Google
+
+Language: Cpp
+Standard: c++17
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AccessModifierOffset: -4
+ColumnLimit: 100
+
+# One statement per line, always braced — keeps algorithm bodies readable for graders
+InsertBraces: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+
+# Preserve hand-wrapped explanation blocks instead of rewrapping them
+ReflowComments: Never
+SpacesBeforeTrailingComments: 2
+
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+FixNamespaceComments: true
