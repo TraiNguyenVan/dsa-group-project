@@ -24,11 +24,11 @@
 using namespace std;
 
 class HashTable {
-   private:
+private:
     static const int SIZE = 10;
     int table[SIZE];
 
-   public:
+public:
     HashTable() {
         for (int i = 0; i < SIZE; ++i) {
             table[i] = -1;
@@ -42,9 +42,12 @@ class HashTable {
 
     void insert(int key) {
         int index = hashFunction(key);
+        // add cnt to
+        int cnt = 0;
 
-        while (table[index] != -1) {
+        while (table[index] != -1 && cnt != SIZE) {
             index = (index + 1) % SIZE;
+            ++cnt;
         }
 
         table[index] = key;

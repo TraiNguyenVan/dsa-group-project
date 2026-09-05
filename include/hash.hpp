@@ -1,6 +1,7 @@
 #ifndef HASH_HPP
 #define HASH_HPP
 #include <iostream>
+#include "linkedlist.hpp"
 
 using namespace std;
 
@@ -12,7 +13,7 @@ private:
     int* table;
 
 public:
-    LinearProbing(int capacity) : size(capacity), table(new int[capacity]) {
+    LinearProbing(int size) : size(size), table(new int[size]) {
         for (int i = 0; i < size; ++i) {
             table[i] = -1;
         }
@@ -58,6 +59,22 @@ public:
             cout << i << ": " << table[i] << '\n';
         }
     }
+};
+
+class SeperatedChaining {
+private:
+    int size;
+    LinkedList* table;
+
+public:
+    SeperatedChaining(int size) : size(size), table(new LinkedList[size]) {}
+    ~SeperatedChaining() {
+
+    };
+    int hashFunction(int key);
+    void insert(int key);
+    bool search(int key);
+    bool remove(int key);
 };
 
 class MidSquare {

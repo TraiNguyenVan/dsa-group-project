@@ -28,7 +28,7 @@ struct Node {
 // Hash Table
 // ==========================
 class HashTable {
-   private:
+private:
     static const int SIZE = 10;
 
     // Mỗi phần tử của table là đầu của một Linked List
@@ -40,7 +40,7 @@ class HashTable {
         return key % SIZE;
     }
 
-   public:
+public:
     // ==========================
     // Constructor
     // ==========================
