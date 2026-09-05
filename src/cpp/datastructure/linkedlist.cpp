@@ -6,6 +6,7 @@ LinkedList::~LinkedList() {}
 
 void LinkedList::insert(Node* node) {
     if (size == 0) {
+        head = node;
     }
     node->next = head;
     head = node;

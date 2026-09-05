@@ -1,5 +1,5 @@
 // Singly LinkedList
-#include "node.hpp" j
+#include "node.hpp"
 class LinkedList {
 private:
     Node* head;
@@ -10,6 +10,6 @@ public:
     ~LinkedList();
     void insert(Node* node);
     Node* search(int key);
-    bool remove(int key);
+    bool remove(int key);  // not implemented yet:D
     int get_size();
 };
