@@ -1,21 +1,23 @@
-# Makefile now is less vibecoded and clean :)
-
 CXX      := g++
 CXXFLAGS := -std=c++17 -Wall -O2 -I.
 
+SRCDIR   := src/cpp
 BUILDDIR := build/cpp
 TARGET   := $(BUILDDIR)/demo
-SRC      := main.cpp
-HEADERS  := $(wildcard include/*.hpp ) 
+SRC      := $(SRCDIR)/main.cpp
+HEADERS  := $(wildcard include/*.hpp)
 
-all: $(TARGET) 
+all: $(TARGET)
 
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
+$(TARGET): $(SRC) $(HEADERS) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
+
 run: $(TARGET)
 	./$(TARGET)
-	
+
 clean:
 	rm -rf $(BUILDDIR)
 
