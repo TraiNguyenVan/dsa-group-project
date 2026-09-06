@@ -1,13 +1,12 @@
 // Part C — C++ demo skeleton (PTIT INT1306_CLC group project)
 // Topic: TBD. Replace this skeleton with your real-world demo.
-// Rules: implement the structure yourself (STL comparison OK, substitution NOT).
-// Must compile with: g++ -std=c++17 -Wall
-// Must run on n >= 100 000, print timings, handle edge cases.
+// Rules: implement the structure yourself (STL comparison OK, substitution
+// NOT). Must compile with: g++ -std=c++17 -Wall Must run on n >= 100 000, print
+// timings, handle edge cases.
 
 #include <algorithm>
 #include <chrono>
 #include <iostream>
-#include <vector>
 using namespace std;
 using namespace std::chrono;
 
@@ -25,25 +24,20 @@ double timeIt(F work, int repeats = 5) {
     return best;
 }
 
-// TODO: your structure implementation goes here.
+// tung tung tung sahur
+void fr() {
+    uint32_t s = 0;
+    for (int i = 0; i < 1e6; ++i) {
+        s += 67;
+    }
+}
 
 int main(int argc, char* argv[]) {
-    // TODO: CLI parsing for the live demo script:
-    //   default  -> run on the full dataset (n >= 100 000), print timings
-    //   --small  -> run on n = 50 subset, print output (correctness proof)
-    //   --empty  -> empty input edge case
-    //   --dups   -> duplicate keys edge case
-    //   --oob    -> out-of-range access edge case
+    int n;
 
-    vector<int> data(100000);
-    for (auto& x : data) x = rand();
+    // cin >> n;
+      double ms = timeIt(fr, 5);
+      cout << ms << "\n";
 
-    double ms = timeIt([&] {
-        sort(data.begin(), data.end());
-    });
-    cout << "n=" << data.size() << " best-of-5: " << ms << " ms\n";
-
-    // TODO: report input size n, operation count (if instrumented),
-    //       wall-clock time (best of 5), peak memory (if relevant).
     return 0;
 }
