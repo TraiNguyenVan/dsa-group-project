@@ -1,5 +1,5 @@
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [languages.cpp]
 pattern = "**/*.{cpp,cxx,cc,c,hpp,hxx,h}"
