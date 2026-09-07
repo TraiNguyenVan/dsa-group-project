@@ -12,6 +12,8 @@
 #include <chrono>
 #include <algorithm>
 #include <cctype>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 using namespace std::chrono;
@@ -153,6 +155,116 @@ public:
 
     // Expose contacts for the search-result printer in main()
     const Contact& getContact(int index) const { return contacts[index]; }
+
+    int size() const { return (int)contacts.size(); }
+
+    // -----------------------------------------------------
+    // CSV loading — called once on startup
+    // Handles: Name,Phone per line, with optional quotes
+    // e.g. Alice Nguyen,0123456789
+    //      "Doe, John",0111222333
+    // -----------------------------------------------------
+    static string trim(const string& s) {
+        size_t start = 0;
+        while (start < s.size() && isspace((unsigned char)s[start])) start++;
+        size_t end = s.size();
+        while (end > start && isspace((unsigned char)s[end - 1])) end--;
+        return s.substr(start, end - start);
+    }
+
+    // Split one CSV line into (name, phone), respecting quoted name
+    static bool parseCsvLine(const string& line, string& name, string& phone) {
+        string l = trim(line);
+        if (l.empty()) return false;
+
+        if (l[0] == '"') {
+            // Quoted name: find closing quote
+            size_t close = l.find('"', 1);
+            if (close == string::npos) return false;
+            name = l.substr(1, close - 1);
+            size_t comma = l.find(',', close + 1);
+            if (comma == string::npos) return false;
+            phone = l.substr(comma + 1);
+        } else {
+            // Unquoted: split on LAST comma so names with commas
+            // (if unquoted) still work; normally just one comma
+            size_t comma = l.rfind(',');
+            if (comma == string::npos) return false;
+            name = l.substr(0, comma);
+            phone = l.substr(comma + 1);
+        }
+
+        name = trim(name);
+        phone = trim(phone);
+
+        // Strip surrounding quotes from phone too, just in case
+        if (phone.size() >= 2 && phone.front() == '"' && phone.back() == '"')
+            phone = phone.substr(1, phone.size() - 2);
+        phone = trim(phone);
+        return !(name.empty() && phone.empty());
+    }
+
+    // Load contacts from CSV. Returns number of contacts loaded.
+    // Skips invalid/duplicate rows quietly (prints one summary line).
+    int loadFromCSV(const string& path) {
+        ifstream file(path);
+        if (!file.is_open()) return -1;
+
+        string line;
+        int loaded = 0, skipped = 0;
+        while (getline(file, line)) {
+            // Strip trailing \r for Windows-style files
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            if (trim(line).empty()) continue;
+
+            string name, phone;
+            if (!parseCsvLine(line, name, phone)) { skipped++; continue; }
+            if (name.empty() || phone.empty()) { skipped++; continue; }
+            if (!isAllDigits(phone)) { skipped++; continue; }
+            if (hashSearch(phone) != -1) { skipped++; continue; }
+
+            contacts.push_back(Contact{name, phone});
+            hashInsert(phone, (int)contacts.size() - 1);
+            loaded++;
+        }
+        if (skipped > 0)
+            cout << "Skipped " << skipped << " invalid/duplicate row(s) from "
+                 << path << ".\n";
+        return loaded;
+    }
+
+    // -----------------------------------------------------
+    // CSV saving — writes the whole phonebook back to disk.
+    // Names containing a comma or quote are re-quoted so the
+    // file round-trips cleanly on the next load.
+    // Returns true on success.
+    // -----------------------------------------------------
+    bool saveToCSV(const string& path) const {
+        ofstream file(path);
+        if (!file.is_open()) return false;
+
+        for (size_t i = 0; i < contacts.size(); i++) {
+            const string& name = contacts[i].name;
+            const string& phone = contacts[i].phone;
+
+            // Quote name if it contains a comma or quote
+            bool needsQuote = name.find(',') != string::npos ||
+                              name.find('"') != string::npos;
+            if (needsQuote) {
+                file << '"';
+                for (char c : name) {
+                    if (c == '"') file << '"' << '"'; // escape by doubling
+                    else file << c;
+                }
+                file << '"';
+            } else {
+                file << name;
+            }
+            file << ',' << phone;
+            if (i + 1 < contacts.size()) file << '\n';
+        }
+        return true;
+    }
 };
 
 // ---------------------------------------------------------
@@ -215,15 +327,27 @@ void doSearch(const PhoneBook& book) {
 // ---------------------------------------------------------
 // Main CLI loop
 // ---------------------------------------------------------
-int main() {
+int main(int argc, char* argv[]) {
     PhoneBook book;
+
+    // Load initial data from CSV on startup.
+    // Usage: ./demo [path/to/contacts.csv]  (default: data/contacts.csv)
+    string csvPath = (argc > 1) ? argv[1] : "data/contacts.csv";
+    int loaded = book.loadFromCSV(csvPath);
+    if (loaded >= 0) {
+        cout << "Loaded " << loaded << " contact(s) from " << csvPath << ".\n";
+    } else {
+        cout << "Note: could not open " << csvPath
+             << " (starting with an empty phonebook).\n";
+    }
 
     while (true) {
         cout << "\n===== Phonebook CLI =====\n";
         cout << "1. Search\n";
         cout << "2. Insert\n";
         cout << "3. Print all\n";
-        cout << "4. Exit\n";
+        cout << "4. Save to CSV\n";
+        cout << "5. Exit\n";
         cout << "Choose an option: ";
 
         int choice;
@@ -245,6 +369,12 @@ int main() {
         } else if (choice == 3) {
             book.printAll();
         } else if (choice == 4) {
+            if (book.saveToCSV(csvPath))
+                cout << "Saved " << book.size()
+                     << " contact(s) to " << csvPath << ".\n";
+            else
+                cout << "Error: could not write to " << csvPath << ".\n";
+        } else if (choice == 5) {
             cout << "Goodbye!\n";
             break;
         } else {
