@@ -3,7 +3,7 @@ CXX      := g++
 CXXFLAGS := -std=c++17 -Wall -O2 -I.
 
 
-SRCDIR   := src/cpp
+SRCDIR   := ./
 BUILDDIR := build/cpp
 TARGET   := $(BUILDDIR)/demo
 SRC      := $(SRCDIR)/main.cpp
