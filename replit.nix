@@ -4,5 +4,6 @@
     pkgs.clang
     pkgs.gnumake
     pkgs.cmake
+    pkgs.opencode
   ];
 }
