@@ -1,0 +1,9 @@
+[nix]
+channel = "stable-24_05"
+
+[languages.cpp]
+pattern = "**/*.{cpp,cxx,cc,c,hpp,hxx,h}"
+syntax = "cpp"
+
+[languages.cpp.languageServer]
+start = "clangd"
