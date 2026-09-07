@@ -17,7 +17,7 @@ AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 
 # Preserve hand-wrapped explanation blocks instead of rewrapping them
-ReflowComments: Never
+# ReflowComments: Never
 SpacesBeforeTrailingComments: 2
 
 SortIncludes: CaseSensitive
