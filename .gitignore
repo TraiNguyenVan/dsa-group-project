@@ -9,7 +9,7 @@ node_modules/
 *.log
 
 # Data (generated or large)
-data/*.csv
+# data/*.csv
 data/*.bin
 data/*.dat
 !data/README.md
