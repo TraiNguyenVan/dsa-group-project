@@ -1,12 +1,12 @@
 CXX      := g++
 
-CXXFLAGS := -std=c++17 -Wall -O2 -I.
+CXXFLAGS := -std=c++17 -Wall -O2 -Iinclude
 
 
-SRCDIR   := ./
+SRCDIR   := ./src
 BUILDDIR := build/cpp
 TARGET   := $(BUILDDIR)/demo
-SRC      := $(SRCDIR)/main.cpp
+SRC      := $(wildcard $(SRCDIR)/*.cpp)
 HEADERS  := $(wildcard include/*.hpp)
 
 all: $(TARGET)
