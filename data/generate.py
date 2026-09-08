@@ -14,7 +14,9 @@ Output:
     data/contacts_1m.csv      (1,000,000 rows)
 
 Format: Name,Phone per line. Names with a comma are quoted ("Last, First").
-Phones are unique zero-padded 10-digit strings (digits only).
+Phones are unique 10-digit strings (digits only) starting with one of the
+Vietnamese mobile prefixes (prefix + 7 random digits, e.g. 0981234567).
+Names are Vietnamese Family Middle Given (e.g. Nguyen Van An).
 """
 
 import argparse
@@ -22,24 +24,31 @@ import csv
 import random
 from pathlib import Path
 
-FIRST_NAMES = [
-    "Alice", "Amir", "Beth", "Bob", "Carl", "Charlie", "David", "Diana",
-    "Eli", "Eva", "Fiona", "Frank", "George", "Grace", "Hannah", "Henry",
-    "Ivan", "Ivy", "Jack", "Jade", "Kate", "Kevin", "Leo", "Lily",
-    "Marco", "Mia", "Nina", "Noah", "Olivia", "Oscar", "Paul", "Penny",
-    "Quinn", "Ray", "Rosa", "Sam", "Sophia", "Tina", "Tom", "Uma",
-    "Una", "Victor", "Vince", "Wendy", "Xavier", "Xena", "Yara", "Yusuf",
-    "Zane", "Zoe",
+PREFIXES = [
+    "096", "097", "098", "086",
+    "032", "033", "034", "035", "036", "037", "038", "039",
+    "091", "094", "088",
+    "081", "082", "083", "084", "085",
+    "090", "093", "089",
+    "070", "076", "077", "078", "079",
 ]
 
-LAST_NAMES = [
-    "Allen", "Anderson", "Brown", "Bui", "Clark", "Dang", "Davis", "Do",
-    "Flores", "Garcia", "Gonzalez", "Harris", "Hernandez", "Hill", "Hoang",
-    "Jackson", "Johnson", "Jones", "King", "Le", "Lee", "Lewis", "Lopez",
-    "Martin", "Martinez", "Miller", "Moore", "Nguyen", "Perez", "Pham",
-    "Phan", "Ramirez", "Robinson", "Rodriguez", "Sanchez", "Scott", "Smith",
-    "Taylor", "Thomas", "Thompson", "Torres", "Tran", "Vu", "Walker",
-    "White", "Williams", "Wilson", "Wright", "Young",
+# Vietnamese name pools: full name = Family Middle Given (e.g. Nguyen Van An).
+FAMILY_NAMES = [
+    "Nguyen", "Tran", "Le", "Pham", "Hoang", "Huynh", "Phan", "Vu",
+    "Vo", "Dang", "Bui", "Do", "Ho", "Ngo", "Duong", "Ly",
+]
+
+MIDDLE_NAMES = [
+    "Van", "Thi", "Huu", "Duc", "Thanh", "Ngoc", "Quang", "Minh",
+]
+
+GIVEN_NAMES = [
+    "An", "Anh", "Bao", "Binh", "Chi", "Cuong", "Dung", "Duc",
+    "Hai", "Hanh", "Hieu", "Hoa", "Hung", "Huong", "Khanh", "Lan",
+    "Linh", "Long", "Mai", "Minh", "Nam", "Ngoc", "Phong", "Phuc",
+    "Quang", "Son", "Thanh", "Thao", "Trang", "Tuan", "Viet", "Yen",
+    "Khoa", "Phuong", "Tung", "Dat", "Kien", "Huy", "Thuy", "Nga",
 ]
 
 # (filename, rows) — kept in ascending order so each file is a prefix of the next.
@@ -65,23 +74,33 @@ def main() -> None:
     rng = random.Random(args.seed)
     max_n = max(n for _, n in DATASETS)
 
-    # Unique 10-digit phones (zero-padded, e.g. 0174292433 is valid).
-    phones = rng.sample(range(10_000_000_000), max_n)
+    # Unique 10-digit phones: uniform-random VN prefix + 7 random digits.
+    # Address space is 28 * 10^7 = 280M, so 1M unique rows resolve fast.
+    # NOTE: append in RNG order (not via set iteration) to keep output
+    # deterministic for a given seed across runs / Python versions.
+    phone_list: list[str] = []
+    seen: set[str] = set()
+    while len(phone_list) < max_n:
+        p = rng.choice(PREFIXES) + f"{rng.randrange(10_000_000):07d}"
+        if p not in seen:
+            seen.add(p)
+            phone_list.append(p)
 
     rows: list[tuple[str, str]] = []
     for i in range(max_n):
-        first = rng.choice(FIRST_NAMES)
-        last = rng.choice(LAST_NAMES)
+        family = rng.choice(FAMILY_NAMES)
+        middle = rng.choice(MIDDLE_NAMES)
+        given = rng.choice(GIVEN_NAMES)
         if rng.random() < QUOTED_FRACTION:
-            name = f"{last}, {first}"
+            name = f"{family}, {middle} {given}"
         else:
-            name = f"{first} {last}"
-        rows.append((name, f"{phones[i]:010d}"))
+            name = f"{family} {middle} {given}"
+        rows.append((name, phone_list[i]))
 
     for filename, n in DATASETS:
         path = out_dir / filename
         with open(path, "w", newline="") as f:
-            writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+            writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
             writer.writerows(rows[:n])
         print(f"Wrote {n:>8,} rows -> {path} (seed={args.seed})")
 
