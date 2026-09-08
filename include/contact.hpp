@@ -12,5 +12,3 @@ struct HashNode {
     int contactIndex;
     HashNode* next;
 };
-
-const int TABLE_SIZE = 101;
