@@ -2,6 +2,7 @@
 #include "../include/timer.hpp"
 #include <cctype>
 #include <iostream>
+#include <limits>
 #include <string>
 
 using namespace std;
@@ -10,8 +11,15 @@ void doSearch(const PhoneBook& book) {
     cout << "2. Hash search (exact full phone number)\n";
     cout << "Choose search method: ";
     int method;
-    cin >> method;
-    cin.ignore();
+    if (!(cin >> method)) {
+        if (!cin.eof()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid method.\n";
+        }
+        return;
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     cout << "Enter search value: ";
     string query;
@@ -75,8 +83,17 @@ int main(int argc, char* argv[]) {
         cout << "Choose an option: ";
 
         int choice;
-        cin >> choice;
-        cin.ignore();
+        if (!(cin >> choice)) {
+            if (cin.eof()) {
+                cout << "\nGoodbye!\n";
+                break;
+            }
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid choice, try again.\n";
+            continue;
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         if (choice == 1) {
             doSearch(book);
