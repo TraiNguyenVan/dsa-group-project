@@ -18,7 +18,7 @@ $(TARGET): $(SRC) $(HEADERS) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
 
 run: $(TARGET)
-	./$(TARGET) data/contacts_200k.csv
+	./$(TARGET) data/contacts_100k.csv
 
 run-50: $(TARGET)
 	./$(TARGET) data/contacts_50.csv
