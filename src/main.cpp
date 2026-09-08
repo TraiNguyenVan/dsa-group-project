@@ -1,11 +1,10 @@
-#include "phonebook.hpp"
-#include "timer.hpp"
+#include "../include/phonebook.hpp"
+#include "../include/timer.hpp"
 #include <cctype>
 #include <iostream>
 #include <string>
 
 using namespace std;
-
 void doSearch(const PhoneBook& book) {
     cout << "1. Linear search (name / partial phone)\n";
     cout << "2. Hash search (exact full phone number)\n";
@@ -56,7 +55,7 @@ void doSearch(const PhoneBook& book) {
 int main(int argc, char* argv[]) {
     PhoneBook book;
 
-    string csvPath = (argc > 1) ? argv[1] : "data/contacts.csv";
+    string csvPath = (argc > 1) ? argv[1] : "data/contacts_200k.csv";
     auto load = timing::measure([&] { return book.loadFromCSV(csvPath); });
     if (load.value >= 0) {
         cout << "Loaded " << load.value << " contact(s) from " << csvPath << ".\n";

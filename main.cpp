@@ -324,8 +324,8 @@ int main(int argc, char* argv[]) {
     PhoneBook book;
 
     // Load initial data from CSV on startup.
-    // Usage: ./demo [path/to/contacts.csv]  (default: data/contacts.csv)
-    string csvPath = (argc > 1) ? argv[1] : "data/contacts.csv";
+    // Usage: ./demo [path/to/contacts.csv]  (default: data/contacts_200k.csv)
+    string csvPath = (argc > 1) ? argv[1] : "data/contacts_200k.csv";
     auto loadStart = high_resolution_clock::now();
     int loaded = book.loadFromCSV(csvPath);
     auto loadEnd = high_resolution_clock::now();
