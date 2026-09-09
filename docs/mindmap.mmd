@@ -1,0 +1,108 @@
+mindmap
+  root((Phonebook CLI<br/>tuan-vibecode<br/>src + include))
+    Data Model & Storage
+      Contact struct
+        name string<br/>phone digits-only<br/>contact.hpp:5 O(1)
+      HashNode struct
+        phone + contactIndex + next*<br/>contact.hpp:10 O(1)
+      PhoneBook class
+        vector Contact contacts<br/>phonebook.hpp:10 O(1) access
+        vector HashNode* buckets<br/>phonebook.hpp:11 O(TABLE_SIZE)
+        tableSize nextPrime<br/>phonebook.hpp:12 O(1)
+        numElements counter<br/>phonebook.hpp:13 O(1)
+    Hash Table Engine O(1) avg
+      hashForSize static
+        h = h*31 + (c-'0')<br/>phonebook.cpp:28 O(L) L=phone len
+        hash % mod<br/>phonebook.cpp:30 O(1)
+      hashFunction wrapper
+        hashForSize(phone, tableSize)<br/>phonebook.cpp:22 O(L)
+      Prime Sizing
+        isPrime trial division<br/>phonebook.cpp:33 O(sqrt n)
+        nextPrime odd scan<br/>phonebook.cpp:41 O(sqrt n)
+        DEFAULT 101 prime<br/>phonebook.hpp:26 O(1)
+      Buckets & Chaining
+        Separate chaining<br/>head insert<br/>phonebook.cpp:91 O(1)
+        Collision linear chain<br/>O(k) k=bucket len
+      Dynamic Rehashing
+        maybeRehash >0.75<br/>phonebook.cpp:84 O(1) check
+        rehash nextPrime 2x<br/>phonebook.cpp:66 O(n)
+        Re-bucket all nodes<br/>O(n) one-time
+    Search Duo Contrast
+      Linear Search O(n)
+        toLower query<br/>phonebook.cpp:9 O(L)
+        Scan all contacts<br/>phonebook.cpp:111 O(n)
+        nameLower.find(q)<br/>phonebook.cpp:113 O(n*m)
+        phone.find(query)<br/>partial match O(n*m)
+        Returns vector int<br/>O(n) result set
+      Hash Search O(1) avg O(n) worst
+        hashFunction idx<br/>phonebook.cpp:98 O(L)
+        Traverse chain<br/>phonebook.cpp:99 O(k)
+        Exact phone ==<br/>phonebook.cpp:101 O(L)
+        Return index or -1<br/>O(1)
+    Operations CRUD
+      insertContact O(1) avg
+        empty check<br/>phonebook.cpp:122 O(1)
+        isAllDigits check<br/>phonebook.cpp:15 O(L)
+        dup hashSearch<br/>phonebook.cpp:130 O(1) avg
+        push_back + hashInsert<br/>phonebook.cpp:135 O(1) amort
+      printAll O(n)
+        empty guard<br/>phonebook.cpp:142 O(1)
+        Loop i 0..n print<br/>phonebook.cpp:147 O(n)
+      Accessors O(1)
+        getContact idx<br/>phonebook.cpp:153
+        size bucketCount<br/>phonebook.cpp:155 O(1)
+        loadFactor n/tableSize<br/>phonebook.cpp:159 O(1)
+    CSV Persistence O(n)
+      Helpers O(L)
+        trim whitespace<br/>phonebook.cpp:163 O(L)
+        parseCsvLine quoted<br/>phonebook.cpp:171 O(L)
+        Handles "Doe, John",phone<br/>rfind comma O(L)
+      loadFromCSV O(n*L)
+        ifstream open<br/>phonebook.cpp:199 O(1)
+        getline loop<br/>phonebook.cpp:204 O(n)
+        Strip CR LF<br/>phonebook.cpp:205 O(1)
+        parse + validate<br/>phonebook.cpp:209 O(L)
+        isAllDigits + dup<br/>skip invalid O(1) avg
+        push + hashInsert<br/>phonebook.cpp:214 O(1) avg
+      saveToCSV O(n*L)
+        ofstream open<br/>phonebook.cpp:225 O(1)
+        needsQuote , or "<br/>phonebook.cpp:232 O(L)
+        Escape "" doubling<br/>phonebook.cpp:237 O(L)
+        Write name,phone \n<br/>phonebook.cpp:244 O(L)
+    CLI Control Flow
+      main O(n) load + loop
+        PhoneBook book<br/>main.cpp:64 O(1)
+        csvPath argv or 200k.csv<br/>main.cpp:66 O(1)
+        timed loadFromCSV<br/>main.cpp:67 O(n*L)
+        print Loaded + elapsed<br/>O(1)
+        while true menu<br/>main.cpp:76 O(1) per iter
+        1 Search doSearch<br/>main.cpp:98 O(n) or O(1)
+        2 Insert read+measure<br/>main.cpp:100 O(1) avg
+        3 PrintAll timed<br/>main.cpp:112 O(n)
+        4 Save timed<br/>main.cpp:115 O(n*L)
+        5 Exit break<br/>O(1)
+      doSearch branching
+        Choose 1 Linear 2 Hash<br/>main.cpp:9 O(1)
+        Method 1 linearSearch<br/>main.cpp:29 O(n)
+        Print results loop<br/>main.cpp:34 O(k)
+        timing printElapsed<br/>O(1)
+        Method 2 digit guard<br/>main.cpp:42 O(L)
+        hashSearch exact<br/>main.cpp:48 O(1) avg
+        Invalid method guard<br/>O(1)
+    Timing Layer O(1)
+      Timed struct<br/>timer.hpp:17 value+us
+      measure generic<br/>timer.hpp:32 Clock.now O(1)
+      is_void specialization<br/>timer.hpp:35 O(1)
+      duration_cast us<br/>timer.hpp:45 O(1)
+      printElapsed ms<br/>timer.hpp:49 O(1)
+      ms = us / 1000 fixed 3<br/>timer.hpp:50 O(1)
+      timed wrapper<br/>timer.hpp:58 auto print
+    Build & Datasets
+      Makefile
+        CXX g++ -std=c++17 -O2<br/>Makefile:3 O(1)
+        SRC wildcard src/*.cpp<br/>Makefile:9
+        TARGET build/cpp/demo<br/>Makefile:8
+        run targets 50/100k/200k/1m<br/>Makefile:21 O(n) dataset
+      Data Generation
+        generate.py<br/>vietnamese-like names
+        contacts_50.csv<br/>contacts_100k.csv<br/>contacts_200k.csv default<br/>contacts_1m.csv
