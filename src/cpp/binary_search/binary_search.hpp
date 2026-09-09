@@ -1,7 +1,7 @@
 // binarySearch.hpp — iterative binary search on a sorted int array
 // Author:  @Alex75762107
 // Source:  n/a
-// AI use:  n/a
+// AI use:  Gemini pro
 #ifndef BINARY_SEARCH_HPP
 #define BINARY_SEARCH_HPP
 
