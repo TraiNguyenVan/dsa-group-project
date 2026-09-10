@@ -10,6 +10,7 @@ private:
     std::vector<Contact> contacts;
 
     static std::string toLower(const std::string &s);
+    static std::string capitalizeFirst(const std::string &s);
     static bool isAllDigits(const std::string &s);
     int hashFuntion(const std::string) const;
 
@@ -32,10 +33,19 @@ public:
     PhoneBook(PhoneBook&&) = delete;
     PhoneBook& operator = (PhoneBook&) = delete;
 
-    void hashInsert(const std::string& name, const std::string& phone);
+    void hashInsert(const std::string& phone, int contactIndex);
+    int hashSearch(const std::string& phone) const;
     
     bool insertContact(const std::string& name, const std::string& phone);
 
+    int searchLinearByPhone(const std::string& phone) const;
+
+    int searchLinearByName(const std::string& name) const;
+
+
+    std::size_t size() const {
+        return contacts.size();
+    }
     int loadfromCSV(const std::string& path);
 
     bool savetoCSV(const std::string& path) const;
