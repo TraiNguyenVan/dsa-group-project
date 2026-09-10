@@ -25,6 +25,7 @@ int PhoneBook::loadfromCSV(const std::string& path) {
             continue;
         }
         contacts.push_back({name, phone});
+        buckets[phone] = static_cast<int>(contacts.size()) - 1;
         
         
     }
