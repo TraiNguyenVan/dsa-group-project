@@ -19,89 +19,14 @@ bool PhoneBook::isAllDigits(const string& s) {
     return true;
 }
 
-int PhoneBook::hashFunction(const string& phone) const {
-    return (int)hashForSize(phone, tableSize);
-}
-
-size_t PhoneBook::hashForSize(const string& phone, size_t mod) {
-    unsigned long hash = 0;
-    for (char c : phone)
-        hash = hash * 31 + (unsigned char)(c - '0');
-    return (size_t)(hash % mod);
-}
-
-bool PhoneBook::isPrime(size_t n) {
-    if (n < 2) return false;
-    if (n % 2 == 0) return n == 2;
-    for (size_t i = 3; i * i <= n; i += 2)
-        if (n % i == 0) return false;
-    return true;
-}
-
-size_t PhoneBook::nextPrime(size_t n) {
-    if (n <= 2) return 2;
-    if (n % 2 == 0) ++n;
-    while (!isPrime(n)) n += 2;
-    return n;
-}
-
-PhoneBook::PhoneBook(size_t initialCapacity) {
-    if (initialCapacity == 0) initialCapacity = DEFAULT_TABLE_SIZE;
-    tableSize = nextPrime(initialCapacity);
-    numElements = 0;
-    buckets.assign(tableSize, nullptr);
-}
-
-PhoneBook::~PhoneBook() {
-    for (size_t i = 0; i < tableSize; i++) {
-        HashNode* node = buckets[i];
-        while (node) {
-            HashNode* toDelete = node;
-            node = node->next;
-            delete toDelete;
-        }
-    }
-}
-
-void PhoneBook::rehash(size_t newSize) {
-    newSize = nextPrime(newSize);
-    if (newSize <= tableSize) return;
-    vector<HashNode*> newBuckets(newSize, nullptr);
-    for (size_t i = 0; i < tableSize; i++) {
-        HashNode* node = buckets[i];
-        while (node) {
-            HashNode* next = node->next;
-            size_t idx = hashForSize(node->phone, newSize);
-            node->next = newBuckets[idx];
-            newBuckets[idx] = node;
-            node = next;
-        }
-    }
-    buckets.swap(newBuckets);
-    tableSize = newSize;
-}
-
-void PhoneBook::maybeRehash() {
-    if ((double)numElements / (double)tableSize > MAX_LOAD_FACTOR)
-        rehash(tableSize * 2);
-}
+PhoneBook::PhoneBook(size_t initialCapacity) : table(initialCapacity) {}
 
 void PhoneBook::hashInsert(const string& phone, int contactIndex) {
-    size_t idx = (size_t)hashFunction(phone);
-    HashNode* node = new HashNode{phone, contactIndex, buckets[idx]};
-    buckets[idx] = node;
-    ++numElements;
-    maybeRehash();
+    table.hashInsert(phone, contactIndex);
 }
 
 int PhoneBook::hashSearch(const string& phone) const {
-    size_t idx = (size_t)hashFunction(phone);
-    HashNode* node = buckets[idx];
-    while (node) {
-        if (node->phone == phone) return node->contactIndex;
-        node = node->next;
-    }
-    return -1;
+    return table.hashSearch(phone);
 }
 
 vector<int> PhoneBook::linearSearch(const string& query) const {
@@ -154,11 +79,9 @@ const Contact& PhoneBook::getContact(int index) const { return contacts[index]; 
 
 int PhoneBook::size() const { return (int)contacts.size(); }
 
-size_t PhoneBook::bucketCount() const { return tableSize; }
+size_t PhoneBook::bucketCount() const { return table.bucketCount(); }
 
-double PhoneBook::loadFactor() const {
-    return tableSize == 0 ? 0.0 : (double)numElements / (double)tableSize;
-}
+double PhoneBook::loadFactor() const { return table.loadFactor(); }
 
 string PhoneBook::trim(const string& s) {
     size_t start = 0;
