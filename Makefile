@@ -65,6 +65,8 @@ run-benchmark-sizes: $(TARGET)
 		(cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main --benchmark-csv ../../$(BENCHCSV) --append ../../$$f); \
 	done
 	python3 benchmark/plot.py --line $(BENCHCSV) benchmark/plot-runtime-vs-n.png || echo "plot skipped: pip install matplotlib"
+	python3 benchmark/plot.py --unified $(BENCHCSV) benchmark/plot-unified-cpp.png || echo "plot skipped: pip install matplotlib"
+	python3 benchmark/plot.py --per-algo $(BENCHCSV) benchmark/plot-per-algo-cpp.png || echo "plot skipped: pip install matplotlib"
 
 clean:
 	rm -rf $(BUILDDIR)

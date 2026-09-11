@@ -15,8 +15,9 @@ import (
 
 const benchHeader = "language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone"
 
-// runSearchBenchmarkBatch writes EVERY run (3 cases x 2 algos x 5 = 30 rows)
-// to CSV. Seeded RNG (42) for a reproducible `random` target.
+// runSearchBenchmarkBatch writes EVERY run (5 cases x 3 algos x 5 = 75 rows)
+// to CSV. Seeded RNG (42) for a reproducible `random` target. `miss` uses
+// phone "0000000000" (not in dataset) for true worst case of hash/binary.
 func runSearchBenchmarkBatch(phonebook *PhoneBook, csvInput, outCsv string, append bool) int {
 	loaded := phonebook.LoadFromCSV(csvInput)
 	if loaded == -1 {
@@ -28,12 +29,14 @@ func runSearchBenchmarkBatch(phonebook *PhoneBook, csvInput, outCsv string, appe
 		fmt.Fprintln(os.Stderr, "No contacts to benchmark.")
 		return 1
 	}
-	cases := [3]string{"first", "random", "last"}
-	indices := [3]int{0, n - 1, n - 1}
+	cases := [5]string{"first", "middle", "random", "last", "miss"}
+	indices := [5]int{0, n / 2, n - 1, n - 1, -1}
 	indices[0] = 0
-	indices[2] = n - 1
+	indices[1] = n / 2
+	indices[3] = n - 1
+	indices[4] = -1
 	if n > 2 {
-		indices[1] = rand.New(rand.NewSource(42)).Intn(n)
+		indices[2] = rand.New(rand.NewSource(42)).Intn(n)
 	}
 
 	needHeader := true
@@ -69,22 +72,31 @@ func runSearchBenchmarkBatch(phonebook *PhoneBook, csvInput, outCsv string, appe
 	}
 	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	toolchain := "go " + runtime.Version()
-	for k := 0; k < 3; k++ {
-		phone := phonebook.GetPhoneAt(indices[k])
-		if phone == "" {
-			continue
+	for k := 0; k < 5; k++ {
+		var phone string
+		if k == 4 {
+			phone = "0000000000"
+		} else {
+			phone = phonebook.GetPhoneAt(indices[k])
+			if phone == "" {
+				continue
+			}
 		}
-		for a := 0; a < 2; a++ {
+		for a := 0; a < 3; a++ {
 			algo := "linear"
 			if a == 1 {
 				algo = "hash"
+			} else if a == 2 {
+				algo = "binary"
 			}
 			for r := 1; r <= 5; r++ {
 				var t float64
 				if a == 0 {
 					t = TimeIt(func() { phonebook.SearchLinearByPhone(phone) })
-				} else {
+				} else if a == 1 {
 					t = TimeIt(func() { phonebook.SearchHashByPhone(phone) })
+				} else {
+					t = TimeIt(func() { phonebook.SearchBinaryByPhone(phone) })
 				}
 				w.Write([]string{"go", csvInput, strconv.Itoa(n), cases[k], algo,
 					strconv.Itoa(r), strconv.FormatFloat(t, 'g', -1, 64),
@@ -97,7 +109,7 @@ func runSearchBenchmarkBatch(phonebook *PhoneBook, csvInput, outCsv string, appe
 		fmt.Fprintf(os.Stderr, "Write failed: %v\n", err)
 		return 1
 	}
-	fmt.Printf("Wrote 30 rows -> %s (%d contacts).\n", outCsv, n)
+	fmt.Printf("Wrote 75 rows -> %s (%d contacts).\n", outCsv, n)
 	return 0
 }
 
@@ -119,35 +131,45 @@ func runSearchBenchmark(phonebook *PhoneBook, csvInput string) {
 	}
 
 	n := phonebook.Size()
-	labels := [3]string{"first (linear best case)", "random (linear average case)", "last (linear worst case)"}
-	indices := [3]int{0, 0, n - 1}
+	labels := [5]string{"first (linear best case)", "middle (linear avg / binary best)", "random (linear average case)", "last (linear worst case)", "miss (linear worst / hash & binary worst)"}
+	indices := [5]int{0, n / 2, 0, n - 1, -1}
 	indices[0] = 0
-	indices[2] = n - 1
+	indices[1] = n / 2
+	indices[3] = n - 1
+	indices[4] = -1
 	if n <= 2 {
-		indices[1] = n - 1
+		indices[2] = n - 1
 	} else {
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		indices[1] = r.Intn(n)
+		indices[2] = r.Intn(n)
 	}
 
-	fmt.Printf("\nBenchmarking phone search (linear cases: first=best / random=average / last=worst; hash is ~O(1) in all cases) (%d contacts, 5 runs each, best reported).\n", n)
+	fmt.Printf("\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary) (%d contacts, 5 runs each, best reported).\n", n)
 
-	for k := 0; k < 3; k++ {
+	for k := 0; k < 5; k++ {
 		targetIdx := indices[k]
-		phone := phonebook.GetPhoneAt(targetIdx)
-		if phone == "" {
-			fmt.Printf("[%s] index %d: cannot pick target.\n", labels[k], targetIdx)
-			continue
+		var phone string
+		if k == 4 {
+			phone = "0000000000"
+		} else {
+			phone = phonebook.GetPhoneAt(targetIdx)
+			if phone == "" {
+				fmt.Printf("[%s] index %d: cannot pick target.\n", labels[k], targetIdx)
+				continue
+			}
 		}
 		idxLin := -1
 		idxHash := -1
+		idxBin := -1
 		linBest := Benchmark(func() { idxLin = phonebook.SearchLinearByPhone(phone) })
 		hashBest := Benchmark(func() { idxHash = phonebook.SearchHashByPhone(phone) })
+		binBest := Benchmark(func() { idxBin = phonebook.SearchBinaryByPhone(phone) })
 		fmt.Printf("[%s index %d phone %s]\n", labels[k], targetIdx, phone)
 		fmt.Printf("  Linear best of 5: %vms. (index %d)\n", linBest, idxLin)
 		fmt.Printf("  Hash best of 5: %vms. (index %d, position-independent)\n", hashBest, idxHash)
+		fmt.Printf("  Binary best of 5: %vms. (index %d, sorted index, position-independent)\n", binBest, idxBin)
 	}
-	fmt.Println("Linear: first=best, last=worst. Hash: ~constant regardless of position.")
+	fmt.Println("Linear: first=best, last/miss=worst. Hash/binary: ~constant; miss is worst (full chain / log n probes).")
 }
 
 func printMenu() {
@@ -298,8 +320,9 @@ func main() {
 			fmt.Println("========== Search ==========")
 			fmt.Println("1. Search phone - Linear Search")
 			fmt.Println("2. Search phone - Hash Search")
-			fmt.Println("3. Search name - Linear Search")
-			fmt.Println("4. Back")
+			fmt.Println("3. Search phone - Binary Search (sorted index)")
+			fmt.Println("4. Search name - Linear Search")
+			fmt.Println("5. Back")
 			fmt.Println("============================")
 			fmt.Print("Enter your choice: ")
 			sline, ok := readChoiceLine(reader)
@@ -350,6 +373,22 @@ func main() {
 					phonebook.PrintContact(index)
 				}
 			} else if searchChoice == 3 {
+				fmt.Print("Enter phone number: ")
+				phone, ok := readRawLine(reader)
+				if !ok {
+					fmt.Println("\nGoodbye")
+					return
+				}
+				index := -1
+				PrintTaskDuration(func() { index = phonebook.SearchBinaryByPhone(phone) })
+				if index == -1 {
+					fmt.Println("Phone number not found.")
+				} else {
+					fmt.Println("Phone number found using Binary Search (sorted index).")
+					fmt.Printf("Contact index: %d\n", index)
+					phonebook.PrintContact(index)
+				}
+			} else if searchChoice == 4 {
 				fmt.Print("Enter name: ")
 				name, ok := readRawLine(reader)
 				if !ok {
@@ -365,7 +404,7 @@ func main() {
 					fmt.Printf("Contact index: %d\n", index)
 					phonebook.PrintContact(index)
 				}
-			} else if searchChoice == 4 {
+			} else if searchChoice == 5 {
 				fmt.Println("Back to main menu.")
 			} else {
 				fmt.Println("Invalid search choice.")

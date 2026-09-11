@@ -55,10 +55,10 @@ For each structure answer explicitly:
 ### B.1 Operation table
 
 Every operation in the topic is tabulated. The demo implements linear
-search and the hash table; binary and interpolation search are part of the
-topic (§2.2.3, §2.2.4) and are included for completeness. They are *not*
-used in the demo because they require a sorted array, and the demo dataset
-is deliberately random (see Part C). A number without a justification
+search, binary search (on a maintained sorted phone index), and the hash
+table; interpolation search is part of the topic (§2.2.4) and is included
+for completeness but not in the demo (it needs uniformly distributed keys;
+phone strings are not). A number without a justification
 scores nothing.
 
 | Operation | Best | Average | Worst | Space | Why |
@@ -87,14 +87,23 @@ above.
 * **Delete** (`deleteContactByPhone`, option `8`): O(n) — vector erase
   shifts the tail + full hash rebuild so order is preserved. Missing phone prints `Phone number not found`.
 * **Search:** `searchLinearByPhone` exact scan, `searchHashByPhone` chained
-  lookup, `searchLinearByName` case-insensitive scan via `toLower`.
+  lookup, `searchBinaryByPhone` hand-written binary search on the sorted
+  phone index (O(log n), resolves to the contact via the hash table),
+  `searchLinearByName` case-insensitive scan via `toLower`.
+* **Sorted index** (`buildSortedIndex`): bulk load pushes contacts + hash
+  entries directly, then sorts the phone copy once (O(n log n)); each
+  `insertContact` keeps it sorted via hand `lowerBound` (O(log n)) + shift
+  (O(n)) and prints the split `hash insert / sorted-index insert` timing;
+  `deleteContactByPhone` rebuilds it (delete is O(n) anyway).
 * **Hash** (`src/hashtable.cpp`): `hash = hash*31 + (unsigned char)(c-'0')`
   with 64-bit wrap, `% numBuckets`; start `101 → nextPrime`; rehash at
   `load > 0.75` to `nextPrime(2x)`; `isPrime` uses `6k±1`.
 * **Timer** (`include/timer.hpp`): `timeIt` ms, `benchmark(work, 5)`
   best-of-5, `printTaskDuration` prints `\nTook: Xms.`
 * **Benchmark** (`src/main.cpp:11-63`, option `0`): auto-loads CSV if empty,
-  picks `first / random / last` phones, times linear vs hash 5 runs each.
+  picks `first / middle / random / last / miss` phones (`miss` is
+  `0000000000`, not in dataset — true worst case for hash/binary), times
+  linear vs hash vs binary (sorted index) 5 runs each.
 
 ---
 
@@ -103,7 +112,8 @@ above.
 ### D.1 What is being compared
 
 Same handwritten algorithm, same input, same machine: a hand-rolled chained
-hash table and a hand-rolled linear scan over `contacts_100k.csv`
+hash table, a hand-rolled linear scan, and a hand-rolled binary search on a
+maintained sorted phone index over `contacts_100k.csv`
 (n=100000) in all five languages — no `dict`, `map`, or `HashMap` anywhere.
 This is a *language + runtime* comparison of equivalent code. It is
 deliberately **not** hand-written C++ vs Python's built-in `dict`: that
@@ -146,9 +156,35 @@ marks.
 Best-of-5 wall-clock ms at the `last` position (index n−1, the same
 position in every language) across n = 50, 10k, 100k, 200k, 500k, 1M —
 the runtime growth curves of all 5 languages overlaid on one graph
-(log-log). Linear search grows ~linearly with n; hash lookup stays flat.
+(log-log). Linear search grows ~linearly with n; hash lookup stays flat
+(~O(1)) and binary search stays nearly flat (O(log n)) — both
+position-independent, unlike linear.
 
 ![Runtime vs n across 5 languages](../benchmark/plot-runtime-vs-n.png)
+
+Per-language view — one chart per language, every algo (linear / hash /
+binary) on every case (first / middle / random / last / miss) vs n, log-log. Color =
+algo, linestyle = case (first solid, middle dashdot, random dashed, last dotted, miss solid). Each
+PNG answers "how fast is *this* language on every algorithm" without
+cross-language clutter:
+
+![cpp: every algo on every case](../benchmark/plot-unified-cpp.png)
+![python: every algo on every case](../benchmark/plot-unified-python.png)
+![go: every algo on every case](../benchmark/plot-unified-go.png)
+![js: every algo on every case](../benchmark/plot-unified-js.png)
+![java: every algo on every case](../benchmark/plot-unified-java.png)
+
+Per-language best / avg / worst per algo — one chart per language, x=algo,
+3 bars `best / avg / worst` at the largest n (log y). `best=min(hit)`,
+`avg=mean(hit)`, `worst=max(hit,miss)` where `hit=first/middle/random/last`.
+This is the "best worst and avg case on each algo" view: linear fans out
+(best≪avg≪worst), hash/binary stay flat.
+
+![cpp: best/avg/worst per algo](../benchmark/plot-per-algo-cpp.png)
+![python: best/avg/worst per algo](../benchmark/plot-per-algo-python.png)
+![go: best/avg/worst per algo](../benchmark/plot-per-algo-go.png)
+![js: best/avg/worst per algo](../benchmark/plot-per-algo-js.png)
+![java: best/avg/worst per algo](../benchmark/plot-per-algo-java.png)
 
 ### D.5 Memory profiling — bar chart
 
@@ -170,13 +206,16 @@ Java is slow on run 1 but fast on run 5 (JIT compilation).
 
 ### D.7 Measurement method
 
-Option `0` is unchanged: per target (`first/random/last`) it prints best-of-5:
+Option `0` now covers 5 targets (`first/middle/random/last/miss`) and prints best-of-5 per target:
 
 ```text
 [role index N phone P]
   Linear best of 5: Xms. (index N)
   Hash best of 5: Yms. (index N, position-independent)
+  Binary best of 5: Xms. (index N, sorted index, position-independent)
 ```
+
+`miss` uses phone `0000000000` (not in dataset) — true worst case for hash (full chain) and binary (log n probes); for linear it is also worst (full scan). `middle` is `n/2` — linear avg and binary best (1 probe).
 
 Run the full matrix:
 
@@ -184,8 +223,9 @@ Run the full matrix:
 make run-benchmark   # all 5 langs, every run -> benchmark/results.csv (overwrite)
 ```
 
-Each program also supports batch mode directly (same 30 rows each —
-compile the C++ demo first):
+Each program also supports batch mode directly (75 rows each —
+first/middle/random/last/miss × linear/hash/binary × 5 runs; compile the C++ demo
+first):
 
 ```sh
 make  # builds ./build/cpp/demo; other languages need no build step
@@ -198,33 +238,44 @@ python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append 
 
 `benchmark/results.csv` columns:
 `language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone`
-— 150 rows (5 langs × first/random/last × linear/hash × 5 runs).
-Batch mode seeds RNG with 42 so the `random` target is reproducible
+— 375 rows single-size (5 langs × 5 cases × 3 algos × 5 runs), 2250 rows
+multi-size (× 6 sizes). Batch mode seeds RNG with 42 so the `random` target is reproducible
 *within* a language (each language's RNG differs, so targets differ
 across languages — `target_index,phone` columns make that auditable).
-Option `0` stays unseeded.
+Option `0` stays unseeded. `miss` has `target_index=-1`.
 
 `make run-benchmark` also draws `benchmark/plot.png` at the end via
-`benchmark/plot.py` (two linear-scale panels — linear scan | hash lookup —
+`benchmark/plot.py` (three linear-scale panels — linear scan | hash lookup | binary search —
 best of 5 per cell with value labels; split axes so bar heights stay in
-true ratio and the µs hash bars aren't flattened by the ms linear bars; needs matplotlib —
+true ratio and the µs hash/binary bars aren't flattened by the ms linear bars; needs matplotlib —
 without it the plot step prints `plot skipped` and the CSV is still
 produced). The script parses every language's `ms` float format
 (C++ `setprecision(17)`, Python `repr`, Go `%g`, JS double, Java
 `Double.toString`) defensively: bad rows are skipped with a warning,
-never a crash.
+never a crash. `make run-benchmark-sizes` additionally draws
+`plot-runtime-vs-n.png` (line chart), `plot-unified-*.png` (every algo on every case per language),
+and `plot-per-algo-*.png` (best/avg/worst per algo).
 
-![Phone search benchmark: linear vs hash across 5 languages](../benchmark/plot.png)
+![Phone search benchmark: linear vs hash vs binary across 5 languages](../benchmark/plot.png)
 
 <details>
 <summary>Per-group charts (one image per case × algo, horizontal, fastest first)</summary>
 
 ![first-linear](../benchmark/plot-first-linear.png)
 ![first-hash](../benchmark/plot-first-hash.png)
+![first-binary](../benchmark/plot-first-binary.png)
+![middle-linear](../benchmark/plot-middle-linear.png)
+![middle-hash](../benchmark/plot-middle-hash.png)
+![middle-binary](../benchmark/plot-middle-binary.png)
 ![random-linear](../benchmark/plot-random-linear.png)
 ![random-hash](../benchmark/plot-random-hash.png)
+![random-binary](../benchmark/plot-random-binary.png)
 ![last-linear](../benchmark/plot-last-linear.png)
 ![last-hash](../benchmark/plot-last-hash.png)
+![last-binary](../benchmark/plot-last-binary.png)
+![miss-linear](../benchmark/plot-miss-linear.png)
+![miss-hash](../benchmark/plot-miss-hash.png)
+![miss-binary](../benchmark/plot-miss-binary.png)
 
 </details>
 
@@ -263,8 +314,10 @@ language has its own RNG, so the index differs per language — check
 languages.
 
 **What you may claim.** The portable, algorithmic claim is the *trend
-within each language*: linear grows first→last, hash stays ~constant —
-it holds in all five, which is the DSA point. Cross-language magnitude
+within each language*: linear grows first→last, hash/binary stay ~constant —
+it holds in all five, which is the DSA point. Binary costs O(log n) probes
+against a sorted phone copy (built once at load, kept sorted on insert),
+so it tracks hash closely while linear diverges. Cross-language magnitude
 differences are runtime properties; cite them only with the mechanism
 above, plus your machine spec (CPU/RAM, OS, toolchains, commit).
 
@@ -275,16 +328,17 @@ above, plus your machine spec (CPU/RAM, OS, toolchains, commit).
 
 ### D.10 Measurement tables
 
-Best-of-5 wall-clock ms per target (`first / random / last`) from
-`benchmark/results.csv`, n=100000, commit `8b9be08`.
+Best-of-5 wall-clock ms per target (`first / random / last`) from a fresh
+100k run on this machine (uncommitted binary-port code; re-run
+`make run-benchmark` after committing to refresh `benchmark/results.csv`).
 
-| Run | Dataset | CPU/RAM, OS | Toolchain | Commit | n | target | Linear runs (ms) | Hash runs (ms) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C++ ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `g++ 16.2.1`, `-O2` | `8b9be08` | 100000 | first/random/last | 0.000019 / 0.071610 / 0.251542 | 0.000036 / 0.000038 / 0.000034 |
-| py ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `Python 3.14.7` | `8b9be08` | 100000 | first/random/last | 0.000215 / 3.269215 / 3.759008 | 0.001269 / 0.001261 / 0.001235 |
-| go ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `go1.27.1` | `8b9be08` | 100000 | first/random/last | 0.000020 / 0.136131 / 0.224993 | 0.000032 / 0.000035 / 0.000035 |
-| js ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `node v26.7.0` | `8b9be08` | 100000 | first/random/last | 0.000310 / 0.504754 / 0.818376 | 0.000908 / 0.000821 / 0.000813 |
-| java ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `javac 27` | `8b9be08` | 100000 | first/random/last | 0.000670 / 0.575658 / 1.622943 | 0.000411 / 0.000463 / 0.000422 |
+| Run | Dataset | CPU/RAM, OS | Toolchain | Commit | n | target | Linear runs (ms) | Hash runs (ms) | Binary runs (ms) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C++ ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `g++ 16.2.1`, `-O2` | uncommitted | 100000 | first/random/last | 0.00002 / 0.089025 / 0.365182 | 0.000037 / 0.000037 / 0.000042 | 0.000111 / 0.000125 / 0.000189 |
+| py ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `Python 3.14.7` | uncommitted | 100000 | first/random/last | 0.000225 / 4.03942 / 5.07507 | 0.001378 / 0.001283 / 0.001919 | 0.002869 / 0.002241 / 0.003748 |
+| go ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `go1.27.1` | uncommitted | 100000 | first/random/last | 0.000031 / 0.323417 / 0.441653 | 0.00005 / 0.000039 / 0.000046 | 0.000221 / 0.00023 / 0.000242 |
+| js ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `node v26.7.0` | uncommitted | 100000 | first/random/last | 0.000311 / 0.469038 / 0.933914 | 0.000938 / 0.00092 / 0.000743 | 0.001878 / 0.001655 / 0.00149 |
+| java ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `javac 27` | uncommitted | 100000 | first/random/last | 0.000659 / 0.698453 / 1.71081 | 0.000497 / 0.000475 / 0.000566 | 0.002898 / 0.001821 / 0.002278 |
 
 ### D.11 Test conditions (machine & toolchain)
 
