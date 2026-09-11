@@ -1,7 +1,11 @@
 #include <cstddef>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "../include/phonebook.hpp"
 #include "../include/timer.hpp"
@@ -62,6 +66,95 @@ void runSearchBenchmark(PhoneBook& phonebook, const string& csvInput) {
     cout << "Linear: first=best, last=worst. Hash: ~constant regardless of position.\n";
 }
 
+static string utcTimestamp() {
+    auto now = std::time(nullptr);
+    std::tm tm{};
+#if defined(_WIN32) || defined(_WIN64)
+    gmtime_s(&tm, &now);
+#else
+    gmtime_r(&now, &tm);
+#endif
+    char buf[32];
+    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &tm);
+    return string(buf);
+}
+
+// Batch benchmark: same first/random/last x linear/hash targets as option 0,
+// but writes EVERY run (5 each = 30 rows) to CSV instead of printing best.
+// Seeded RNG (42) so the `random` target is reproducible. Option 0 untouched.
+int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
+                            const string& outCsv, bool append) {
+    int loaded = phonebook.loadfromCSV(csvInput);
+    if (loaded == -1) {
+        cerr << "Cannot open file: " << csvInput << "\n";
+        return 1;
+    }
+    if (phonebook.size() == 0) {
+        cerr << "No contacts to benchmark.\n";
+        return 1;
+    }
+
+    std::size_t n = phonebook.size();
+    std::size_t indices[3];
+    const char* cases[3] = {"first", "random", "last"};
+    indices[0] = 0;
+    indices[2] = n - 1;
+    if (n <= 2) {
+        indices[1] = n - 1;
+    } else {
+        std::mt19937 gen(42);
+        std::uniform_int_distribution<std::size_t> dist(0, n - 1);
+        indices[1] = dist(gen);
+    }
+
+    bool needHeader = true;
+    if (append) {
+        ifstream probe(outCsv);
+        if (probe.good()) {
+            string line;
+            if (std::getline(probe, line) && !line.empty()) {
+                needHeader = false;
+            }
+        }
+    }
+    ofstream out;
+    out.open(outCsv, append ? (ios::out | ios::app) : (ios::out | ios::trunc));
+    if (!out.is_open()) {
+        cerr << "Cannot open output file: " << outCsv << "\n";
+        return 1;
+    }
+    if (needHeader) {
+        out << "language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone\n";
+    }
+    string timestamp = utcTimestamp();
+    string toolchain = string("g++ ") + __VERSION__;
+    const int repeats = 5;
+    for (int k = 0; k < 3; ++k) {
+        std::size_t targetIdx = indices[k];
+        string phone = phonebook.getPhoneAt(targetIdx);
+        if (phone.empty()) {
+            continue;
+        }
+        for (int a = 0; a < 2; ++a) {
+            const char* algo = (a == 0) ? "linear" : "hash";
+            for (int r = 1; r <= repeats; ++r) {
+                double t;
+                if (a == 0) {
+                    t = timeIt([&]() { phonebook.searchLinearByPhone(phone); });
+                } else {
+                    t = timeIt([&]() { phonebook.searchHashByPhone(phone); });
+                }
+                out << "cpp," << csvInput << "," << n << "," << cases[k] << "," << algo
+                    << "," << r << "," << std::setprecision(17) << t << "," << timestamp
+                    << ",\"" << toolchain << "\"," << targetIdx << "," << phone << "\n";
+            }
+        }
+    }
+    out.close();
+    cout << "Wrote 30 rows -> " << outCsv << " (" << n << " contacts).\n";
+    return 0;
+}
+
 void printMenu() {
     cout << "\n";
     cout << "========================================\n";
@@ -86,9 +179,26 @@ void printMenu() {
 int main(int argc, char* argv[]) {
     string csvInput;
     string csvOutput;
-    csvInput = (argc > 1) ? argv[1] : "data/contacts_100k.csv";
-    csvOutput = (argc > 2) ? argv[2] : csvInput;
+    string benchCsv;
+    bool benchAppend = false;
+    vector<string> positionals;
+    for (int i = 1; i < argc; ++i) {
+        string a = argv[i];
+        if (a == "--benchmark-csv" && i + 1 < argc) {
+            benchCsv = argv[++i];
+        } else if (a == "--append") {
+            benchAppend = true;
+        } else {
+            positionals.push_back(a);
+        }
+    }
+    csvInput = (!positionals.empty()) ? positionals[0] : "data/contacts_100k.csv";
+    csvOutput = (positionals.size() > 1) ? positionals[1] : csvInput;
     PhoneBook phonebook;
+
+    if (!benchCsv.empty()) {
+        return runSearchBenchmarkBatch(phonebook, csvInput, benchCsv, benchAppend);
+    }
 
     while (true) {
         printMenu();
