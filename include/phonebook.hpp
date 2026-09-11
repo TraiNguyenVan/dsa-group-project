@@ -1,6 +1,7 @@
 #pragma once
 
 #include "contact.hpp"
+#include "hashtable.hpp"
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -8,26 +9,13 @@
 class PhoneBook {
 private:
     std::vector<Contact> contacts;
-    std::vector<HashNode*> buckets;
-    std::size_t tableSize;
-    std::size_t numElements;
+    HashTable table;
 
     static std::string toLower(const std::string& s);
     static bool isAllDigits(const std::string& s);
-    int hashFunction(const std::string& phone) const;
-    static std::size_t hashForSize(const std::string& phone, std::size_t mod);
-
-    void rehash(std::size_t newSize);
-    void maybeRehash();
-    static bool isPrime(std::size_t n);
-    static std::size_t nextPrime(std::size_t n);
 
 public:
-    static constexpr std::size_t DEFAULT_TABLE_SIZE = 101;
-    static constexpr double MAX_LOAD_FACTOR = 0.75;
-
-    explicit PhoneBook(std::size_t initialCapacity = DEFAULT_TABLE_SIZE);
-    ~PhoneBook();
+    explicit PhoneBook(std::size_t initialCapacity = HashTable::DEFAULT_TABLE_SIZE);
 
     PhoneBook(const PhoneBook&) = delete;
     PhoneBook& operator=(const PhoneBook&) = delete;
