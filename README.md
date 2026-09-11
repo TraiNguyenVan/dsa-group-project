@@ -207,21 +207,12 @@ never a crash.
 
 ![Phone search benchmark: linear vs hash across 5 languages](benchmark/plot.png)
 
-<details>
-<summary>Per-group charts (one image per case × algo, horizontal, fastest first)</summary>
-
-<!-- PLOT-SPLITS:START -->
-
 ![first-linear](benchmark/plot-first-linear.png)
 ![first-hash](benchmark/plot-first-hash.png)
 ![random-linear](benchmark/plot-random-linear.png)
 ![random-hash](benchmark/plot-random-hash.png)
 ![last-linear](benchmark/plot-last-linear.png)
 ![last-hash](benchmark/plot-last-hash.png)
-
-<!-- PLOT-SPLITS:END -->
-
-</details>
 
 ### Reading the chart fairly
 
