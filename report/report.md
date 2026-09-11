@@ -280,11 +280,11 @@ Copy this table and fill from `benchmark/results.csv` + your machine spec:
 
 | Run | Dataset | CPU/RAM, OS | Toolchain | Commit | n | target | Linear runs (ms) | Hash runs (ms) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C++ ex | `contacts_100k` | | `g++ --version`, `-O2` | | 100000 | first/random/last | | |
-| py ex | `contacts_100k` | | `python3 --version` | | 100000 | first/random/last | | |
-| go ex | `contacts_100k` | | `go version` | | 100000 | first/random/last | | |
-| js ex | `contacts_100k` | | `node -v` | | 100000 | first/random/last | | |
-| java ex | `contacts_100k` | | `javac 27` | | 100000 | first/random/last | | |
+| C++ ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `g++ 16.2.1`, `-O2` | `8b9be08` | 100000 | first/random/last | | |
+| py ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `Python 3.14.7` | `8b9be08` | 100000 | first/random/last | | |
+| go ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `go1.27.1` | `8b9be08` | 100000 | first/random/last | | |
+| js ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `node v26.7.0` | `8b9be08` | 100000 | first/random/last | | |
+| java ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `javac 27` | `8b9be08` | 100000 | first/random/last | | |
 
 ### D.11 Test conditions (machine & toolchain)
 
@@ -302,7 +302,7 @@ A measurement without its conditions is not a measurement. Same table as
 | Node | v26.7.0 |
 | Java | javac 27 (JDK 27) |
 | Dataset | `data/contacts_100k.csv` (n=100000), seed 42 |
-| Commit | <!-- TODO: git rev-parse HEAD (added in next commit) --> |
+| Commit | `8b9be0826b14e05636361382a80029c5bef6b61b` |
 
 ---
 
