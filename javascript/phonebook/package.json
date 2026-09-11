@@ -1,0 +1,13 @@
+{
+  "name": "phonebook",
+  "version": "1.0.0",
+  "description": "Phone Book CLI - faithful port of src/main.cpp",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js ../../data/contacts_100k.csv"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

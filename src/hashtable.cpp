@@ -102,6 +102,42 @@ int HashTable::hashSearch(const std::string& phone) const {
     return -1;
 }
 
+//--------------- Delete (O(1) average) ------------------------
+bool HashTable::hashDelete(const std::string& phone) {
+    std::size_t idx = (hashFunction(phone));
+    HashNode* node = buckets[idx];
+    HashNode* prev = nullptr;
+    while (node != nullptr) {
+        if (node->phone == phone) {
+            if (prev != nullptr) {
+                prev->next = node->next;
+            } else {
+                buckets[idx] = node->next;
+            }
+            delete node;
+            --numElements;
+            return true;
+        }
+        prev = node;
+        node = node->next;
+    }
+    return false;
+}
+
+//--------------- Clear (drop all entries, keep bucket count) --------
+void HashTable::clear() {
+    for (std::size_t i = 0; i < numBuckets; ++i) {
+        HashNode* node = buckets[i];
+        while (node != nullptr) {
+            HashNode* tmp = node;
+            node = node->next;
+            delete tmp;
+        }
+        buckets[i] = nullptr;
+    }
+    numElements = 0;
+}
+
 //------------------Load Factor---------------
 double HashTable::loadFactor() const {
     return static_cast<double>(numElements) / static_cast<double>(numBuckets);
