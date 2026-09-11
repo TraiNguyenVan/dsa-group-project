@@ -13,9 +13,8 @@ results are comparable (`contacts_50` ⊂ `contacts_100k` ⊂ `contacts_200k` �
 
 Format: `Name,Phone` per line (no header, LF line endings). `Phone` is a
 unique 10-digit string (digits only): one of the Vietnamese mobile prefixes
-below plus 7 random digits (e.g. `0981234567`). Names are Vietnamese
-`Family Middle Given` (e.g. `Nguyen Van An`), with ~10% in quoted
-`"Family, Middle Given"` form to exercise the CSV quote path.
+below plus 7 random digits (e.g. `0981234567`). Names are plain Vietnamese
+`Family Middle Given` (e.g. `Nguyen Van An`), no commas or quotes.
 
 Valid prefixes: `096, 097, 098, 086, 032, 033, 034, 035, 036, 037, 038,
 039, 091, 094, 088, 081, 082, 083, 084, 085, 090, 093, 089, 070, 076,
