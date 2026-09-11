@@ -1,7 +1,7 @@
 'use strict';
 
 // Faithful port of src/main.cpp - Phone Book CLI (Node.js).
-const readline = require('node:readline/promises');
+const readline = require('node:readline');
 const { stdin: input, stdout: output } = require('node:process');
 const { PhoneBook } = require('./phonebook');
 const { benchmark, printTaskDuration } = require('./timer');
@@ -70,7 +70,8 @@ function printMenu() {
   console.log('5. Print all contacts');
   console.log('6. Print contact by index');
   console.log('7. Show number of contacts');
-  console.log('8. Exit');
+  console.log('8. Delete contact by phone');
+  console.log('9. Exit');
   console.log('========================================');
 }
 
@@ -90,18 +91,32 @@ async function main() {
   const csvOutput = args.length > 1 ? args[1] : csvInput;
   const phonebook = new PhoneBook();
 
-  const rl = readline.createInterface({ input, output });
-  // rl.question rejects with AbortError / returns null on EOF; treat as goodbye.
+  // Line queue via async iterator: works for both TTY and piped stdin+piped
+  // stdout (rl.question breaks on 2nd read when stdout is piped).
+  const rl = readline.createInterface({ input, terminal: false });
+  const lineIter = rl[Symbol.asyncIterator]();
+  let eof = false;
   async function ask(prompt) {
+    if (eof) return null;
     try {
       output.write(prompt);
-      const ans = await rl.question('');
-      return ans;
+    } catch (_) {}
+    try {
+      const { value, done } = await lineIter.next();
+      if (done) {
+        eof = true;
+        return null;
+      }
+      if (value === undefined) return null;
+      // Strip one trailing \r (Windows pipe); choice parsing trims anyway.
+      if (value.endsWith('\r')) return value.slice(0, -1);
+      return value;
     } catch (e) {
+      eof = true;
       return null;
     }
   }
-  // If stdin is piped and ends, readline closes; detect it.
+  // If stdin ends, readline closes; detect it.
   let closed = false;
   rl.on('close', () => { closed = true; });
 
@@ -214,11 +229,18 @@ async function main() {
     } else if (choice === 7) {
       console.log(`\nNumber of contacts: ${phonebook.size()}`);
     } else if (choice === 8) {
+      const phone = await ask('\nEnter phone number to delete: ');
+      if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+      const result = {};
+      printTaskDuration(() => { result.v = phonebook.deleteContactByPhone(phone); });
+      if (result.v) console.log('Contact deleted successfully.');
+      else console.log('Failed to delete contact.');
+    } else if (choice === 9) {
       console.log('Goodbye');
       try { rl.close(); } catch (_) {}
       return 0;
     } else {
-      console.log('Invalid choice. Please choose from 0 to 8.');
+      console.log('Invalid choice. Please choose from 0 to 9.');
     }
   }
 }

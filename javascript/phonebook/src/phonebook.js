@@ -124,6 +124,21 @@ class PhoneBook {
     return this.hashtable.hashSearch(phone);
   }
 
+  deleteContactByPhone(phone) {
+    // O(n): splice shifts tail + full hash rebuild preserves order.
+    const idx = this.searchHashByPhone(phone);
+    if (idx === -1) {
+      console.log('Phone number not found');
+      return false;
+    }
+    this.contacts.splice(idx, 1);
+    this.hashtable.clear();
+    for (let i = 0; i < this.contacts.length; i++) {
+      this.hashtable.hashInsert(this.contacts[i].phone, i);
+    }
+    return true;
+  }
+
   searchLinearByName(name) {
     const target = PhoneBook.toLower(name);
     for (let i = 0; i < this.contacts.length; i++) {

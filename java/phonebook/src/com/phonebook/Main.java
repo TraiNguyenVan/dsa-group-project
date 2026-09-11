@@ -74,7 +74,8 @@ public class Main {
         System.out.println("5. Print all contacts");
         System.out.println("6. Print contact by index");
         System.out.println("7. Show number of contacts");
-        System.out.println("8. Exit");
+        System.out.println("8. Delete contact by phone");
+        System.out.println("9. Exit");
         System.out.println("========================================");
         System.out.print("Enter your choice: ");
     }
@@ -270,10 +271,27 @@ public class Main {
             } else if (choice == 7) {
                 System.out.println("\nNumber of contacts: " + phonebook.size());
             } else if (choice == 8) {
+                System.out.print("\nEnter phone number to delete: ");
+                String phone;
+                try {
+                    phone = sc.nextLine();
+                } catch (NoSuchElementException e) {
+                    System.out.println("\nGoodbye");
+                    return;
+                }
+                final String fPhone = phone;
+                final boolean[] result = {false};
+                Timer.printTaskDuration(() -> result[0] = phonebook.deleteContactByPhone(fPhone));
+                if (result[0]) {
+                    System.out.println("Contact deleted successfully.");
+                } else {
+                    System.out.println("Failed to delete contact.");
+                }
+            } else if (choice == 9) {
                 System.out.println("Goodbye");
                 return;
             } else {
-                System.out.println("Invalid choice. Please choose from 0 to 8.");
+                System.out.println("Invalid choice. Please choose from 0 to 9.");
             }
         }
     }

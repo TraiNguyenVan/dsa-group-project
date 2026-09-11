@@ -76,7 +76,8 @@ void printMenu() {
     cout << "5. Print all contacts\n";
     cout << "6. Print contact by index\n";
     cout << "7. Show number of contacts\n";
-    cout << "8. Exit\n";
+    cout << "8. Delete contact by phone\n";
+    cout << "9. Exit\n";
 
     cout << "========================================\n";
     cout << "Enter your choice: ";
@@ -234,11 +235,22 @@ int main(int argc, char* argv[]) {
             cout << "\nNumber of contacts: " << phonebook.size()
                  << "\n";
         } else if (choice == 8) {
+            string phone;
+            cout << "\nEnter phone number to delete: ";
+            getline(cin, phone);
+            bool result;
+            printTaskDuration([&]() { result = phonebook.deleteContactByPhone(phone); });
+            if (result) {
+                cout << "Contact deleted successfully.\n";
+            } else {
+                cout << "Failed to delete contact.\n";
+            }
+        } else if (choice == 9) {
             cout << "Goodbye\n";
             return 0;
         } else {
             cout << "Invalid choice. "
-                 << "Please choose from 0 to 8.\n";
+                 << "Please choose from 0 to 9.\n";
         }
     }
     return 0;

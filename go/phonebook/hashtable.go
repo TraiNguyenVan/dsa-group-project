@@ -104,6 +104,49 @@ func (t *HashTable) HashSearch(phone string) int {
 	return -1
 }
 
+// HashDelete unlinks the node for phone; true if found. O(1) average.
+func (t *HashTable) HashDelete(phone string) bool {
+	idx := t.hashFunction(phone)
+	node := t.buckets[idx]
+	var prev *HashNode
+	for node != nil {
+		if node.Phone == phone {
+			if prev != nil {
+				prev.Next = node.Next
+			} else {
+				t.buckets[idx] = node.Next
+			}
+			t.numElements--
+			return true
+		}
+		prev = node
+		node = node.Next
+	}
+	return false
+}
+
+// HashUpdate repoints an existing phone entry at a new index.
+// Kept for teaching chained-hash update; PhoneBook delete (O(n) rebuild)
+// does not use it.
+func (t *HashTable) HashUpdate(phone string, newContactIndex int) bool {
+	idx := t.hashFunction(phone)
+	for node := t.buckets[idx]; node != nil; node = node.Next {
+		if node.Phone == phone {
+			node.ContactIndex = newContactIndex
+			return true
+		}
+	}
+	return false
+}
+
+// Clear drops all entries but keeps the bucket count.
+func (t *HashTable) Clear() {
+	for i := range t.buckets {
+		t.buckets[i] = nil
+	}
+	t.numElements = 0
+}
+
 // LoadFactor returns numElements / numBuckets.
 func (t *HashTable) LoadFactor() float64 {
 	return float64(t.numElements) / float64(t.numBuckets)

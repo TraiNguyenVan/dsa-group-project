@@ -23,6 +23,10 @@ public:
     // write in public to call directly
     void hashInsert(const std::string& phone, int contactIndex);
     int hashSearch(const std::string& phone) const;
+    // O(1) average chained delete: unlink node for phone, return true if found
+    bool hashDelete(const std::string& phone);
+    // drop all entries (keeps bucket count); used to rebuild index after O(n) vector erase
+    void clear();
     double loadFactor() const;
 
 private:

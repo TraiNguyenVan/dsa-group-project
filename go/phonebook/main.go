@@ -73,7 +73,8 @@ func printMenu() {
 	fmt.Println("5. Print all contacts")
 	fmt.Println("6. Print contact by index")
 	fmt.Println("7. Show number of contacts")
-	fmt.Println("8. Exit")
+	fmt.Println("8. Delete contact by phone")
+	fmt.Println("9. Exit")
 	fmt.Println("========================================")
 	fmt.Print("Enter your choice: ")
 }
@@ -292,10 +293,24 @@ func main() {
 		case 7:
 			fmt.Printf("\nNumber of contacts: %d\n", phonebook.Size())
 		case 8:
+			fmt.Print("\nEnter phone number to delete: ")
+			phone, ok := readRawLine(reader)
+			if !ok {
+				fmt.Println("\nGoodbye")
+				return
+			}
+			result := false
+			PrintTaskDuration(func() { result = phonebook.DeleteContactByPhone(phone) })
+			if result {
+				fmt.Println("Contact deleted successfully.")
+			} else {
+				fmt.Println("Failed to delete contact.")
+			}
+		case 9:
 			fmt.Println("Goodbye")
 			return
 		default:
-			fmt.Println("Invalid choice. Please choose from 0 to 8.")
+			fmt.Println("Invalid choice. Please choose from 0 to 9.")
 		}
 	}
 }

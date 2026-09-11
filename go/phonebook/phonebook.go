@@ -145,6 +145,21 @@ func (p *PhoneBook) InsertContact(name, phone string) bool {
 	return true
 }
 
+// DeleteContactByPhone erases + rebuilds the hash index. O(n), preserves order.
+func (p *PhoneBook) DeleteContactByPhone(phone string) bool {
+	idx := p.SearchHashByPhone(phone)
+	if idx == -1 {
+		fmt.Println("Phone number not found")
+		return false
+	}
+	p.contacts = append(p.contacts[:idx], p.contacts[idx+1:]...)
+	p.hashtable.Clear()
+	for i, c := range p.contacts {
+		p.hashtable.HashInsert(c.Phone, i)
+	}
+	return true
+}
+
 // SearchLinearByPhone linear scan by phone.
 func (p *PhoneBook) SearchLinearByPhone(phone string) int {
 	for i, c := range p.contacts {

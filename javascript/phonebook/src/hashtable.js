@@ -73,6 +73,41 @@ class HashTable {
     return -1;
   }
 
+  hashDelete(phone) {
+    const idx = this.hashFunction(phone);
+    let node = this.buckets[idx];
+    let prev = null;
+    while (node !== null) {
+      if (node.phone === phone) {
+        if (prev === null) this.buckets[idx] = node.next;
+        else prev.next = node.next;
+        this.numElements -= 1;
+        return true;
+      }
+      prev = node;
+      node = node.next;
+    }
+    return false;
+  }
+
+  hashUpdate(phone, newContactIndex) {
+    const idx = this.hashFunction(phone);
+    let node = this.buckets[idx];
+    while (node !== null) {
+      if (node.phone === phone) {
+        node.contactIndex = newContactIndex;
+        return true;
+      }
+      node = node.next;
+    }
+    return false;
+  }
+
+  clear() {
+    this.buckets = new Array(this.numBuckets).fill(null);
+    this.numElements = 0;
+  }
+
   loadFactor() {
     return this.numElements / this.numBuckets;
   }

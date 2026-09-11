@@ -57,7 +57,8 @@ Menu (`src/main.cpp:65-83`):
 5. Print all contacts
 6. Print contact by index
 7. Show number of contacts
-8. Exit
+8. Delete contact by phone (O(n) erase + rebuild, preserves order)
+9. Exit
 ```
 
 Bad input prints `Invalid input.` and reprompts. EOF prints `Goodbye`.
@@ -72,6 +73,9 @@ Bad input prints `Invalid input.` and reprompts. EOF prints `Goodbye`.
   non-digit phone (`Invalid phone number`), reject duplicate phone via
   hash (`Phone number is already exist`), else store
   `CapitalizeFirst(ToLower(name))` (ASCII-only) + index in hash table.
+* **Delete** (`deleteContactByPhone`, option `8`): O(n) — vector erase
+  shifts the tail + full hash rebuild so order is preserved (usual
+  DSA-course version). Missing phone prints `Phone number not found`.
 * **Search:** `searchLinearByPhone` exact scan, `searchHashByPhone` chained
   lookup, `searchLinearByName` case-insensitive scan via `toLower`.
 * **Hash** (`src/hashtable.cpp`): `hash = hash*31 + (unsigned char)(c-'0')`
