@@ -163,6 +163,22 @@ bool PhoneBook::insertContact(const std::string& name, const std::string& phone)
     return true;
 };
 
+// O(n): vector erase shifts the tail + full hash rebuild so order is preserved
+// (usual DSA-course version; swap-with-last would be O(1) but reorders).
+bool PhoneBook::deleteContactByPhone(const std::string& phone) {
+    int idx = searchHashByPhone(phone);
+    if (idx == -1) {
+        std::cout << "Phone number not found\n";
+        return false;
+    }
+    contacts.erase(contacts.begin() + idx);
+    hashtable.clear();
+    for (int i = 0; i < static_cast<int>(contacts.size()); ++i) {
+        hashtable.hashInsert(contacts[static_cast<std::size_t>(i)].phone, i);
+    }
+    return true;
+};
+
 //------------------ Utility function --------------------
 // Check if the string consists entirely of digits (used for phone number validation);
 // returns false if the string is empty or contains any character other than '0'-'9'

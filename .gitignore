@@ -8,6 +8,10 @@ __pycache__/
 node_modules/
 *.log
 
+# Lang ports build outputs
+java/phonebook/out/
+/tmp/jout/
+
 # Data (generated or large)
 # data/*.csv
 data/*.bin

@@ -92,3 +92,16 @@ add_demo_run_target(run-50 data/contacts_50.csv)
 add_demo_run_target(run-100k data/contacts_100k.csv)
 add_demo_run_target(run-200k data/contacts_200k.csv)
 add_demo_run_target(run-1m data/contacts_1m.csv)
+
+# Batch benchmark (C++ rows only): every run -> benchmark/results-cpp.csv
+# + plot-cpp.png (needs matplotlib; `make run-benchmark` skips plotting
+# gracefully instead). The full 5-language matrix lives in `make run-benchmark`.
+add_custom_target(run-benchmark-cpp
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/benchmark"
+  COMMAND $<TARGET_FILE:demo> --benchmark-csv "${CMAKE_SOURCE_DIR}/benchmark/results-cpp.csv" "${CMAKE_SOURCE_DIR}/data/contacts_100k.csv"
+  COMMAND ${CMAKE_COMMAND} -E env python3 "${CMAKE_SOURCE_DIR}/benchmark/plot.py" "${CMAKE_SOURCE_DIR}/benchmark/results-cpp.csv" "${CMAKE_SOURCE_DIR}/benchmark/plot-cpp.png"
+  DEPENDS demo
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  COMMENT "Writing C++ benchmark rows to benchmark/results-cpp.csv"
+  VERBATIM
+)
