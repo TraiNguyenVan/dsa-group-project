@@ -114,6 +114,24 @@ cmake --build build
 cmake --build build --target run-50
 ```
 
+### CMake presets (`CMakePresets.json`, needs CMake 3.21+)
+
+| OS | Preset | When to use |
+| --- | --- | --- |
+| Windows (MSYS2 MinGW, no Visual Studio) | `mingw-release` | default choice on Windows |
+| Windows (MSYS2 MinGW) | `mingw-debug` | debugging (`-g`, no optimisation) |
+| Linux / macOS (or Windows + Visual Studio) | `default` | uses CMake's default generator |
+
+```sh
+cmake --list-presets                # show available configure presets
+cmake --preset mingw-release        # configure (Windows MinGW)
+cmake --build --preset mingw-release
+./build/demo data/contacts_50.csv   # build/demo.exe on Windows
+
+cmake --preset default              # configure (Linux/macOS)
+cmake --build --preset default
+```
+
 CLI args: `demo [csvInput] [csvOutput]`.
 Default `csvInput = data/contacts_100k.csv`, `csvOutput = csvInput`.
 

@@ -4,6 +4,8 @@
 # Usage (any OS: Linux, macOS, Windows):
 #   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release  # configure once
 #   cmake --build build                             # build the demo binary
+#   cmake --preset mingw-release                     # Windows MinGW shortcut (see CMakePresets.json)
+#   cmake --build --preset mingw-release             # build via the preset
 #   cmake --build build --target run-50             # build + run on 50-row CSV
 #   ./build/demo data/contacts_100k.csv             # run manually (build/demo.exe on Windows)
 #
