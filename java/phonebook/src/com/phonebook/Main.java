@@ -1,0 +1,280 @@
+package com.phonebook;
+
+import java.util.NoSuchElementException;
+import java.util.Random;
+import java.util.Scanner;
+
+// Faithful port of src/main.cpp - Phone Book CLI.
+public class Main {
+
+    static void runSearchBenchmark(PhoneBook phonebook, String csvInput) {
+        if (phonebook.size() == 0) {
+            System.out.println("Phonebook empty, auto-loading from: " + csvInput);
+            int loaded = phonebook.loadfromCSV(csvInput);
+            if (loaded == -1) {
+                System.out.println("Cannot open file.");
+                return;
+            }
+            if (phonebook.size() == 0) {
+                System.out.println("No contacts to benchmark. Load contacts first (option 1).");
+                return;
+            }
+            System.out.println("Auto-loaded " + loaded + " contacts.");
+        }
+
+        int n = phonebook.size();
+        String[] labels = {
+            "first (linear best case)",
+            "random (linear average case)",
+            "last (linear worst case)"
+        };
+        int[] indices = new int[3];
+        indices[0] = 0;
+        indices[2] = n - 1;
+        if (n <= 2) {
+            indices[1] = n - 1;
+        } else {
+            Random rng = new Random();
+            indices[1] = rng.nextInt(n);
+        }
+
+        System.out.println("\nBenchmarking phone search (linear cases: first=best / random=average / last=worst; "
+                + "hash is ~O(1) in all cases)"
+                + " (" + n + " contacts, 5 runs each, best reported).");
+
+        for (int k = 0; k < 3; k++) {
+            int targetIdx = indices[k];
+            String phone = phonebook.getPhoneAt(targetIdx);
+            if (phone.isEmpty()) {
+                System.out.println("[" + labels[k] + "] index " + targetIdx + ": cannot pick target.");
+                continue;
+            }
+            final int[] idxLin = {-1};
+            final int[] idxHash = {-1};
+            double linBest = Timer.benchmark(() -> idxLin[0] = phonebook.searchLinearByPhone(phone));
+            double hashBest = Timer.benchmark(() -> idxHash[0] = phonebook.searchHashByPhone(phone));
+
+            System.out.println("[" + labels[k] + " index " + targetIdx + " phone " + phone + "]");
+            System.out.println("  Linear best of 5: " + linBest + "ms. (index " + idxLin[0] + ")");
+            System.out.println("  Hash best of 5: " + hashBest + "ms. (index " + idxHash[0] + ", position-independent)");
+        }
+        System.out.println("Linear: first=best, last=worst. Hash: ~constant regardless of position.");
+    }
+
+    static void printMenu() {
+        System.out.println("");
+        System.out.println("========================================");
+        System.out.println("             PHONE BOOK CLI");
+        System.out.println("========================================");
+        System.out.println("0. Benchmark phone search (5 runs, best)");
+        System.out.println("1. Load contacts from CSV");
+        System.out.println("2. Save contacts to CSV");
+        System.out.println("3. Insert contact");
+        System.out.println("4. Search contact");
+        System.out.println("5. Print all contacts");
+        System.out.println("6. Print contact by index");
+        System.out.println("7. Show number of contacts");
+        System.out.println("8. Exit");
+        System.out.println("========================================");
+        System.out.print("Enter your choice: ");
+    }
+
+    public static void main(String[] args) {
+        String csvInput = args.length > 0 ? args[0] : "data/contacts_100k.csv";
+        String csvOutput = args.length > 1 ? args[1] : csvInput;
+        PhoneBook phonebook = new PhoneBook();
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            printMenu();
+            int choice;
+            if (!sc.hasNext()) {
+                System.out.println("\nGoodbye");
+                return;
+            }
+            if (!sc.hasNextInt()) {
+                sc.nextLine(); // discard bad input
+                System.out.println("Invalid input.");
+                continue;
+            }
+            choice = sc.nextInt();
+            sc.nextLine(); // discard rest of line (mirrors cin.ignore)
+
+            if (choice == 0) {
+                runSearchBenchmark(phonebook, csvInput);
+            } else if (choice == 1) {
+                System.out.println("Loading contacts from: " + csvInput);
+                final int[] result = {0};
+                Timer.printTaskDuration(() -> result[0] = phonebook.loadfromCSV(csvInput));
+                if (result[0] == -1) {
+                    System.out.println("Cannot open file.");
+                } else {
+                    System.out.println("Successfully loaded " + result[0] + " contacts.");
+                }
+            } else if (choice == 2) {
+                System.out.println("\nSaving contacts to: " + csvOutput);
+                final boolean[] result = {false};
+                Timer.printTaskDuration(() -> result[0] = phonebook.savetoCSV(csvOutput));
+                if (result[0]) {
+                    System.out.println("Contacts saved successfully.");
+                } else {
+                    System.out.println("Cannot open output file.");
+                }
+            } else if (choice == 3) {
+                String name;
+                String phone;
+                try {
+                    System.out.print("\nEnter name: ");
+                    name = sc.nextLine();
+                    System.out.print("Enter phone: ");
+                    phone = sc.nextLine();
+                } catch (NoSuchElementException e) {
+                    System.out.println("\nGoodbye");
+                    return;
+                }
+                final boolean[] result = {false};
+                final String fName = name;
+                final String fPhone = phone;
+                Timer.printTaskDuration(() -> result[0] = phonebook.insertContact(fName, fPhone));
+                if (result[0]) {
+                    System.out.println("Contact inserted successfully.");
+                } else {
+                    System.out.println("Failed to insert contact.");
+                }
+            } else if (choice == 4) {
+                System.out.println("");
+                System.out.println("========== Search ==========");
+                System.out.println("1. Search phone - Linear Search");
+                System.out.println("2. Search phone - Hash Search");
+                System.out.println("3. Search name - Linear Search");
+                System.out.println("4. Back");
+                System.out.println("============================");
+                System.out.print("Enter your choice: ");
+                if (!sc.hasNext()) {
+                    System.out.println("\nGoodbye");
+                    return;
+                }
+                if (!sc.hasNextInt()) {
+                    try {
+                        sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    System.out.println("Invalid search choice.");
+                    continue;
+                }
+                int searchChoice = sc.nextInt();
+                try {
+                    sc.nextLine();
+                } catch (NoSuchElementException e) {
+                    System.out.println("\nGoodbye");
+                    return;
+                }
+                if (searchChoice == 1) {
+                    System.out.print("Enter phone number: ");
+                    String phone;
+                    try {
+                        phone = sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    final String fPhone = phone;
+                    final int[] index = {-1};
+                    Timer.printTaskDuration(() -> index[0] = phonebook.searchLinearByPhone(fPhone));
+                    if (index[0] == -1) {
+                        System.out.println("Phone number not found.");
+                    } else {
+                        System.out.println("Phone number found.");
+                        System.out.println("Contact index: " + index[0]);
+                        phonebook.printContact(index[0]);
+                    }
+                } else if (searchChoice == 2) {
+                    System.out.print("Enter phone number: ");
+                    String phone;
+                    try {
+                        phone = sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    final String fPhone = phone;
+                    final int[] index = {-1};
+                    Timer.printTaskDuration(() -> index[0] = phonebook.searchHashByPhone(fPhone));
+                    if (index[0] == -1) {
+                        System.out.println("Phone number not found.");
+                    } else {
+                        System.out.println("Phone number found using Hash Table.");
+                        System.out.println("Contact index: " + index[0]);
+                        phonebook.printContact(index[0]);
+                    }
+                } else if (searchChoice == 3) {
+                    System.out.print("Enter name: ");
+                    String name;
+                    try {
+                        name = sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    final String fName = name;
+                    final int[] index = {-1};
+                    Timer.printTaskDuration(() -> index[0] = phonebook.searchLinearByName(fName));
+                    if (index[0] == -1) {
+                        System.out.println("Name not found.");
+                    } else {
+                        System.out.println("Name found.");
+                        System.out.println("Contact index: " + index[0]);
+                        phonebook.printContact(index[0]);
+                    }
+                } else if (searchChoice == 4) {
+                    System.out.println("Back to main menu.");
+                } else {
+                    System.out.println("Invalid search choice.");
+                }
+            } else if (choice == 5) {
+                System.out.println("");
+                System.out.println("========== Contacts ==========");
+                Timer.printTaskDuration(phonebook::printAll);
+                System.out.println("==============================");
+            } else if (choice == 6) {
+                System.out.print("\nEnter contact index: ");
+                if (!sc.hasNext()) {
+                    System.out.println("\nGoodbye");
+                    return;
+                }
+                if (!sc.hasNextInt()) {
+                    try {
+                        sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    System.out.println("Invalid index.");
+                    continue;
+                }
+                int index = sc.nextInt();
+                try {
+                    sc.nextLine();
+                } catch (NoSuchElementException e) {
+                    System.out.println("\nGoodbye");
+                    return;
+                }
+                final int fIndex = index;
+                final boolean[] result = {false};
+                Timer.printTaskDuration(() -> result[0] = phonebook.printContact(fIndex));
+                if (!result[0]) {
+                    System.out.println("Invalid contact index.");
+                }
+            } else if (choice == 7) {
+                System.out.println("\nNumber of contacts: " + phonebook.size());
+            } else if (choice == 8) {
+                System.out.println("Goodbye");
+                return;
+            } else {
+                System.out.println("Invalid choice. Please choose from 0 to 8.");
+            }
+        }
+    }
+}
