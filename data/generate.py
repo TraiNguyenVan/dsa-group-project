@@ -13,8 +13,7 @@ Output:
     data/contacts_200k.csv    (200,000 rows)
     data/contacts_1m.csv      (1,000,000 rows)
 
-Format: Name,Phone per line. Names with a comma are quoted ("Last, First").
-Phones are unique 10-digit strings (digits only) starting with one of the
+Format: Name,Phone per line. Phones are unique 10-digit strings (digits only) starting with one of the
 Vietnamese mobile prefixes (prefix + 7 random digits, e.g. 0981234567).
 Names are Vietnamese Family Middle Given (e.g. Nguyen Van An).
 """
@@ -59,8 +58,6 @@ DATASETS = [
     ("contacts_1m.csv", 1_000_000),
 ]
 
-QUOTED_FRACTION = 0.10  # ~10% "Last, First" rows, exercises the CSV quote path
-
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Generate phonebook datasets.")
@@ -91,10 +88,7 @@ def main() -> None:
         family = rng.choice(FAMILY_NAMES)
         middle = rng.choice(MIDDLE_NAMES)
         given = rng.choice(GIVEN_NAMES)
-        if rng.random() < QUOTED_FRACTION:
-            name = f"{family}, {middle} {given}"
-        else:
-            name = f"{family} {middle} {given}"
+        name = f"{family} {middle} {given}"
         rows.append((name, phone_list[i]))
 
     for filename, n in DATASETS:
