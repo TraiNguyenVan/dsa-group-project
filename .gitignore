@@ -19,13 +19,6 @@ data/*.dat
 !data/README.md
 !data/generate.py
 
-# Report/slides binaries
-report/*.pdf
-slides/*.pptx
-slides/*.pdf
-!report/README.md
-!slides/README.md
-
 # Grading (keep template, not submissions)
 grading/*.csv
 !grading/marking_sheet_template.csv
