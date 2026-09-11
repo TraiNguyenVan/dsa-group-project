@@ -2,14 +2,104 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"math/rand"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
+
+const benchHeader = "language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone"
+
+// runSearchBenchmarkBatch writes EVERY run (3 cases x 2 algos x 5 = 30 rows)
+// to CSV. Seeded RNG (42) for a reproducible `random` target.
+func runSearchBenchmarkBatch(phonebook *PhoneBook, csvInput, outCsv string, append bool) int {
+	loaded := phonebook.LoadFromCSV(csvInput)
+	if loaded == -1 {
+		fmt.Fprintf(os.Stderr, "Cannot open file: %s\n", csvInput)
+		return 1
+	}
+	n := phonebook.Size()
+	if n == 0 {
+		fmt.Fprintln(os.Stderr, "No contacts to benchmark.")
+		return 1
+	}
+	cases := [3]string{"first", "random", "last"}
+	indices := [3]int{0, n - 1, n - 1}
+	indices[0] = 0
+	indices[2] = n - 1
+	if n > 2 {
+		indices[1] = rand.New(rand.NewSource(42)).Intn(n)
+	}
+
+	needHeader := true
+	if append {
+		if fi, err := os.Stat(outCsv); err == nil && fi.Size() > 0 {
+			f, err := os.Open(outCsv)
+			if err == nil {
+				r := bufio.NewReader(f)
+				line, _ := r.ReadString('\n')
+				f.Close()
+				if strings.TrimSpace(line) != "" {
+					needHeader = false
+				}
+			}
+		}
+	}
+	var f *os.File
+	var err error
+	if append {
+		f, err = os.OpenFile(outCsv, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	} else {
+		f, err = os.OpenFile(outCsv, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot open output file: %s\n", outCsv)
+		return 1
+	}
+	defer f.Close()
+	w := csv.NewWriter(f)
+	defer w.Flush()
+	if needHeader {
+		fmt.Fprintln(f, benchHeader)
+	}
+	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	toolchain := "go " + runtime.Version()
+	for k := 0; k < 3; k++ {
+		phone := phonebook.GetPhoneAt(indices[k])
+		if phone == "" {
+			continue
+		}
+		for a := 0; a < 2; a++ {
+			algo := "linear"
+			if a == 1 {
+				algo = "hash"
+			}
+			for r := 1; r <= 5; r++ {
+				var t float64
+				if a == 0 {
+					t = TimeIt(func() { phonebook.SearchLinearByPhone(phone) })
+				} else {
+					t = TimeIt(func() { phonebook.SearchHashByPhone(phone) })
+				}
+				w.Write([]string{"go", csvInput, strconv.Itoa(n), cases[k], algo,
+					strconv.Itoa(r), strconv.FormatFloat(t, 'g', -1, 64),
+					timestamp, toolchain, strconv.Itoa(indices[k]), phone})
+			}
+		}
+	}
+	w.Flush()
+	if err := w.Error(); err != nil {
+		fmt.Fprintf(os.Stderr, "Write failed: %v\n", err)
+		return 1
+	}
+	fmt.Printf("Wrote 30 rows -> %s (%d contacts).\n", outCsv, n)
+	return 0
+}
 
 // Faithful port of src/main.cpp.
 
@@ -112,15 +202,33 @@ func readRawLine(r *bufio.Reader) (string, bool) {
 func main() {
 	csvInput := "data/contacts_100k.csv"
 	csvOutput := ""
-	if len(os.Args) > 1 {
-		csvInput = os.Args[1]
+	benchCsv := ""
+	benchAppend := false
+	var positionals []string
+	args := os.Args[1:]
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--benchmark-csv" && i+1 < len(args) {
+			benchCsv = args[i+1]
+			i++
+		} else if args[i] == "--append" {
+			benchAppend = true
+		} else {
+			positionals = append(positionals, args[i])
+		}
 	}
-	if len(os.Args) > 2 {
-		csvOutput = os.Args[2]
+	if len(positionals) > 0 {
+		csvInput = positionals[0]
+	}
+	if len(positionals) > 1 {
+		csvOutput = positionals[1]
 	} else {
 		csvOutput = csvInput
 	}
 	phonebook := NewPhoneBook()
+
+	if benchCsv != "" {
+		os.Exit(runSearchBenchmarkBatch(phonebook, csvInput, benchCsv, benchAppend))
+	}
 	reader := bufio.NewReader(os.Stdin)
 
 	for {

@@ -161,9 +161,9 @@ See `data/README.md`. `Name,Phone` per line, no header. Regenerate with
 `python3 data/generate.py --seed 42`. Use `contacts_50.csv` for demos,
 `100k/200k/1m` for scaling.
 
-## Perf claims — method + template (no invented numbers)
+## Perf claims — method + data (no invented numbers)
 
-Option `0` reports, per target (`first/random/last`):
+Option `0` is unchanged: per target (`first/random/last`) it prints best-of-5:
 
 ```text
 [role index N phone P]
@@ -171,29 +171,64 @@ Option `0` reports, per target (`first/random/last`):
   Hash best of 5: Yms. (index N, position-independent)
 ```
 
+For the report, don't hand-copy that output — run the full matrix:
+
+```sh
+make run-benchmark   # all 5 langs, every run -> benchmark/results.csv (overwrite)
+```
+
+Each program also supports batch mode directly (same 30 rows each):
+
+```sh
+./build/cpp/demo --benchmark-csv benchmark/results.csv data/contacts_100k.csv
+python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append data/contacts_100k.csv
+cd go/phonebook && go run . --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv
+cd javascript/phonebook && node src/main.js --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv
+cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv
+```
+
+`benchmark/results.csv` columns:
+`language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone`
+— 150 rows (5 langs × first/random/last × linear/hash × 5 runs).
+Batch mode seeds RNG with 42 so the `random` target is reproducible
+*within* a language (each language's RNG differs, so targets differ
+across languages — `target_index,phone` columns make that auditable).
+Option `0` stays unseeded.
+
+`make run-benchmark` also draws `benchmark/plot.png` at the end via
+`benchmark/plot.py` (grouped bars on a log y-axis, best of 5 per cell —
+log scale so the µs hash bars stay visible next to the ms linear bars; needs matplotlib —
+without it the plot step prints `plot skipped` and the CSV is still
+produced). The script parses every language's `ms` float format
+(C++ `setprecision(17)`, Python `repr`, Go `%g`, JS double, Java
+`Double.toString`) defensively: bad rows are skipped with a warning,
+never a crash.
+
+![Phone search benchmark: linear vs hash across 5 languages](benchmark/plot.png)
+
 Per `CONTRIBUTING.md`, a timing without conditions is not a measurement.
 Do not compare ms across languages (different runtimes/timers). The only
 portable claim is the intra-run trend: linear grows first→last, hash stays
 ~constant.
 
-Copy this table and fill with real runs:
+Copy this table and fill from `benchmark/results.csv` + your machine spec:
 
-| Run | Dataset | CPU/RAM, OS | Toolchain | Commit | n | target | Linear best 5 (ms) | Hash best 5 (ms) |
+| Run | Dataset | CPU/RAM, OS | Toolchain | Commit | n | target | Linear runs (ms) | Hash runs (ms) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C++ ex | `contacts_50` | | `g++ --version`, `-O2` | | 50 | first/random/last | / / | / / |
-| py ex | `contacts_50` | | `python3 --version` | | 50 | first/random/last | / / | / / |
-| go ex | `contacts_50` | | `go version` | | 50 | first/random/last | / / | / / |
-| js ex | `contacts_50` | | `node -v` | | 50 | first/random/last | / / | / / |
-| java ex | `contacts_50` | | `javac 17` | | 50 | first/random/last | / / | / / |
+| C++ ex | `contacts_100k` | | `g++ --version`, `-O2` | | 100000 | first/random/last | | |
+| py ex | `contacts_100k` | | `python3 --version` | | 100000 | first/random/last | | |
+| go ex | `contacts_100k` | | `go version` | | 100000 | first/random/last | | |
+| js ex | `contacts_100k` | | `node -v` | | 100000 | first/random/last | | |
+| java ex | `contacts_100k` | | `javac 17` | | 100000 | first/random/last | | |
 
-Reproduce:
+Interactive reproduce (option 0):
 
 ```sh
-printf '0\n8\n' | ./build/cpp/demo data/contacts_50.csv
-printf '0\n8\n' | python3 python/phonebook/main.py data/contacts_50.csv
-printf '0\n8\n' | go run . ../../data/contacts_50.csv
-printf '0\n8\n' | node src/main.js ../../data/contacts_50.csv
-printf '0\n8\n' | java -cp out com.phonebook.Main ../../data/contacts_50.csv
+printf '0\n9\n' | ./build/cpp/demo data/contacts_50.csv
+printf '0\n9\n' | python3 python/phonebook/main.py data/contacts_50.csv
+printf '0\n9\n' | (cd go/phonebook && go run . ../../data/contacts_50.csv)
+printf '0\n9\n' | (cd javascript/phonebook && node src/main.js ../../data/contacts_50.csv)
+printf '0\n9\n' | (cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main ../../data/contacts_50.csv)
 ```
 
 ## Contributing

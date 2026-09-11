@@ -1,10 +1,87 @@
 'use strict';
 
 // Faithful port of src/main.cpp - Phone Book CLI (Node.js).
+const fs = require('node:fs');
 const readline = require('node:readline');
 const { stdin: input, stdout: output } = require('node:process');
 const { PhoneBook } = require('./phonebook');
-const { benchmark, printTaskDuration } = require('./timer');
+const { benchmark, printTaskDuration, timeIt } = require('./timer');
+
+const BENCH_HEADER = 'language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone';
+
+// mulberry32: small seeded RNG so batch `random` target is reproducible.
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function csvEscape(v) {
+  v = String(v);
+  if (v.includes(',') || v.includes('"') || v.includes('\n')) {
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+  return v;
+}
+
+// Batch benchmark: every run to CSV (30 rows). Seeded RNG (42).
+function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
+  const loaded = phonebook.loadfromCSV(csvInput);
+  if (loaded === -1) {
+    console.error(`Cannot open file: ${csvInput}`);
+    return 1;
+  }
+  const n = phonebook.size();
+  if (n === 0) {
+    console.error('No contacts to benchmark.');
+    return 1;
+  }
+  const cases = ['first', 'random', 'last'];
+  const indices = [0, n - 1, n - 1];
+  indices[0] = 0;
+  indices[2] = n - 1;
+  if (n > 2) indices[1] = Math.floor(mulberry32(42)() * n);
+
+  let needHeader = true;
+  if (append && fs.existsSync(outCsv) && fs.statSync(outCsv).size > 0) {
+    const first = fs.readFileSync(outCsv, 'utf8').split('\n')[0].trim();
+    needHeader = !first;
+  }
+  let fd;
+  try {
+    fd = fs.openSync(outCsv, append ? 'a' : 'w');
+  } catch (e) {
+    console.error(`Cannot open output file: ${outCsv}`);
+    return 1;
+  }
+  const lines = [];
+  if (needHeader) lines.push(BENCH_HEADER);
+  const timestamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  const toolchain = `node ${process.version}`;
+  for (let k = 0; k < 3; k++) {
+    const phone = phonebook.getPhoneAt(indices[k]);
+    if (!phone) continue;
+    for (let a = 0; a < 2; a++) {
+      const algo = a === 0 ? 'linear' : 'hash';
+      for (let r = 1; r <= 5; r++) {
+        let t;
+        if (a === 0) t = timeIt(() => phonebook.searchLinearByPhone(phone));
+        else t = timeIt(() => phonebook.searchHashByPhone(phone));
+        lines.push(['js', csvInput, n, cases[k], algo, r, t, timestamp,
+          toolchain, indices[k], phone].map(csvEscape).join(','));
+      }
+    }
+  }
+  fs.writeSync(fd, lines.join('\n') + '\n');
+  fs.closeSync(fd);
+  console.log(`Wrote 30 rows -> ${outCsv} (${n} contacts).`);
+  return 0;
+}
 
 function runSearchBenchmark(phonebook, csvInput) {
   if (phonebook.size() === 0) {
@@ -87,9 +164,26 @@ function parseChoice(raw) {
 
 async function main() {
   const args = process.argv.slice(2);
-  const csvInput = args.length > 0 ? args[0] : 'data/contacts_100k.csv';
-  const csvOutput = args.length > 1 ? args[1] : csvInput;
+  let benchCsv = '';
+  let benchAppend = false;
+  const positionals = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--benchmark-csv' && i + 1 < args.length) {
+      benchCsv = args[++i];
+    } else if (args[i] === '--append') {
+      benchAppend = true;
+    } else {
+      positionals.push(args[i]);
+    }
+  }
+  const csvInput = positionals.length > 0 ? positionals[0] : 'data/contacts_100k.csv';
+  const csvOutput = positionals.length > 1 ? positionals[1] : csvInput;
   const phonebook = new PhoneBook();
+
+  if (benchCsv) {
+    process.exitCode = runSearchBenchmarkBatch(phonebook, csvInput, benchCsv, benchAppend);
+    return process.exitCode;
+  }
 
   // Line queue via async iterator: works for both TTY and piped stdin+piped
   // stdout (rl.question breaks on 2nd read when stdout is piped).

@@ -1,5 +1,16 @@
 package com.phonebook;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
@@ -61,6 +72,91 @@ public class Main {
         System.out.println("Linear: first=best, last=worst. Hash: ~constant regardless of position.");
     }
 
+    static String csvEscape(String v) {
+        if (v.contains(",") || v.contains("\"") || v.contains("\n")) {
+            return "\"" + v.replace("\"", "\"\"") + "\"";
+        }
+        return v;
+    }
+
+    // Batch benchmark: every run to CSV (30 rows). Seeded RNG (42).
+    static int runSearchBenchmarkBatch(PhoneBook phonebook, String csvInput,
+                                       String outCsv, boolean append) {
+        int loaded = phonebook.loadfromCSV(csvInput);
+        if (loaded == -1) {
+            System.err.println("Cannot open file: " + csvInput);
+            return 1;
+        }
+        int n = phonebook.size();
+        if (n == 0) {
+            System.err.println("No contacts to benchmark.");
+            return 1;
+        }
+        String[] cases = {"first", "random", "last"};
+        int[] indices = {0, n - 1, n - 1};
+        indices[0] = 0;
+        indices[2] = n - 1;
+        if (n > 2) {
+            indices[1] = new Random(42).nextInt(n);
+        }
+
+        boolean needHeader = true;
+        Path outPath = Paths.get(outCsv);
+        if (append && Files.exists(outPath)) {
+            try {
+                if (Files.size(outPath) > 0) {
+                    List<String> lines = Files.readAllLines(outPath, StandardCharsets.UTF_8);
+                    if (!lines.isEmpty() && !lines.get(0).trim().isEmpty()) {
+                        needHeader = false;
+                    }
+                }
+            } catch (IOException e) {
+                // fall through, rewrite header
+            }
+        }
+        List<String> rows = new ArrayList<>();
+        if (needHeader) {
+            rows.add("language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone");
+        }
+        String timestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS).toString();
+        String toolchain = "javac " + System.getProperty("java.version", "?");
+        for (int k = 0; k < 3; k++) {
+            String phone = phonebook.getPhoneAt(indices[k]);
+            if (phone.isEmpty()) {
+                continue;
+            }
+            final String fPhone = phone;
+            for (int a = 0; a < 2; a++) {
+                String algo = (a == 0) ? "linear" : "hash";
+                final int which = a;
+                for (int r = 1; r <= 5; r++) {
+                    double t;
+                    if (which == 0) {
+                        t = Timer.timeIt(() -> phonebook.searchLinearByPhone(fPhone));
+                    } else {
+                        t = Timer.timeIt(() -> phonebook.searchHashByPhone(fPhone));
+                    }
+                    rows.add("java," + csvEscape(csvInput) + "," + n + "," + cases[k] + ","
+                            + algo + "," + r + "," + t + "," + timestamp + ","
+                            + csvEscape(toolchain) + "," + indices[k] + "," + phone);
+                }
+            }
+        }
+        try (BufferedWriter w = Files.newBufferedWriter(outPath, StandardCharsets.UTF_8,
+                append ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+            for (String row : rows) {
+                w.write(row);
+                w.newLine();
+            }
+        } catch (IOException e) {
+            System.err.println("Cannot open output file: " + outCsv);
+            return 1;
+        }
+        System.out.println("Wrote 30 rows -> " + outCsv + " (" + n + " contacts).");
+        return 0;
+    }
+
     static void printMenu() {
         System.out.println("");
         System.out.println("========================================");
@@ -81,9 +177,26 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        String csvInput = args.length > 0 ? args[0] : "data/contacts_100k.csv";
-        String csvOutput = args.length > 1 ? args[1] : csvInput;
+        String benchCsv = "";
+        boolean benchAppend = false;
+        List<String> positionals = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--benchmark-csv") && i + 1 < args.length) {
+                benchCsv = args[++i];
+            } else if (args[i].equals("--append")) {
+                benchAppend = true;
+            } else {
+                positionals.add(args[i]);
+            }
+        }
+        String csvInput = positionals.size() > 0 ? positionals.get(0) : "data/contacts_100k.csv";
+        String csvOutput = positionals.size() > 1 ? positionals.get(1) : csvInput;
         PhoneBook phonebook = new PhoneBook();
+
+        if (!benchCsv.isEmpty()) {
+            System.exit(runSearchBenchmarkBatch(phonebook, csvInput, benchCsv, benchAppend));
+            return;
+        }
         Scanner sc = new Scanner(System.in);
 
         while (true) {
