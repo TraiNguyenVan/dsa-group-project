@@ -202,7 +202,7 @@ A measurement without its conditions is not a measurement (CONTRIBUTING.md).
 | Node | v26.7.0 |
 | Java | javac 27 (JDK 27) |
 | Dataset | `data/contacts_100k.csv` (n=100000), seed 42 |
-| Commit | `8b9be0826b14e05636361382a80029c5bef6b61b` |
+| Commit | `adc54407393a2d8b82260a8af5695ad077df7641` |
 
 The full measurement method, charts, and comparison tables are in
 [`report/report.md`](report/report.md) (Part D).
