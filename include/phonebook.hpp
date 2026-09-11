@@ -26,6 +26,8 @@ public:
     PhoneBook& operator=(PhoneBook&&) = delete;       // ban move assignment
 
     bool insertContact(const std::string& name, const std::string& phone);
+    // O(n): vector erase shifts tail + hash index rebuilt to preserve order
+    bool deleteContactByPhone(const std::string& phone);
 
     // linear search phone number(enter the correct phone number )
     int searchLinearByPhone(const std::string& phone) const;

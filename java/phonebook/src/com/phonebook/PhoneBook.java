@@ -169,6 +169,21 @@ public class PhoneBook {
         return hashtable.hashSearch(phone);
     }
 
+    public boolean deleteContactByPhone(String phone) {
+        // O(n): list erase shifts tail + full hash rebuild preserves order.
+        int idx = searchHashByPhone(phone);
+        if (idx == -1) {
+            System.out.println("Phone number not found");
+            return false;
+        }
+        contacts.remove(idx);
+        hashtable.clear();
+        for (int i = 0; i < contacts.size(); i++) {
+            hashtable.hashInsert(contacts.get(i).phone, i);
+        }
+        return true;
+    }
+
     public int searchLinearByName(String name) {
         String target = toLower(name);
         for (int i = 0; i < contacts.size(); i++) {

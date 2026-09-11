@@ -101,6 +101,46 @@ public class HashTable {
         return -1;
     }
 
+    public boolean hashDelete(String phone) {
+        int idx = hashFunction(phone);
+        HashNode node = buckets[idx];
+        HashNode prev = null;
+        while (node != null) {
+            if (node.phone.equals(phone)) {
+                if (prev != null) {
+                    prev.next = node.next;
+                } else {
+                    buckets[idx] = node.next;
+                }
+                numElements--;
+                return true;
+            }
+            prev = node;
+            node = node.next;
+        }
+        return false;
+    }
+
+    public boolean hashUpdate(String phone, int newContactIndex) {
+        int idx = hashFunction(phone);
+        HashNode node = buckets[idx];
+        while (node != null) {
+            if (node.phone.equals(phone)) {
+                node.contactIndex = newContactIndex;
+                return true;
+            }
+            node = node.next;
+        }
+        return false;
+    }
+
+    public void clear() {
+        for (int i = 0; i < numBuckets; i++) {
+            buckets[i] = null;
+        }
+        numElements = 0;
+    }
+
     public double loadFactor() {
         return (double) numElements / (double) numBuckets;
     }

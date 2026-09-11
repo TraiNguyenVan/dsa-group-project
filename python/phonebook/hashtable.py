@@ -74,6 +74,36 @@ class HashTable:
             node = node.next
         return -1
 
+    def hash_delete(self, phone: str) -> bool:
+        idx = self.hash_function(phone)
+        node = self.buckets[idx]
+        prev = None
+        while node is not None:
+            if node.phone == phone:
+                if prev is None:
+                    self.buckets[idx] = node.next
+                else:
+                    prev.next = node.next
+                self.num_elements -= 1
+                return True
+            prev = node
+            node = node.next
+        return False
+
+    def hash_update(self, phone: str, new_contact_index: int) -> bool:
+        idx = self.hash_function(phone)
+        node = self.buckets[idx]
+        while node is not None:
+            if node.phone == phone:
+                node.contact_index = new_contact_index
+                return True
+            node = node.next
+        return False
+
+    def clear(self) -> None:
+        self.buckets = [None] * self.num_buckets
+        self.num_elements = 0
+
     def load_factor(self) -> float:
         return self.num_elements / float(self.num_buckets)
 

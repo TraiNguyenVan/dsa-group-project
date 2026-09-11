@@ -77,7 +77,8 @@ def print_menu() -> None:
     print("5. Print all contacts")
     print("6. Print contact by index")
     print("7. Show number of contacts")
-    print("8. Exit")
+    print("8. Delete contact by phone")
+    print("9. Exit")
     print("========================================")
     print("Enter your choice: ", end="")
 
@@ -267,10 +268,27 @@ def main() -> int:
         elif choice == 7:
             print(f"\nNumber of contacts: {phonebook.size()}")
         elif choice == 8:
+            try:
+                print("\nEnter phone number to delete: ", end="")
+                phone = input()
+            except EOFError:
+                print("\nGoodbye")
+                return 0
+            result = {}
+
+            def work8():
+                result["v"] = phonebook.delete_contact_by_phone(phone)
+
+            print_task_duration(work8)
+            if result["v"]:
+                print("Contact deleted successfully.")
+            else:
+                print("Failed to delete contact.")
+        elif choice == 9:
             print("Goodbye")
             return 0
         else:
-            print("Invalid choice. Please choose from 0 to 8.")
+            print("Invalid choice. Please choose from 0 to 9.")
     return 0
 
 

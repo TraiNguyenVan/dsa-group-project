@@ -110,6 +110,18 @@ class PhoneBook:
         self.hashtable.hash_insert(phone, len(self.contacts) - 1)
         return True
 
+    def delete_contact_by_phone(self, phone: str) -> bool:
+        # O(n): list erase shifts tail + full hash rebuild preserves order.
+        idx = self.search_hash_by_phone(phone)
+        if idx == -1:
+            print("Phone number not found")
+            return False
+        del self.contacts[idx]
+        self.hashtable.clear()
+        for i, c in enumerate(self.contacts):
+            self.hashtable.hash_insert(c.phone, i)
+        return True
+
     def search_linear_by_phone(self, phone: str) -> int:
         for i, c in enumerate(self.contacts):
             if c.phone == phone:
@@ -196,6 +208,7 @@ class PhoneBook:
     loadfromCSV = loadfrom_csv
     savetoCSV = saveto_csv
     insertContact = insert_contact
+    deleteContactByPhone = delete_contact_by_phone
     searchLinearByPhone = search_linear_by_phone
     searchHashByPhone = search_hash_by_phone
     searchLinearByName = search_linear_by_name
