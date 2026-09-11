@@ -36,7 +36,7 @@ run-1m: $(TARGET)
 # Option 0 in the CLI is untouched; each port's --benchmark-csv batch mode is
 # seeded (42) so the `random` target is reproducible. C++ writes header, rest append.
 BENCHCSV  := benchmark/results.csv
-BENCHDATA := data/contacts_100k.csv
+BENCHDATA := data/contacts_200k.csv
 
 run-benchmark: $(TARGET)
 	mkdir -p benchmark
@@ -51,6 +51,10 @@ run-benchmark: $(TARGET)
 clean:
 	rm -rf $(BUILDDIR)
 
-.PHONY: all run run-50 run-100k run-200k run-1m run-benchmark clean
+# Export report/report.md -> report/report.pdf (headless Chromium, no deps)
+pdf:
+	python3 report/export_pdf.py
+
+.PHONY: all run run-50 run-100k run-200k run-1m run-benchmark pdf clean
 
 
