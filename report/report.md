@@ -276,15 +276,16 @@ above, plus your machine spec (CPU/RAM, OS, toolchains, commit).
 
 ### D.10 Measurement tables
 
-Copy this table and fill from `benchmark/results.csv` + your machine spec:
+Best-of-5 wall-clock ms per target (`first / random / last`) from
+`benchmark/results.csv`, n=100000, commit `8b9be08`.
 
 | Run | Dataset | CPU/RAM, OS | Toolchain | Commit | n | target | Linear runs (ms) | Hash runs (ms) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C++ ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `g++ 16.2.1`, `-O2` | `8b9be08` | 100000 | first/random/last | | |
-| py ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `Python 3.14.7` | `8b9be08` | 100000 | first/random/last | | |
-| go ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `go1.27.1` | `8b9be08` | 100000 | first/random/last | | |
-| js ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `node v26.7.0` | `8b9be08` | 100000 | first/random/last | | |
-| java ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `javac 27` | `8b9be08` | 100000 | first/random/last | | |
+| C++ ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `g++ 16.2.1`, `-O2` | `8b9be08` | 100000 | first/random/last | 0.000019 / 0.071610 / 0.251542 | 0.000036 / 0.000038 / 0.000034 |
+| py ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `Python 3.14.7` | `8b9be08` | 100000 | first/random/last | 0.000215 / 3.269215 / 3.759008 | 0.001269 / 0.001261 / 0.001235 |
+| go ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `go1.27.1` | `8b9be08` | 100000 | first/random/last | 0.000020 / 0.136131 / 0.224993 | 0.000032 / 0.000035 / 0.000035 |
+| js ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `node v26.7.0` | `8b9be08` | 100000 | first/random/last | 0.000310 / 0.504754 / 0.818376 | 0.000908 / 0.000821 / 0.000813 |
+| java ex | `contacts_100k` | i5-1135G7, 15 GiB, Omarchy | `javac 27` | `8b9be08` | 100000 | first/random/last | 0.000670 / 0.575658 / 1.622943 | 0.000411 / 0.000463 / 0.000422 |
 
 ### D.11 Test conditions (machine & toolchain)
 
