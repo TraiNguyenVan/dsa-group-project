@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import csv
+import os
 import sys
 
 LANG_ORDER = ["cpp", "python", "go", "js", "java"]
@@ -105,38 +106,105 @@ def main():
         print("error: no plottable rows found", file=sys.stderr)
         return 1
 
-    xlabels = [f"{c}-{a}" for c, a in GROUPS]
-    x = range(len(GROUPS))
+    # Two linear-scale panels (linear algo | hash algo): ratios within a
+    # panel are honest, and the us-scale hash bars get their own axis
+    # instead of being flattened by the ms-scale linear bars.
+    # Missing combos -> NaN (gap, no bar).
     width = 0.8 / len(LANG_ORDER)
+    panels = [
+        ("Linear scan ms (best of 5)", [(c, "linear") for c in CASE_ORDER]),
+        ("Hash lookup ms (best of 5)", [(c, "hash") for c in CASE_ORDER]),
+    ]
 
-    # Log y-axis: linear cases (~ms) dwarf hash cases (~µs) on a linear
-    # scale. Missing combos -> NaN (no bar) so log never sees 0.
-    import math
-
-    positives = [v for v in best.values() if v > 0]
-    floor = min(positives) / 5 if positives else 1e-6
-
-    fig, ax = plt.subplots(figsize=(12, 6))
-    for i, lang in enumerate(LANG_ORDER):
-        vals = [best.get((lang, c, a), float("nan")) for c, a in GROUPS]
-        offs = [p + (i - (len(LANG_ORDER) - 1) / 2) * width for p in x]
-        bars = ax.bar(offs, vals, width=width, label=lang, log=True)
-        for b, v in zip(bars, vals):
-            if v == v and v > 0:  # not NaN
-                ax.text(b.get_x() + b.get_width() / 2, v * 1.15, f"{v:.2g}",
-                        ha="center", va="bottom", fontsize=7, rotation=45)
-
-    ax.set_xticks(list(x))
-    ax.set_xticklabels(xlabels, rotation=15)
-    ax.set_yscale("log")
-    ax.set_ylim(bottom=floor)
-    ax.set_ylabel("ms (best of 5 runs, log scale)")
-    ax.set_title(f"Phone search: linear vs hash ({dataset}, n={n})")
-    ax.legend()
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    for ax, (ylabel, groups) in zip(axes, panels):
+        x = range(len(groups))
+        for i, lang in enumerate(LANG_ORDER):
+            vals = [best.get((lang, c, a), float("nan")) for c, a in groups]
+            offs = [p + (i - (len(LANG_ORDER) - 1) / 2) * width for p in x]
+            bars = ax.bar(offs, vals, width=width, label=lang)
+            for b, v in zip(bars, vals):
+                if v == v and v > 0:  # not NaN
+                    ax.text(b.get_x() + b.get_width() / 2, v * 1.02, f"{v:.2g}",
+                            ha="center", va="bottom", fontsize=8, rotation=45)
+        ax.set_xticks(list(x))
+        ax.set_xticklabels([c for c, _ in groups])
+        ax.set_ylabel(ylabel)
+        ax.set_ylim(bottom=0)
+    axes[0].legend()
+    fig.suptitle(f"Phone search: linear vs hash ({dataset}, n={n})")
     fig.tight_layout()
     fig.savefig(args.output, dpi=120)
     print(f"Wrote {args.output} ({len(best)} cells).")
+
+    # 6 per-group charts: one PNG per (case, algo), horizontal bars sorted
+    # fastest-first. Same LANG_ORDER colors as the overview.
+    cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    lang_color = {lang: cycle[i % len(cycle)] for i, lang in enumerate(LANG_ORDER)}
+    out_dir = os.path.dirname(args.output) or "."
+    stem = os.path.splitext(os.path.basename(args.output))[0]
+    split_names = []
+    for c, a in GROUPS:
+        pairs = [(lang, best[(lang, c, a)])
+                 for lang in LANG_ORDER if (lang, c, a) in best]
+        pairs.sort(key=lambda p: p[1])  # fastest first
+        fig1, ax1 = plt.subplots(figsize=(8, 5))
+        if pairs:
+            langs = [p[0] for p in pairs]
+            vals = [p[1] for p in pairs]
+            bars = ax1.barh(langs, vals,
+                            color=[lang_color[lang] for lang in langs])
+            for b, v in zip(bars, vals):
+                ax1.text(v * 1.02, b.get_y() + b.get_height() / 2, f"{v:.4g}",
+                         ha="left", va="center", fontsize=9)
+            ax1.set_xlim(right=max(vals) * 1.25)
+            ax1.invert_yaxis()  # fastest bar on top
+        ax1.set_xlabel("ms (best of 5 runs)")
+        ax1.set_title(f"{c}-{a} across languages, fastest first ({dataset}, n={n})")
+        fig1.tight_layout()
+        name = f"{stem}-{c}-{a}.png"
+        split_path = os.path.join(out_dir, name)
+        fig1.savefig(split_path, dpi=120)
+        plt.close(fig1)
+        split_names.append(name)
+        print(f"Wrote {split_path}.")
+
+    update_readme(out_dir, split_names)
     return 0
+
+
+README_START = "<!-- PLOT-SPLITS:START -->"
+README_END = "<!-- PLOT-SPLITS:END -->"
+
+
+def update_readme(out_dir, split_names):
+    """Rewrite the auto-generated image list in README.md (idempotent).
+
+    Looks for README.md next to the benchmark/ dir and replaces everything
+    between PLOT-SPLITS markers with one `![..](benchmark/...)` line per
+    split image, so the 6 charts always land in the right place.
+    """
+    root = os.path.dirname(os.path.abspath(out_dir))
+    readme = os.path.join(root, "README.md")
+    try:
+        with open(readme, "r", encoding="utf-8") as f:
+            text = f.read()
+    except OSError as e:
+        print(f"warn: README update skipped (cannot read {readme}): {e}",
+              file=sys.stderr)
+        return
+    if README_START not in text or README_END not in text:
+        print("warn: README update skipped (markers not found)", file=sys.stderr)
+        return
+    bench_dir = os.path.basename(os.path.abspath(out_dir))
+    lines = [f"![{os.path.splitext(n)[0].replace('plot-', '')}]"
+             f"({bench_dir}/{n})" for n in split_names]
+    block = README_START + "\n\n" + "\n".join(lines) + "\n\n" + README_END
+    pre, _, rest = text.partition(README_START)
+    _, _, post = rest.partition(README_END)
+    with open(readme, "w", encoding="utf-8", newline="\n") as f:
+        f.write(pre + block + post)
+    print(f"Updated image list in {readme}.")
 
 
 if __name__ == "__main__":

@@ -196,8 +196,9 @@ across languages — `target_index,phone` columns make that auditable).
 Option `0` stays unseeded.
 
 `make run-benchmark` also draws `benchmark/plot.png` at the end via
-`benchmark/plot.py` (grouped bars on a log y-axis, best of 5 per cell —
-log scale so the µs hash bars stay visible next to the ms linear bars; needs matplotlib —
+`benchmark/plot.py` (two linear-scale panels — linear scan | hash lookup —
+best of 5 per cell with value labels; split axes so bar heights stay in
+true ratio and the µs hash bars aren't flattened by the ms linear bars; needs matplotlib —
 without it the plot step prints `plot skipped` and the CSV is still
 produced). The script parses every language's `ms` float format
 (C++ `setprecision(17)`, Python `repr`, Go `%g`, JS double, Java
@@ -205,6 +206,72 @@ produced). The script parses every language's `ms` float format
 never a crash.
 
 ![Phone search benchmark: linear vs hash across 5 languages](benchmark/plot.png)
+
+<details>
+<summary>Per-group charts (one image per case × algo, horizontal, fastest first)</summary>
+
+<!-- PLOT-SPLITS:START -->
+
+![first-linear](benchmark/plot-first-linear.png)
+![first-hash](benchmark/plot-first-hash.png)
+![random-linear](benchmark/plot-random-linear.png)
+![random-hash](benchmark/plot-random-hash.png)
+![last-linear](benchmark/plot-last-linear.png)
+![last-hash](benchmark/plot-last-hash.png)
+
+<!-- PLOT-SPLITS:END -->
+
+</details>
+
+### Reading the chart fairly
+
+**What is being compared.** Same handwritten algorithm, same input, same
+machine: a hand-rolled chained hash table and a hand-rolled linear scan
+over `contacts_100k.csv` (n=100000) in all five languages — no `dict`,
+`map`, or `HashMap` anywhere. This is a *language + runtime* comparison
+of equivalent code. It is deliberately **not** hand-written C++ vs
+Python's built-in `dict`: that would compare a teaching implementation
+against a production hash table (open addressing, optimized C) and would
+answer a different question.
+
+**Same position, except `random`.** `first` (index 0) and `last`
+(index n−1) hit the identical phone in every language, so those bars
+are directly comparable. The `random` target is seeded (42) but each
+language has its own RNG, so the index differs per language — check
+`target_index` in the CSV before comparing `random-*` bars across
+languages.
+
+**Explaining the gap, not just observing it.** "Python is slower" is an
+observation; the mechanism is the answer:
+
+* **C++ (`-O2`)** is the baseline: `vector<Contact>` stores structs
+  contiguously, short strings sit inside the object (SSO), and the scan
+  compiles to a tight machine-code loop with no per-element overhead.
+* **Python** pays per element: every `Contact`, `str`, and `int` is a
+  heap-boxed `PyObject` reached through a pointer, and each loop
+  iteration runs CPython bytecode dispatch plus attribute-dict lookups.
+  That is why `last-linear` is ~10× the others — 100k interpreter steps
+  vs 100k machine instructions. The hash bars stay small because O(1)
+  steps mean the per-op tax applies ~once, not 100k times.
+* **Go** is compiled with value-type slices, so its scan is a real
+  machine loop (bounds checks are nearly free here) — expect it closest
+  to C++. Its gap is runtime checks + GC write barriers, not
+  interpretation.
+* **JavaScript (V8)** stores an array of heap objects (pointer chasing +
+  hidden-class checks per access) and must JIT-warm: best-of-5 lets the
+  optimizing compiler settle, but run-to-run spread is JIT tier-up, not
+  noise in your code.
+* **Java** is the same story on the JVM: `ArrayList<Contact>` holds
+  references, the C2 compiler kicks in after ~10k loop iterations (one
+  100k scan trips it), and G1 may pause — startup is *not* measured,
+  only the timed search, which flatters Java fairly since all languages
+  get the same treatment.
+
+**What you may claim.** The portable, algorithmic claim is the *trend
+within each language*: linear grows first→last, hash stays ~constant —
+it holds in all five, which is the DSA point. Cross-language magnitude
+differences are runtime properties; cite them only with the mechanism
+above, plus your machine spec (CPU/RAM, OS, toolchains, commit).
 
 Per `CONTRIBUTING.md`, a timing without conditions is not a measurement.
 Do not compare ms across languages (different runtimes/timers). The only
