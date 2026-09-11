@@ -37,6 +37,8 @@ run-1m: $(TARGET)
 # seeded (42) so the `random` target is reproducible. C++ writes header, rest append.
 BENCHCSV  := benchmark/results.csv
 BENCHDATA := data/contacts_200k.csv
+# Multi-size scaling run: nested-prefix datasets, appended into one CSV.
+BENCHFILES := data/contacts_50.csv data/contacts_10k.csv data/contacts_100k.csv data/contacts_200k.csv data/contacts_500k.csv data/contacts_1m.csv
 
 run-benchmark: $(TARGET)
 	mkdir -p benchmark
@@ -48,6 +50,22 @@ run-benchmark: $(TARGET)
 	cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main --benchmark-csv ../../$(BENCHCSV) --append ../../$(BENCHDATA)
 	python3 benchmark/plot.py $(BENCHCSV) benchmark/plot.png || echo "plot skipped: pip install matplotlib"
 
+# Multi-size scaling benchmark (guide Part D): every size x every language,
+# appended into one results.csv so plot.py --line can draw runtime vs n.
+run-benchmark-sizes: $(TARGET)
+	mkdir -p benchmark
+	python3 data/generate.py --seed 42
+	rm -f $(BENCHCSV)
+	@for f in $(BENCHFILES); do \
+		echo "== $$f =="; \
+		./$(TARGET) --benchmark-csv $(BENCHCSV) --append $$f; \
+		python3 python/phonebook/main.py --benchmark-csv $(BENCHCSV) --append $$f; \
+		(cd go/phonebook && go run . --benchmark-csv ../../$(BENCHCSV) --append ../../$$f); \
+		(cd javascript/phonebook && node src/main.js --benchmark-csv ../../$(BENCHCSV) --append ../../$$f); \
+		(cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main --benchmark-csv ../../$(BENCHCSV) --append ../../$$f); \
+	done
+	python3 benchmark/plot.py --line $(BENCHCSV) benchmark/plot-runtime-vs-n.png || echo "plot skipped: pip install matplotlib"
+
 clean:
 	rm -rf $(BUILDDIR)
 
@@ -55,6 +73,6 @@ clean:
 pdf:
 	python3 report/export_pdf.py
 
-.PHONY: all run run-50 run-100k run-200k run-1m run-benchmark pdf clean
+.PHONY: all run run-50 run-100k run-200k run-1m run-benchmark run-benchmark-sizes pdf clean
 
 

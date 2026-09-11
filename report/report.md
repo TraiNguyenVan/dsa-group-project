@@ -143,13 +143,12 @@ marks.
 
 ### D.4 Runtime growth — line chart
 
-Guide: run across multiple dataset sizes (e.g. n = 10k, 50k, 100k, 500k,
-1M) and plot the runtime growth curves of all 5 languages overlaid on one
-graph.
+Best-of-5 wall-clock ms at the `last` position (index n−1, the same
+position in every language) across n = 50, 10k, 100k, 200k, 500k, 1M —
+the runtime growth curves of all 5 languages overlaid on one graph
+(log-log). Linear search grows ~linearly with n; hash lookup stays flat.
 
-<!-- TODO: generate the multi-n data (see D.7 method) and embed the line
-     chart here, e.g.:
-![Runtime vs n across 5 languages](../benchmark/plot-runtime-vs-n.png) -->
+![Runtime vs n across 5 languages](../benchmark/plot-runtime-vs-n.png)
 
 ### D.5 Memory profiling — bar chart
 
@@ -317,8 +316,9 @@ dataset and how it was generated.
 ### A.2 Dataset
 
 See `data/README.md`. `Name,Phone` per line, no header. Regenerate with
-`python3 data/generate.py --seed 42`. Use `contacts_50.csv` for demos,
-`100k/200k/1m` for scaling.
+`python3 data/generate.py --seed 42`. Sizes: `50 / 10k / 100k / 200k /
+500k / 1m` — nested prefixes of one seeded stream, so scaling results are
+comparable. Use `contacts_50.csv` for demos.
 
 ### A.3 Port implementation notes
 
