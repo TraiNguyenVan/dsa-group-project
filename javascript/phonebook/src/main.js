@@ -29,7 +29,8 @@ function csvEscape(v) {
   return v;
 }
 
-// Batch benchmark: every run to CSV (30 rows). Seeded RNG (42).
+// Batch benchmark: every run to CSV (75 rows). Seeded RNG (42). `miss` uses
+// phone "0000000000" (not in dataset) for true worst case of hash/binary.
 function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
   const loaded = phonebook.loadfromCSV(csvInput);
   if (loaded === -1) {
@@ -41,11 +42,13 @@ function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
     console.error('No contacts to benchmark.');
     return 1;
   }
-  const cases = ['first', 'random', 'last'];
-  const indices = [0, n - 1, n - 1];
+  const cases = ['first', 'middle', 'random', 'last', 'miss'];
+  const indices = [0, Math.floor(n / 2), n - 1, n - 1, -1];
   indices[0] = 0;
-  indices[2] = n - 1;
-  if (n > 2) indices[1] = Math.floor(mulberry32(42)() * n);
+  indices[1] = Math.floor(n / 2);
+  indices[3] = n - 1;
+  indices[4] = -1;
+  if (n > 2) indices[2] = Math.floor(mulberry32(42)() * n);
 
   let needHeader = true;
   if (append && fs.existsSync(outCsv) && fs.statSync(outCsv).size > 0) {
@@ -63,15 +66,20 @@ function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
   if (needHeader) lines.push(BENCH_HEADER);
   const timestamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
   const toolchain = `node ${process.version}`;
-  for (let k = 0; k < 3; k++) {
-    const phone = phonebook.getPhoneAt(indices[k]);
-    if (!phone) continue;
-    for (let a = 0; a < 2; a++) {
-      const algo = a === 0 ? 'linear' : 'hash';
+  for (let k = 0; k < 5; k++) {
+    let phone;
+    if (k === 4) phone = '0000000000';
+    else {
+      phone = phonebook.getPhoneAt(indices[k]);
+      if (!phone) continue;
+    }
+    for (let a = 0; a < 3; a++) {
+      const algo = a === 0 ? 'linear' : a === 1 ? 'hash' : 'binary';
       for (let r = 1; r <= 5; r++) {
         let t;
         if (a === 0) t = timeIt(() => phonebook.searchLinearByPhone(phone));
-        else t = timeIt(() => phonebook.searchHashByPhone(phone));
+        else if (a === 1) t = timeIt(() => phonebook.searchHashByPhone(phone));
+        else t = timeIt(() => phonebook.searchBinaryByPhone(phone));
         lines.push(['js', csvInput, n, cases[k], algo, r, t, timestamp,
           toolchain, indices[k], phone].map(csvEscape).join(','));
       }
@@ -79,7 +87,7 @@ function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
   }
   fs.writeSync(fd, lines.join('\n') + '\n');
   fs.closeSync(fd);
-  console.log(`Wrote 30 rows -> ${outCsv} (${n} contacts).`);
+  console.log(`Wrote 75 rows -> ${outCsv} (${n} contacts).`);
   return 0;
 }
 
@@ -101,37 +109,47 @@ function runSearchBenchmark(phonebook, csvInput) {
   const n = phonebook.size();
   const labels = [
     'first (linear best case)',
+    'middle (linear avg / binary best)',
     'random (linear average case)',
     'last (linear worst case)',
+    'miss (linear worst / hash & binary worst)',
   ];
-  const indices = [0, 0, n - 1];
+  const indices = [0, Math.floor(n / 2), 0, n - 1, -1];
   indices[0] = 0;
-  indices[2] = n - 1;
+  indices[1] = Math.floor(n / 2);
+  indices[3] = n - 1;
+  indices[4] = -1;
   if (n <= 2) {
-    indices[1] = n - 1;
+    indices[2] = n - 1;
   } else {
-    indices[1] = Math.floor(Math.random() * n);
+    indices[2] = Math.floor(Math.random() * n);
   }
 
   console.log(
-    `\nBenchmarking phone search (linear cases: first=best / random=average / last=worst; hash is ~O(1) in all cases) (${n} contacts, 5 runs each, best reported).`
+    `\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary) (${n} contacts, 5 runs each, best reported).`
   );
 
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < 5; k++) {
     const targetIdx = indices[k];
-    const phone = phonebook.getPhoneAt(targetIdx);
-    if (!phone) {
-      console.log(`[${labels[k]}] index ${targetIdx}: cannot pick target.`);
-      continue;
+    let phone;
+    if (k === 4) phone = '0000000000';
+    else {
+      phone = phonebook.getPhoneAt(targetIdx);
+      if (!phone) {
+        console.log(`[${labels[k]}] index ${targetIdx}: cannot pick target.`);
+        continue;
+      }
     }
-    const holder = { lin: -1, h: -1 };
+    const holder = { lin: -1, h: -1, b: -1 };
     const linBest = benchmark(() => { holder.lin = phonebook.searchLinearByPhone(phone); });
     const hashBest = benchmark(() => { holder.h = phonebook.searchHashByPhone(phone); });
+    const binBest = benchmark(() => { holder.b = phonebook.searchBinaryByPhone(phone); });
     console.log(`[${labels[k]} index ${targetIdx} phone ${phone}]`);
     console.log(`  Linear best of 5: ${linBest}ms. (index ${holder.lin})`);
     console.log(`  Hash best of 5: ${hashBest}ms. (index ${holder.h}, position-independent)`);
+    console.log(`  Binary best of 5: ${binBest}ms. (index ${holder.b}, sorted index, position-independent)`);
   }
-  console.log('Linear: first=best, last=worst. Hash: ~constant regardless of position.');
+  console.log('Linear: first=best, last/miss=worst. Hash/binary: ~constant; miss is worst (full chain / log n probes).');
 }
 
 function printMenu() {
@@ -256,8 +274,9 @@ async function main() {
       console.log('========== Search ==========');
       console.log('1. Search phone - Linear Search');
       console.log('2. Search phone - Hash Search');
-      console.log('3. Search name - Linear Search');
-      console.log('4. Back');
+      console.log('3. Search phone - Binary Search (sorted index)');
+      console.log('4. Search name - Linear Search');
+      console.log('5. Back');
       console.log('============================');
       const sraw = await ask('Enter your choice: ');
       if (sraw === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
@@ -289,6 +308,17 @@ async function main() {
           phonebook.printContact(result.v);
         }
       } else if (searchChoice === 3) {
+        const phone = await ask('Enter phone number: ');
+        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+        const result = {};
+        printTaskDuration(() => { result.v = phonebook.searchBinaryByPhone(phone); });
+        if (result.v === -1) console.log('Phone number not found.');
+        else {
+          console.log('Phone number found using Binary Search (sorted index).');
+          console.log(`Contact index: ${result.v}`);
+          phonebook.printContact(result.v);
+        }
+      } else if (searchChoice === 4) {
         const name = await ask('Enter name: ');
         if (name === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
         const result = {};
@@ -299,7 +329,7 @@ async function main() {
           console.log(`Contact index: ${result.v}`);
           phonebook.printContact(result.v);
         }
-      } else if (searchChoice === 4) {
+      } else if (searchChoice === 5) {
         console.log('Back to main menu.');
       } else {
         console.log('Invalid search choice.');

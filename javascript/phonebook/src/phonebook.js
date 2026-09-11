@@ -4,6 +4,7 @@
 const fs = require('node:fs');
 const { Contact } = require('./contact');
 const { HashTable, DEFAULT_TABLE_SIZE } = require('./hashtable');
+const { timeIt } = require('./timer');
 
 function trimCsv(s) {
   return s.replace(/^[ \t\n\r\x0b\x0c]+|[ \t\n\r\x0b\x0c]+$/g, '');
@@ -58,6 +59,25 @@ class PhoneBook {
   constructor(initialCapacity = DEFAULT_TABLE_SIZE) {
     this.contacts = [];
     this.hashtable = new HashTable(initialCapacity);
+    // Sorted copy of phone numbers (kept sorted incrementally) so binary
+    // search is O(log n). The main array + hash table are untouched.
+    this.sortedPhones = [];
+  }
+
+  // Hand-written binary search: first index where v[i] >= target.
+  static lowerBound(v, target) {
+    let lo = 0, hi = v.length;
+    while (lo < hi) {
+      const mid = lo + ((hi - lo) >> 1);
+      if (v[mid] < target) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  // Rebuild the sorted index from scratch (O(n log n)); called once after load.
+  buildSortedIndex() {
+    this.sortedPhones = this.contacts.map((c) => c.phone).sort();
   }
 
   static isAllDigits(s) {
@@ -108,8 +128,19 @@ class PhoneBook {
       return false;
     }
     const normalized = PhoneBook.capitalizeFirst(PhoneBook.toLower(name));
-    this.contacts.push(new Contact(normalized, phone));
-    this.hashtable.hashInsert(phone, this.contacts.length - 1);
+    // add contact to array + hashtable (O(1))
+    const tHash = timeIt(() => {
+      this.contacts.push(new Contact(normalized, phone));
+      this.hashtable.hashInsert(phone, this.contacts.length - 1);
+    });
+
+    // keep the sorted index sorted: binary-search the spot (O(log n)) + shift (O(n))
+    const tIndex = timeIt(() => {
+      const pos = PhoneBook.lowerBound(this.sortedPhones, phone);
+      this.sortedPhones.splice(pos, 0, phone);
+    });
+
+    console.log(`  hash insert: ${tHash}ms, sorted-index insert: ${tIndex}ms (the cost of keeping binary search possible)`);
     return true;
   }
 
@@ -124,6 +155,19 @@ class PhoneBook {
     return this.hashtable.hashSearch(phone);
   }
 
+  // Binary search by phone on the sorted index (O(log n)).
+  // Returns the contact index via the hash table, or -1 if not found.
+  searchBinaryByPhone(phone) {
+    let lo = 0, hi = this.sortedPhones.length;
+    while (lo < hi) {
+      const mid = lo + ((hi - lo) >> 1);
+      if (this.sortedPhones[mid] === phone) return this.hashtable.hashSearch(phone);
+      if (this.sortedPhones[mid] < phone) lo = mid + 1;
+      else hi = mid;
+    }
+    return -1;
+  }
+
   deleteContactByPhone(phone) {
     // O(n): splice shifts tail + full hash rebuild preserves order.
     const idx = this.searchHashByPhone(phone);
@@ -136,6 +180,7 @@ class PhoneBook {
     for (let i = 0; i < this.contacts.length; i++) {
       this.hashtable.hashInsert(this.contacts[i].phone, i);
     }
+    this.buildSortedIndex(); // delete is O(n) anyway; rebuild the sorted index
     return true;
   }
 
@@ -185,8 +230,15 @@ class PhoneBook {
       const [ok, name, phone] = parseCsvLine(line);
       if (!ok) continue;
       if (!name || !PhoneBook.isAllDigits(phone)) continue;
-      if (this.insertContact(name, phone)) count++;
+      if (this.searchHashByPhone(phone) !== -1) continue;
+      // Push directly (no per-row index maintenance — that would be O(n^2));
+      // the sorted index is built once below.
+      const normalized = PhoneBook.capitalizeFirst(PhoneBook.toLower(name));
+      this.contacts.push(new Contact(normalized, phone));
+      this.hashtable.hashInsert(phone, this.contacts.length - 1);
+      count++;
     }
+    this.buildSortedIndex();
     return count;
   }
 

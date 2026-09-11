@@ -28,42 +28,53 @@ void runSearchBenchmark(PhoneBook& phonebook, const string& csvInput) {
     }
 
     std::size_t n = phonebook.size();
-    std::size_t indices[3];
-    const char* labels[3] = {"first (linear best case)", "random (linear average case)",
-                             "last (linear worst case)"};
+    const char* labels[5] = {"first (linear best case)", "middle (linear avg / binary best)",
+                             "random (linear avg case)", "last (linear worst case)",
+                             "miss (linear worst / hash & binary worst)"};
+    long long indices[5];
     indices[0] = 0;
-    indices[2] = n - 1;
+    indices[1] = static_cast<long long>(n / 2);
+    indices[3] = static_cast<long long>(n - 1);
+    indices[4] = -1;
     if (n <= 2) {
-        indices[1] = n - 1;
+        indices[2] = static_cast<long long>(n - 1);
     } else {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<std::size_t> dist(0, n - 1);
-        indices[1] = dist(gen);
+        indices[2] = static_cast<long long>(dist(gen));
     }
 
-    cout << "\nBenchmarking phone search (linear cases: first=best / random=average / last=worst; "
-            "hash is ~O(1) in all cases)"
+    cout << "\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; "
+            "hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary)"
          << " (" << n << " contacts, 5 runs each, best reported).\n";
 
-    for (int k = 0; k < 3; ++k) {
-        std::size_t targetIdx = indices[k];
-        string phone = phonebook.getPhoneAt(targetIdx);
-        if (phone.empty()) {
-            cout << "[" << labels[k] << "] index " << targetIdx << ": cannot pick target.\n";
-            continue;
+    for (int k = 0; k < 5; ++k) {
+        long long targetIdx = indices[k];
+        string phone;
+        if (k == 4) {
+            phone = "0000000000";
+        } else {
+            phone = phonebook.getPhoneAt(static_cast<std::size_t>(targetIdx));
+            if (phone.empty()) {
+                cout << "[" << labels[k] << "] index " << targetIdx << ": cannot pick target.\n";
+                continue;
+            }
         }
 
         int idxLin = -1;
         int idxHash = -1;
+        int idxBin = -1;
         double linBest = benchmark([&]() { idxLin = phonebook.searchLinearByPhone(phone); });
         double hashBest = benchmark([&]() { idxHash = phonebook.searchHashByPhone(phone); });
+        double binBest = benchmark([&]() { idxBin = phonebook.searchBinaryByPhone(phone); });
 
         cout << "[" << labels[k] << " index " << targetIdx << " phone " << phone << "]\n";
         cout << "  Linear best of 5: " << linBest << "ms. (index " << idxLin << ")\n";
         cout << "  Hash best of 5: " << hashBest << "ms. (index " << idxHash << ", position-independent)\n";
+        cout << "  Binary best of 5: " << binBest << "ms. (index " << idxBin << ", sorted index, position-independent)\n";
     }
-    cout << "Linear: first=best, last=worst. Hash: ~constant regardless of position.\n";
+    cout << "Linear: first=best, last/miss=worst. Hash/binary: ~constant; miss is worst (full chain / log n probes).\n";
 }
 
 static string utcTimestamp() {
@@ -79,9 +90,10 @@ static string utcTimestamp() {
     return string(buf);
 }
 
-// Batch benchmark: same first/random/last x linear/hash targets as option 0,
-// but writes EVERY run (5 each = 30 rows) to CSV instead of printing best.
-// Seeded RNG (42) so the `random` target is reproducible. Option 0 untouched.
+// Batch benchmark: first/middle/random/last/miss x linear/hash/binary targets,
+// writes EVERY run (5 each = 75 rows) to CSV. Seeded RNG (42) so `random`
+// is reproducible. `miss` uses phone "0000000000" (not in dataset) to
+// capture true worst case for hash/binary (full chain / log n probes).
 int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
                             const string& outCsv, bool append) {
     int loaded = phonebook.loadfromCSV(csvInput);
@@ -95,16 +107,18 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
     }
 
     std::size_t n = phonebook.size();
-    std::size_t indices[3];
-    const char* cases[3] = {"first", "random", "last"};
+    long long indices[5];
+    const char* cases[5] = {"first", "middle", "random", "last", "miss"};
     indices[0] = 0;
-    indices[2] = n - 1;
+    indices[1] = static_cast<long long>(n / 2);
+    indices[3] = static_cast<long long>(n - 1);
+    indices[4] = -1;
     if (n <= 2) {
-        indices[1] = n - 1;
+        indices[2] = static_cast<long long>(n - 1);
     } else {
         std::mt19937 gen(42);
         std::uniform_int_distribution<std::size_t> dist(0, n - 1);
-        indices[1] = dist(gen);
+        indices[2] = static_cast<long long>(dist(gen));
     }
 
     bool needHeader = true;
@@ -129,20 +143,27 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
     string timestamp = utcTimestamp();
     string toolchain = string("g++ ") + __VERSION__;
     const int repeats = 5;
-    for (int k = 0; k < 3; ++k) {
-        std::size_t targetIdx = indices[k];
-        string phone = phonebook.getPhoneAt(targetIdx);
-        if (phone.empty()) {
-            continue;
+    for (int k = 0; k < 5; ++k) {
+        long long targetIdx = indices[k];
+        string phone;
+        if (k == 4) {
+            phone = "0000000000";
+        } else {
+            phone = phonebook.getPhoneAt(static_cast<std::size_t>(targetIdx));
+            if (phone.empty()) {
+                continue;
+            }
         }
-        for (int a = 0; a < 2; ++a) {
-            const char* algo = (a == 0) ? "linear" : "hash";
+        for (int a = 0; a < 3; ++a) {
+            const char* algo = (a == 0) ? "linear" : (a == 1) ? "hash" : "binary";
             for (int r = 1; r <= repeats; ++r) {
                 double t;
                 if (a == 0) {
                     t = timeIt([&]() { phonebook.searchLinearByPhone(phone); });
-                } else {
+                } else if (a == 1) {
                     t = timeIt([&]() { phonebook.searchHashByPhone(phone); });
+                } else {
+                    t = timeIt([&]() { phonebook.searchBinaryByPhone(phone); });
                 }
                 out << "cpp," << csvInput << "," << n << "," << cases[k] << "," << algo
                     << "," << r << "," << std::setprecision(17) << t << "," << timestamp
@@ -151,7 +172,7 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
         }
     }
     out.close();
-    cout << "Wrote 30 rows -> " << outCsv << " (" << n << " contacts).\n";
+    cout << "Wrote 75 rows -> " << outCsv << " (" << n << " contacts).\n";
     return 0;
 }
 
@@ -262,8 +283,9 @@ int main(int argc, char* argv[]) {
             cout << "========== Search ==========\n";
             cout << "1. Search phone - Linear Search\n";
             cout << "2. Search phone - Hash Search\n";
-            cout << "3. Search name - Linear Search\n";
-            cout << "4. Back\n";
+            cout << "3. Search phone - Binary Search (sorted index)\n";
+            cout << "4. Search name - Linear Search\n";
+            cout << "5. Back\n";
             cout << "============================\n";
 
             cout << "Enter your choice: ";
@@ -302,6 +324,19 @@ int main(int argc, char* argv[]) {
                     phonebook.printContact(index);
                 }
             } else if (searchChoice == 3) {
+                string phone;
+                cout << "Enter phone number: ";
+                getline(cin, phone);
+                int index;
+                printTaskDuration([&]() { index = phonebook.searchBinaryByPhone(phone); });
+                if (index == -1) {
+                    cout << "Phone number not found.\n";
+                } else {
+                    cout << "Phone number found using Binary Search (sorted index).\n";
+                    cout << "Contact index: " << index << "\n";
+                    phonebook.printContact(index);
+                }
+            } else if (searchChoice == 4) {
                 string name;
                 cout << "Enter name: ";
                 getline(cin, name);
@@ -317,7 +352,7 @@ int main(int argc, char* argv[]) {
 
                     phonebook.printContact(index);
                 }
-            } else if (searchChoice == 4) {
+            } else if (searchChoice == 5) {
                 cout << "Back to main menu.\n";
             } else {
                 cout << "Invalid search choice.\n";

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -13,6 +14,32 @@ import (
 type PhoneBook struct {
 	contacts  []Contact
 	hashtable *HashTable
+	// Sorted copy of phone numbers (kept sorted incrementally) so binary
+	// search is O(log n). The main slice + hash table are untouched.
+	sortedPhones []string
+}
+
+// lowerBound is a hand-written binary search: first index where v[i] >= target.
+func lowerBound(v []string, target string) int {
+	lo, hi := 0, len(v)
+	for lo < hi {
+		mid := lo + (hi-lo)/2
+		if v[mid] < target {
+			lo = mid + 1
+		} else {
+			hi = mid
+		}
+	}
+	return lo
+}
+
+// BuildSortedIndex rebuilds the sorted index from scratch (O(n log n)); called once after load.
+func (p *PhoneBook) BuildSortedIndex() {
+	p.sortedPhones = p.sortedPhones[:0]
+	for _, c := range p.contacts {
+		p.sortedPhones = append(p.sortedPhones, c.Phone)
+	}
+	sort.Strings(p.sortedPhones)
 }
 
 // NewPhoneBook creates an empty phonebook.
@@ -140,8 +167,21 @@ func (p *PhoneBook) InsertContact(name, phone string) bool {
 		return false
 	}
 	normalized := CapitalizeFirst(ToLower(name))
-	p.contacts = append(p.contacts, Contact{Name: normalized, Phone: phone})
-	p.hashtable.HashInsert(phone, len(p.contacts)-1)
+	// add contact to slice + hashtable (O(1))
+	tHash := TimeIt(func() {
+		p.contacts = append(p.contacts, Contact{Name: normalized, Phone: phone})
+		p.hashtable.HashInsert(phone, len(p.contacts)-1)
+	})
+
+	// keep the sorted index sorted: binary-search the spot (O(log n)) + shift (O(n))
+	tIndex := TimeIt(func() {
+		pos := lowerBound(p.sortedPhones, phone)
+		p.sortedPhones = append(p.sortedPhones, "")
+		copy(p.sortedPhones[pos+1:], p.sortedPhones[pos:])
+		p.sortedPhones[pos] = phone
+	})
+
+	fmt.Printf("  hash insert: %vms, sorted-index insert: %vms (the cost of keeping binary search possible)\n", tHash, tIndex)
 	return true
 }
 
@@ -157,6 +197,7 @@ func (p *PhoneBook) DeleteContactByPhone(phone string) bool {
 	for i, c := range p.contacts {
 		p.hashtable.HashInsert(c.Phone, i)
 	}
+	p.BuildSortedIndex() // delete is O(n) anyway; rebuild the sorted index
 	return true
 }
 
@@ -173,6 +214,24 @@ func (p *PhoneBook) SearchLinearByPhone(phone string) int {
 // SearchHashByPhone hash lookup by phone.
 func (p *PhoneBook) SearchHashByPhone(phone string) int {
 	return p.hashtable.HashSearch(phone)
+}
+
+// SearchBinaryByPhone binary search by phone on the sorted index (O(log n)).
+// Returns the contact index via the hash table, or -1 if not found.
+func (p *PhoneBook) SearchBinaryByPhone(phone string) int {
+	lo, hi := 0, len(p.sortedPhones)
+	for lo < hi {
+		mid := lo + (hi-lo)/2
+		if p.sortedPhones[mid] == phone {
+			return p.hashtable.HashSearch(phone)
+		}
+		if p.sortedPhones[mid] < phone {
+			lo = mid + 1
+		} else {
+			hi = mid
+		}
+	}
+	return -1
 }
 
 // SearchLinearByName case-insensitive linear scan by name.
@@ -242,10 +301,17 @@ func (p *PhoneBook) LoadFromCSV(path string) int {
 		if name == "" || !IsAllDigits(phone) {
 			continue
 		}
-		if p.InsertContact(name, phone) {
-			count++
+		if p.SearchHashByPhone(phone) != -1 {
+			continue
 		}
+		// Push directly (no per-row index maintenance — that would be O(n^2));
+		// the sorted index is built once below.
+		normalized := CapitalizeFirst(ToLower(name))
+		p.contacts = append(p.contacts, Contact{Name: normalized, Phone: phone})
+		p.hashtable.HashInsert(phone, len(p.contacts)-1)
+		count++
 	}
+	p.BuildSortedIndex()
 	return count
 }
 

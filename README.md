@@ -1,6 +1,6 @@
 # Phonebook Lookup — C++
 
-CLI phonebook lookup that compares **linear search vs hash search** on phone numbers.
+CLI phonebook lookup that compares **linear search vs hash search vs binary search** on phone numbers.
 
 > **Report:** Parts A, B and D (syllabus position, complexity, cross-language
 > comparison) are written up in [`report/report.md`](report/report.md).
@@ -36,8 +36,8 @@ CLI phonebook lookup that compares **linear search vs hash search** on phone num
 │   ├── phonebook.hpp
 │   └── timer.hpp               # timeIt / benchmark(best-of-5)
 ├── src/                        # C++ sources
-│   ├── main.cpp                # CLI: menu 0-8, benchmark, search sub-menu
-│   ├── phonebook.cpp           # CSV, insert/validate, linear + hash search
+│   ├── main.cpp                # CLI: menu 0-9, benchmark, search sub-menu
+│   ├── phonebook.cpp           # CSV, insert/validate, linear + hash + binary search
 │   ├── hashtable.cpp           # chained hash table, prime sizing, rehash
 │   └── cpp/
 │       └── main.cpp
@@ -117,14 +117,14 @@ cmake --build build --target run-50
 CLI args: `demo [csvInput] [csvOutput]`.
 Default `csvInput = data/contacts_100k.csv`, `csvOutput = csvInput`.
 
-Menu (`src/main.cpp:65-83`):
+Menu (`src/main.cpp`):
 
 ```text
 0. Benchmark phone search (5 runs, best)
 1. Load contacts from CSV
 2. Save contacts to CSV
 3. Insert contact
-4. Search contact (1=phone linear, 2=phone hash, 3=name linear, 4=back)
+4. Search contact (1=phone linear, 2=phone hash, 3=phone binary, 4=name linear, 5=back)
 5. Print all contacts
 6. Print contact by index
 7. Show number of contacts

@@ -18,7 +18,7 @@ HEADER = "language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,p
 
 def run_search_benchmark_batch(phonebook: PhoneBook, csv_input: str,
                                out_csv: str, append: bool) -> int:
-    """Batch benchmark: every run to CSV (30 rows). Seeded RNG (42)."""
+    """Batch benchmark: every run to CSV (75 rows). Seeded RNG (42)."""
     loaded = phonebook.loadfrom_csv(csv_input)
     if loaded == -1:
         print(f"Cannot open file: {csv_input}", file=sys.stderr)
@@ -27,11 +27,13 @@ def run_search_benchmark_batch(phonebook: PhoneBook, csv_input: str,
     if n == 0:
         print("No contacts to benchmark.", file=sys.stderr)
         return 1
-    cases = ["first", "random", "last"]
-    indices = [0, n - 1, n - 1]
+    cases = ["first", "middle", "random", "last", "miss"]
+    indices = [0, n // 2, n - 1, n - 1, -1]
     indices[0] = 0
-    indices[2] = n - 1
-    indices[1] = n - 1 if n <= 2 else random.Random(42).randint(0, n - 1)
+    indices[1] = n // 2
+    indices[3] = n - 1
+    indices[4] = -1
+    indices[2] = n - 1 if n <= 2 else random.Random(42).randint(0, n - 1)
 
     need_header = True
     if append and os.path.exists(out_csv) and os.path.getsize(out_csv) > 0:
@@ -49,20 +51,25 @@ def run_search_benchmark_batch(phonebook: PhoneBook, csv_input: str,
         w = csv.writer(f)
         if need_header:
             f.write(HEADER + "\n")
-        for k in range(3):
+        for k in range(5):
             target_idx = indices[k]
-            phone = phonebook.get_phone_at(target_idx)
-            if not phone:
-                continue
-            for algo in ("linear", "hash"):
+            if k == 4:
+                phone = "0000000000"
+            else:
+                phone = phonebook.get_phone_at(target_idx)
+                if not phone:
+                    continue
+            for algo in ("linear", "hash", "binary"):
                 for r in range(1, 6):
                     if algo == "linear":
                         t = time_it(lambda: phonebook.search_linear_by_phone(phone))
-                    else:
+                    elif algo == "hash":
                         t = time_it(lambda: phonebook.search_hash_by_phone(phone))
+                    else:
+                        t = time_it(lambda: phonebook.search_binary_by_phone(phone))
                     w.writerow(["python", csv_input, n, cases[k], algo, r, repr(t),
                                 timestamp, toolchain, target_idx, phone])
-    print(f"Wrote 30 rows -> {out_csv} ({n} contacts).")
+    print(f"Wrote 75 rows -> {out_csv} ({n} contacts).")
     return 0
 
 
@@ -81,30 +88,37 @@ def run_search_benchmark(phonebook: PhoneBook, csv_input: str) -> None:
     n = phonebook.size()
     labels = [
         "first (linear best case)",
+        "middle (linear avg / binary best)",
         "random (linear average case)",
         "last (linear worst case)",
+        "miss (linear worst / hash & binary worst)",
     ]
-    indices = [0, 0, n - 1]
+    indices = [0, n // 2, 0, n - 1, -1]
     indices[0] = 0
-    indices[2] = n - 1
+    indices[1] = n // 2
+    indices[3] = n - 1
+    indices[4] = -1
     if n <= 2:
-        indices[1] = n - 1
+        indices[2] = n - 1
     else:
-        indices[1] = random.randint(0, n - 1)
+        indices[2] = random.randint(0, n - 1)
 
     print(
-        "\nBenchmarking phone search (linear cases: first=best / random=average / last=worst; "
-        "hash is ~O(1) in all cases)"
+        "\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; "
+        "hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary)"
         f" ({n} contacts, 5 runs each, best reported)."
     )
 
-    for k in range(3):
+    for k in range(5):
         target_idx = indices[k]
-        phone = phonebook.get_phone_at(target_idx)
-        if not phone:
-            print(f"[{labels[k]}] index {target_idx}: cannot pick target.")
-            continue
-        holder = {"lin": -1, "h": -1}
+        if k == 4:
+            phone = "0000000000"
+        else:
+            phone = phonebook.get_phone_at(target_idx)
+            if not phone:
+                print(f"[{labels[k]}] index {target_idx}: cannot pick target.")
+                continue
+        holder = {"lin": -1, "h": -1, "b": -1}
 
         def do_lin(p=phone):
             holder["lin"] = phonebook.search_linear_by_phone(p)
@@ -112,12 +126,17 @@ def run_search_benchmark(phonebook: PhoneBook, csv_input: str) -> None:
         def do_hash(p=phone):
             holder["h"] = phonebook.search_hash_by_phone(p)
 
+        def do_bin(p=phone):
+            holder["b"] = phonebook.search_binary_by_phone(p)
+
         lin_best = benchmark(do_lin)
         hash_best = benchmark(do_hash)
+        bin_best = benchmark(do_bin)
         print(f"[{labels[k]} index {target_idx} phone {phone}]")
         print(f"  Linear best of 5: {lin_best}ms. (index {holder['lin']})")
         print(f"  Hash best of 5: {hash_best}ms. (index {holder['h']}, position-independent)")
-    print("Linear: first=best, last=worst. Hash: ~constant regardless of position.")
+        print(f"  Binary best of 5: {bin_best}ms. (index {holder['b']}, sorted index, position-independent)")
+    print("Linear: first=best, last/miss=worst. Hash/binary: ~constant; miss is worst (full chain / log n probes).")
 
 
 def print_menu() -> None:
@@ -235,8 +254,9 @@ def main() -> int:
             print("========== Search ==========")
             print("1. Search phone - Linear Search")
             print("2. Search phone - Hash Search")
-            print("3. Search name - Linear Search")
-            print("4. Back")
+            print("3. Search phone - Binary Search (sorted index)")
+            print("4. Search name - Linear Search")
+            print("5. Back")
             print("============================")
             print("Enter your choice: ", end="")
             try:
@@ -289,6 +309,25 @@ def main() -> int:
                     phonebook.print_contact(result["v"])
             elif search_choice == 3:
                 try:
+                    print("Enter phone number: ", end="")
+                    phone = input()
+                except EOFError:
+                    print("\nGoodbye")
+                    return 0
+                result = {}
+
+                def wbin():
+                    result["v"] = phonebook.search_binary_by_phone(phone)
+
+                print_task_duration(wbin)
+                if result["v"] == -1:
+                    print("Phone number not found.")
+                else:
+                    print("Phone number found using Binary Search (sorted index).")
+                    print(f"Contact index: {result['v']}")
+                    phonebook.print_contact(result["v"])
+            elif search_choice == 4:
+                try:
                     print("Enter name: ", end="")
                     name = input()
                 except EOFError:
@@ -306,7 +345,7 @@ def main() -> int:
                     print("Name found.")
                     print(f"Contact index: {result['v']}")
                     phonebook.print_contact(result["v"])
-            elif search_choice == 4:
+            elif search_choice == 5:
                 print("Back to main menu.")
             else:
                 print("Invalid search choice.")
