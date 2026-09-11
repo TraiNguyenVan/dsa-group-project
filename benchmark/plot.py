@@ -78,10 +78,71 @@ def load_best(path):
     return best, dataset, n
 
 
+def plot_line(input_path, output_path, case="last"):
+    """Line chart: best-of-5 ms vs n, one line per language, per algo panel.
+
+    Reads a multi-size results.csv (produced by `make run-benchmark-sizes`),
+    groups best-of-5 by (lang, algo, case, n), and plots the runtime growth
+    curves of all 5 languages overlaid on one graph (log-log so 50..1M fits).
+    Defaults to the `last` case (index n-1, same position in every language,
+    worst case for linear search) so the O(n) slope is visible.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    best = {}  # (lang, algo, case, n) -> best ms
+    with open(input_path, "r", encoding="utf-8", newline="") as f:
+        for rowno, row in enumerate(csv.DictReader(f), start=2):
+            lang = (row.get("language") or "").strip()
+            algo = (row.get("algo") or "").strip()
+            c = (row.get("case") or "").strip()
+            try:
+                n = int((row.get("n") or "").strip())
+            except ValueError:
+                continue
+            if lang not in LANG_ORDER or algo not in ALGO_ORDER or c not in CASE_ORDER:
+                continue
+            v = parse_ms(row.get("ms"), rowno)
+            if v is None:
+                continue
+            key = (lang, algo, c, n)
+            if key not in best or v < best[key]:
+                best[key] = v
+
+    ns = sorted({n for (_, _, _, n) in best})
+    if not ns:
+        print("error: no plottable rows found", file=sys.stderr)
+        return 1
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    for ax, algo in zip(axes, ALGO_ORDER):
+        for lang in LANG_ORDER:
+            ys = [best.get((lang, algo, case, n), float("nan")) for n in ns]
+            ax.plot(ns, ys, marker="o", label=lang)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("n (rows)")
+        ax.set_ylabel("best-of-5 ms")
+        ax.set_title(f"{algo} lookup ({case} position)")
+        ax.grid(True, which="both", alpha=0.3)
+    axes[0].legend()
+    fig.suptitle("Runtime vs dataset size, all 5 languages")
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=120)
+    print(f"Wrote {output_path} ({len(ns)} sizes, {len(best)} cells).")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="Plot benchmark/results.csv (best of 5).")
     ap.add_argument("input", help="input CSV (benchmark/results.csv)")
     ap.add_argument("output", help="output PNG (benchmark/plot.png)")
+    ap.add_argument("--line", action="store_true",
+                    help="line chart of best-of-5 ms vs n (multi-size results.csv)")
+    ap.add_argument("--case", choices=CASE_ORDER, default="last",
+                    help="target case for the line chart (default: last)")
     args = ap.parse_args()
 
     try:
@@ -92,6 +153,9 @@ def main():
     except ImportError:
         print("error: matplotlib not installed (pip install matplotlib)", file=sys.stderr)
         return 2
+
+    if args.line:
+        return plot_line(args.input, args.output, args.case)
 
     try:
         best, dataset, n = load_best(args.input)

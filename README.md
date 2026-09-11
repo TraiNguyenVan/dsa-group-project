@@ -25,8 +25,10 @@ CLI phonebook lookup that compares **linear search vs hash search** on phone num
 │   ├── generate.py             # seeded generator (--seed 42)
 │   ├── README.md
 │   ├── contacts_50.csv         # demo set
+│   ├── contacts_10k.csv
 │   ├── contacts_100k.csv
 │   ├── contacts_200k.csv
+│   ├── contacts_500k.csv
 │   └── contacts_1m.csv
 ├── include/                    # C++ headers
 │   ├── contact.hpp

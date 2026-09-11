@@ -2,13 +2,15 @@
 
 Benchmark datasets for the phonebook lookup CLI. All files share the same
 schema and are nested prefixes of one seeded 1M-row stream, so scaling
-results are comparable (`contacts_50` ⊂ `contacts_100k` ⊂ `contacts_200k` ⊂ `contacts_1m`).
+results are comparable (`contacts_50` ⊂ `contacts_10k` ⊂ `contacts_100k` ⊂ `contacts_200k` ⊂ `contacts_500k` ⊂ `contacts_1m`).
 
 | File               | Rows      | Approx. size |
 | ------------------ | --------- | ------------ |
 | `contacts_50.csv`  | 50        | ~1 KB        |
+| `contacts_10k.csv` | 10,000    | ~250 KB      |
 | `contacts_100k.csv`| 100,000   | ~2.6 MB      |
 | `contacts_200k.csv`| 200,000   | ~5.1 MB      |
+| `contacts_500k.csv`| 500,000   | ~13 MB       |
 | `contacts_1m.csv`  | 1,000,000 | ~26 MB       |
 
 Format: `Name,Phone` per line (no header, LF line endings). `Phone` is a
