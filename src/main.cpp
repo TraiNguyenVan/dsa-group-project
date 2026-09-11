@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <iostream>
+#include <random>
 #include <string>
 
 #include "../include/phonebook.hpp"
@@ -7,12 +8,67 @@
 
 using namespace std;
 
+void runSearchBenchmark(PhoneBook& phonebook, const string& csvInput) {
+    if (phonebook.size() == 0) {
+        cout << "Phonebook empty, auto-loading from: " << csvInput << "\n";
+        int loaded = phonebook.loadfromCSV(csvInput);
+        if (loaded == -1) {
+            cout << "Cannot open file.\n";
+            return;
+        }
+        if (phonebook.size() == 0) {
+            cout << "No contacts to benchmark. Load contacts first (option 1).\n";
+            return;
+        }
+        cout << "Auto-loaded " << loaded << " contacts.\n";
+    }
+
+    std::size_t n = phonebook.size();
+    std::size_t indices[3];
+    const char* labels[3] = {"first (linear best case)", "random (linear average case)",
+                             "last (linear worst case)"};
+    indices[0] = 0;
+    indices[2] = n - 1;
+    if (n <= 2) {
+        indices[1] = n - 1;
+    } else {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<std::size_t> dist(0, n - 1);
+        indices[1] = dist(gen);
+    }
+
+    cout << "\nBenchmarking phone search (linear cases: first=best / random=average / last=worst; "
+            "hash is ~O(1) in all cases)"
+         << " (" << n << " contacts, 5 runs each, best reported).\n";
+
+    for (int k = 0; k < 3; ++k) {
+        std::size_t targetIdx = indices[k];
+        string phone = phonebook.getPhoneAt(targetIdx);
+        if (phone.empty()) {
+            cout << "[" << labels[k] << "] index " << targetIdx << ": cannot pick target.\n";
+            continue;
+        }
+
+        int idxLin = -1;
+        int idxHash = -1;
+        double linBest = benchmark([&]() { idxLin = phonebook.searchLinearByPhone(phone); });
+        double hashBest = benchmark([&]() { idxHash = phonebook.searchHashByPhone(phone); });
+
+        cout << "[" << labels[k] << " index " << targetIdx << " phone " << phone << "]\n";
+        cout << "  Linear best of 5: " << linBest << "ms. (index " << idxLin << ")\n";
+        cout << "  Hash best of 5: " << hashBest << "ms. (index " << idxHash << ", position-independent)\n";
+    }
+    cout << "Linear: first=best, last=worst. Hash: ~constant regardless of position.\n";
+}
+
 void printMenu() {
     cout << "\n";
     cout << "========================================\n";
     cout << "             PHONE BOOK CLI\n";
     cout << "========================================\n";
 
+    cout << "0. Benchmark phone search (5 runs, best)\n";
     cout << "1. Load contacts from CSV\n";
     cout << "2. Save contacts to CSV\n";
     cout << "3. Insert contact\n";
@@ -48,7 +104,9 @@ int main(int argc, char* argv[]) {
         }
         cin.clear();
         cin.ignore(200000, '\n');
-        if (choice == 1) {
+        if (choice == 0) {
+            runSearchBenchmark(phonebook, csvInput);
+        } else if (choice == 1) {
             cout << "Loading contacts from: " << csvInput << "\n";
 
             int result;
@@ -180,7 +238,7 @@ int main(int argc, char* argv[]) {
             return 0;
         } else {
             cout << "Invalid choice. "
-                 << "Please choose from 1 to 8.\n";
+                 << "Please choose from 0 to 8.\n";
         }
     }
     return 0;
