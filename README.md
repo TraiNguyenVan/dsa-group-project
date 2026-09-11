@@ -1,12 +1,6 @@
-# Phonebook Lookup — C++ (source of truth) + Python/Go/JS/Java for comparison
+# Phonebook Lookup — C++
 
-CLI phonebook that compares **linear search vs hash search** on phone numbers.
-The C++ program is the graded deliverable. The four ports exist only so the
-teacher can compare the same logic across languages.
-
-Source of truth: `src/main.cpp`, `src/phonebook.cpp`, `src/hashtable.cpp`,
-`include/phonebook.hpp`, `include/hashtable.hpp`, `include/timer.hpp`,
-`include/contact.hpp`.
+CLI phonebook lookupthat compares **linear search vs hash search** on phone numbers.
 
 ## Repo layout
 
@@ -26,17 +20,13 @@ benchmark/               results.csv, plot.png, plot-*.png, plot.py (generated b
 
 ## Dependencies
 
-One table, three jobs. Normal run and benchmark run need the **same**
-toolchain per language (batch `--benchmark-csv` mode is built into each
-program, no extra tools). Only plot generation needs anything extra.
-
-| Language | Normal run | Benchmark run (`--benchmark-csv`) | Plot generation |
-| --- | --- | --- | --- |
-| C++ | `g++` with C++17 (or CMake 3.16+) | same, no extras | — |
-| Python | `python3` stdlib only, no deps | same, no extras | `matplotlib` (`pip install matplotlib`) |
-| Go | `go 1.21+` | same, no extras | — |
-| JavaScript | `node >=18`, no `npm install` | same, no extras | — |
-| Java | JDK 17 (`javac` + `java`) | same, no extras | — |
+| Language   | Normal run                        | Benchmark run (`--benchmark-csv`) | Plot generation                         |
+| ---------- | --------------------------------- | --------------------------------- | --------------------------------------- |
+| C++        | `g++` with C++17 (or CMake 3.16+) | same, no extras                   | —                                       |
+| Python     | `python3` stdlib only, no deps    | same, no extras                   | `matplotlib` (`pip install matplotlib`) |
+| Go         | `go 1.21+`                        | same, no extras                   | —                                       |
+| JavaScript | `node >=18`, no `npm install`     | same, no extras                   | —                                       |
+| Java       | JDK 17 (`javac` + `java`)         | same, no extras                   | —                                       |
 
 Without matplotlib the pipeline still works: the plot step prints
 `plot skipped: pip install matplotlib` and `benchmark/results.csv` is
@@ -82,7 +72,7 @@ Menu (`src/main.cpp:65-83`):
 
 Bad input prints `Invalid input.` and reprompts. EOF prints `Goodbye`.
 
-## C++ behavior (ports copy this)
+## C++ behavior
 
 * **CSV** (`src/phonebook.cpp:30-83`): quoted `"Do, Thanh Tuan"` with `""`
   escapes, unquoted split on **last** comma, trim spaces, strip wrapping
@@ -93,8 +83,7 @@ Bad input prints `Invalid input.` and reprompts. EOF prints `Goodbye`.
   hash (`Phone number is already exist`), else store
   `CapitalizeFirst(ToLower(name))` (ASCII-only) + index in hash table.
 * **Delete** (`deleteContactByPhone`, option `8`): O(n) — vector erase
-  shifts the tail + full hash rebuild so order is preserved (usual
-  DSA-course version). Missing phone prints `Phone number not found`.
+  shifts the tail + full hash rebuild so order is preserved. Missing phone prints `Phone number not found`.
 * **Search:** `searchLinearByPhone` exact scan, `searchHashByPhone` chained
   lookup, `searchLinearByName` case-insensitive scan via `toLower`.
 * **Hash** (`src/hashtable.cpp`): `hash = hash*31 + (unsigned char)(c-'0')`
@@ -105,18 +94,18 @@ Bad input prints `Invalid input.` and reprompts. EOF prints `Goodbye`.
 * **Benchmark** (`src/main.cpp:11-63`, option `0`): auto-loads CSV if empty,
   picks `first / random / last` phones, times linear vs hash 5 runs each.
 
-## Ports — per-language detail (comparison only)
+## Ports — per-language detail (We use AI to assist building this) 
 
 Same prompts, same messages, same file split as C++. Differences are only
 what the runtime forces (64-bit wrap, stdin, timing API).
 
-| C++ | Python | Go | JavaScript (Node) | Java |
-| --- | --- | --- | --- | --- |
-| `src/main.cpp` | `python/phonebook/main.py` | `go/phonebook/main.go` | `javascript/phonebook/src/main.js` | `java/phonebook/src/com/phonebook/Main.java` |
-| `src/phonebook.cpp` + `include/phonebook.hpp` | `phonebook.py` | `phonebook.go` | `src/phonebook.js` | `PhoneBook.java` |
-| `src/hashtable.cpp` + `include/hashtable.hpp` | `hashtable.py` | `hashtable.go` | `src/hashtable.js` | `HashTable.java` |
-| `include/timer.hpp` | `timer.py` | `timer.go` | `src/timer.js` | `Timer.java` |
-| `include/contact.hpp` | `contact.py` | `contact.go` | `src/contact.js` | `Contact.java` |
+| C++                                           | Python                     | Go                     | JavaScript (Node)                  | Java                                         |
+| --------------------------------------------- | -------------------------- | ---------------------- | ---------------------------------- | -------------------------------------------- |
+| `src/main.cpp`                                | `python/phonebook/main.py` | `go/phonebook/main.go` | `javascript/phonebook/src/main.js` | `java/phonebook/src/com/phonebook/Main.java` |
+| `src/phonebook.cpp` + `include/phonebook.hpp` | `phonebook.py`             | `phonebook.go`         | `src/phonebook.js`                 | `PhoneBook.java`                             |
+| `src/hashtable.cpp` + `include/hashtable.hpp` | `hashtable.py`             | `hashtable.go`         | `src/hashtable.js`                 | `HashTable.java`                             |
+| `include/timer.hpp`                           | `timer.py`                 | `timer.go`             | `src/timer.js`                     | `Timer.java`                                 |
+| `include/contact.hpp`                         | `contact.py`               | `contact.go`           | `src/contact.js`                   | `Contact.java`                               |
 
 ### Python
 
@@ -161,7 +150,7 @@ for hash wrap, `fs.readFileSync`.
 
 ### Java
 
-Prereq: JDK 17. In this workspace: `nix-shell -p openjdk17`.
+Prereq: JDK 17. In this workspace: `openjdk17`.
 
 ```sh
 cd java/phonebook
@@ -203,9 +192,9 @@ compile the C++ demo first):
 make  # builds ./build/cpp/demo; other languages need no build step
 ./build/cpp/demo --benchmark-csv benchmark/results.csv data/contacts_100k.csv
 python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append data/contacts_100k.csv
-cd go/phonebook && go run . --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv
-cd javascript/phonebook && node src/main.js --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv
-cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv
+(cd go/phonebook && go run . --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv)
+(cd javascript/phonebook && node src/main.js --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv)
+(cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv)
 ```
 
 `benchmark/results.csv` columns:
