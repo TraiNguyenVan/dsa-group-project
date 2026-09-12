@@ -101,19 +101,22 @@ replacement for the compiler — it still invokes `g++` (or clang++/MSVC)
 underneath, so you need CMake 3.16+ **and** a C++17 compiler.
 
 ```sh
-# Makefile (mirrors CMakeLists.txt)
+# Makefile
 make
 ./build/cpp/demo data/contacts_50.csv
 make run-50      # 50 rows
 make run-100k    # 100k rows
-make run-200k
-make run-1m
+make run-200k    # 200k rows
+make run-1m       # 1M rows
 
-# CMake
+# CMake (mirrors the Makefile targets)
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ./build/demo data/contacts_100k.csv
 cmake --build build --target run-50
+cmake --build build --target run-100k
+cmake --build build --target run-200k
+cmake --build build --target run-1m
 ```
 
 ### CMake presets (`CMakePresets.json`, needs CMake 3.21+)
@@ -225,9 +228,14 @@ A measurement without its conditions is not a measurement (CONTRIBUTING.md).
 | Commit | `adc54407393a2d8b82260a8af5695ad077df7641` |
 
 The full measurement method, charts, and comparison tables are in
-[`report/report.md`](report/report.md) (Part D).
+[`report/report.md`](report/report.md) (Part D). For the benchmark harness
+and workflow walkthrough, see the docs guide in
+[`docs/README.md`](docs/README.md).
 
 ## Reproduce the benchmark (option 0)
+
+The same option-0 benchmark flow can be replayed across the C++ and
+language ports by piping the menu choices `0` and `9` into each program.
 
 ```sh
 printf '0\n9\n' | ./build/cpp/demo data/contacts_50.csv
