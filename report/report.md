@@ -533,5 +533,7 @@ comparable. Use `contacts_50.csv` for demos.
 
 ### A.6 AI-use declaration
 
-<!-- TODO: where AI was used (guide: "AI is a tool, not an author — declare
-     where, and be able to explain every line you submit, line by line") -->
+We used **OpenCode, Copilot, and web-based AI chat** for brainstorming and for boilerplate translation/tooling. The **C++ program is completely hand-written** — no AI generated any file under `src/` or `include/` (`contact.hpp`, `hashtable.hpp/.cpp`, `phonebook.hpp/.cpp`, `timer.hpp`, `main.cpp`). All AI-assisted output was reviewed, compiled, executed.
+
+* **AI-assisted:** language ports (`python/phonebook/*`, `go/phonebook/*`, `javascript/phonebook/src/*`, `java/phonebook/src/com/phonebook/*`) — faithful translations of the C++ chained hash table — and benchmark/tooling scripts (`benchmark/plot.py`, `benchmark/mem_profile.py`, `report/export_pdf.py`).
+* **Not AI-assisted:** C++ core, report prose/analysis (Parts A, B, D — AI only for brainstorming concepts we did not know), and all measurements (`benchmark/results.csv`, `benchmark/mem/*`, D.4/D.5/D.10/D.11 — real runs via `make run-benchmark` on the machine in D.11).
