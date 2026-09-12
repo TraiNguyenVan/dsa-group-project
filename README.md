@@ -212,8 +212,6 @@ report appendix.
 
 ## Machine & toolchain used for measurements
 
-A measurement without its conditions is not a measurement (CONTRIBUTING.md).
-
 | Component | Value |
 | --- | --- |
 | CPU | Intel Core i5-1135G7 @ 2.40 GHz (4 cores / 8 threads) |
