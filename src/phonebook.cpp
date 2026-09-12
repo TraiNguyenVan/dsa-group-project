@@ -292,8 +292,8 @@ int PhoneBook::searchBinaryByPhone(const std::string& phone) const {
 }
 // Rebuild the sorted index from scratch (O(n log n)); called once after load.
 void PhoneBook::buildSortedIndex() {
-    sortedPhones.clear();
-    sortedPhones.reserve(contacts.size());
+    sortedPhones.clear(); // drop old sorted phone numbers so the index starts fresh
+    sortedPhones.reserve(contacts.size()); // pre-allocate for the current contact count
     for (const auto& c : contacts) {
         sortedPhones.push_back(c.phone);
     }
