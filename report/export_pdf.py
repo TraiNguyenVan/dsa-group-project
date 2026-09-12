@@ -36,7 +36,7 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MD = os.path.join(HERE, "report.md")
-DEFAULT_PDF = os.path.join(HERE, "report.pdf")
+DEFAULT_PDF = os.path.join(HERE, "../report.pdf")
 
 # ---------------------------------------------------------------------------
 # Markdown -> HTML
