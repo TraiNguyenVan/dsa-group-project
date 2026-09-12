@@ -1,7 +1,6 @@
 """Faithful port of src/main.cpp - Phone Book CLI."""
 import csv
 import os
-import random
 import sys
 from datetime import datetime, timezone
 
@@ -18,7 +17,7 @@ HEADER = "language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,p
 
 def run_search_benchmark_batch(phonebook: PhoneBook, csv_input: str,
                                out_csv: str, append: bool) -> int:
-    """Batch benchmark: every run to CSV (75 rows). Seeded RNG (42)."""
+    """Batch benchmark: every run to CSV (60 rows)."""
     loaded = phonebook.loadfrom_csv(csv_input)
     if loaded == -1:
         print(f"Cannot open file: {csv_input}", file=sys.stderr)
@@ -27,13 +26,12 @@ def run_search_benchmark_batch(phonebook: PhoneBook, csv_input: str,
     if n == 0:
         print("No contacts to benchmark.", file=sys.stderr)
         return 1
-    cases = ["first", "middle", "random", "last", "miss"]
-    indices = [0, n // 2, n - 1, n - 1, -1]
+    cases = ["first", "middle", "last", "miss"]
+    indices = [0, n // 2, n - 1, -1]
     indices[0] = 0
     indices[1] = n // 2
-    indices[3] = n - 1
-    indices[4] = -1
-    indices[2] = n - 1 if n <= 2 else random.Random(42).randint(0, n - 1)
+    indices[2] = n - 1
+    indices[3] = -1
 
     need_header = True
     if append and os.path.exists(out_csv) and os.path.getsize(out_csv) > 0:
@@ -51,9 +49,9 @@ def run_search_benchmark_batch(phonebook: PhoneBook, csv_input: str,
         w = csv.writer(f)
         if need_header:
             f.write(HEADER + "\n")
-        for k in range(5):
+        for k in range(4):
             target_idx = indices[k]
-            if k == 4:
+            if k == 3:
                 phone = "0000000000"
             else:
                 phone = phonebook.get_phone_at(target_idx)
@@ -69,7 +67,7 @@ def run_search_benchmark_batch(phonebook: PhoneBook, csv_input: str,
                         t = time_it(lambda: phonebook.search_binary_by_phone(phone))
                     w.writerow(["python", csv_input, n, cases[k], algo, r, repr(t),
                                 timestamp, toolchain, target_idx, phone])
-    print(f"Wrote 75 rows -> {out_csv} ({n} contacts).")
+    print(f"Wrote 60 rows -> {out_csv} ({n} contacts).")
     return 0
 
 
@@ -89,29 +87,24 @@ def run_search_benchmark(phonebook: PhoneBook, csv_input: str) -> None:
     labels = [
         "first (linear best case)",
         "middle (linear avg / binary best)",
-        "random (linear average case)",
         "last (linear worst case)",
         "miss (linear worst / hash & binary worst)",
     ]
-    indices = [0, n // 2, 0, n - 1, -1]
+    indices = [0, n // 2, n - 1, -1]
     indices[0] = 0
     indices[1] = n // 2
-    indices[3] = n - 1
-    indices[4] = -1
-    if n <= 2:
-        indices[2] = n - 1
-    else:
-        indices[2] = random.randint(0, n - 1)
+    indices[2] = n - 1
+    indices[3] = -1
 
     print(
-        "\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; "
+        "\nBenchmarking phone search (linear: first=best / middle / last,miss=worst; "
         "hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary)"
         f" ({n} contacts, 5 runs each, best reported)."
     )
 
-    for k in range(5):
+    for k in range(4):
         target_idx = indices[k]
-        if k == 4:
+        if k == 3:
             phone = "0000000000"
         else:
             phone = phonebook.get_phone_at(target_idx)

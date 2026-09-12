@@ -3,7 +3,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <random>
 #include <string>
 #include <vector>
 
@@ -28,31 +27,22 @@ void runSearchBenchmark(PhoneBook& phonebook, const string& csvInput) {
     }
 
     std::size_t n = phonebook.size();
-    const char* labels[5] = {"first (linear best case)", "middle (linear avg / binary best)",
-                             "random (linear avg case)", "last (linear worst case)",
-                             "miss (linear worst / hash & binary worst)"};
-    long long indices[5];
+    const char* labels[4] = {"first (linear best case)", "middle (linear avg / binary best)",
+                              "last (linear worst case)", "miss (linear worst / hash & binary worst)"};
+    long long indices[4];
     indices[0] = 0;
     indices[1] = static_cast<long long>(n / 2);
-    indices[3] = static_cast<long long>(n - 1);
-    indices[4] = -1;
-    if (n <= 2) {
-        indices[2] = static_cast<long long>(n - 1);
-    } else {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<std::size_t> dist(0, n - 1);
-        indices[2] = static_cast<long long>(dist(gen));
-    }
+    indices[2] = static_cast<long long>(n - 1);
+    indices[3] = -1;
 
-    cout << "\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; "
+    cout << "\nBenchmarking phone search (linear: first=best / middle / last,miss=worst; "
             "hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary)"
          << " (" << n << " contacts, 5 runs each, best reported).\n";
 
-    for (int k = 0; k < 5; ++k) {
+    for (int k = 0; k < 4; ++k) {
         long long targetIdx = indices[k];
         string phone;
-        if (k == 4) {
+        if (k == 3) {
             phone = "0000000000";
         } else {
             phone = phonebook.getPhoneAt(static_cast<std::size_t>(targetIdx));
@@ -90,10 +80,10 @@ static string utcTimestamp() {
     return string(buf);
 }
 
-// Batch benchmark: first/middle/random/last/miss x linear/hash/binary targets,
-// writes EVERY run (5 each = 75 rows) to CSV. Seeded RNG (42) so `random`
-// is reproducible. `miss` uses phone "0000000000" (not in dataset) to
-// capture true worst case for hash/binary (full chain / log n probes).
+// Batch benchmark: first/middle/last/miss x linear/hash/binary targets,
+// writes EVERY run (4 cases x 3 algos x 5 = 60 rows) to CSV. `miss` uses
+// phone "0000000000" (not in dataset) to capture true worst case for
+// hash/binary (full chain / log n probes).
 int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
                             const string& outCsv, bool append) {
     int loaded = phonebook.loadfromCSV(csvInput);
@@ -107,19 +97,12 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
     }
 
     std::size_t n = phonebook.size();
-    long long indices[5];
-    const char* cases[5] = {"first", "middle", "random", "last", "miss"};
+    long long indices[4];
+    const char* cases[4] = {"first", "middle", "last", "miss"};
     indices[0] = 0;
     indices[1] = static_cast<long long>(n / 2);
-    indices[3] = static_cast<long long>(n - 1);
-    indices[4] = -1;
-    if (n <= 2) {
-        indices[2] = static_cast<long long>(n - 1);
-    } else {
-        std::mt19937 gen(42);
-        std::uniform_int_distribution<std::size_t> dist(0, n - 1);
-        indices[2] = static_cast<long long>(dist(gen));
-    }
+    indices[2] = static_cast<long long>(n - 1);
+    indices[3] = -1;
 
     bool needHeader = true;
     if (append) {
@@ -143,10 +126,10 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
     string timestamp = utcTimestamp();
     string toolchain = string("g++ ") + __VERSION__;
     const int repeats = 5;
-    for (int k = 0; k < 5; ++k) {
+    for (int k = 0; k < 4; ++k) {
         long long targetIdx = indices[k];
         string phone;
-        if (k == 4) {
+        if (k == 3) {
             phone = "0000000000";
         } else {
             phone = phonebook.getPhoneAt(static_cast<std::size_t>(targetIdx));

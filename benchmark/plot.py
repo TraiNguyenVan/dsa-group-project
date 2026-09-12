@@ -16,11 +16,11 @@ import os
 import sys
 
 LANG_ORDER = ["cpp", "python", "go", "js", "java"]
-CASE_ORDER = ["first", "middle", "random", "last", "miss"]
+CASE_ORDER = ["first", "middle", "last", "miss"]
 ALGO_ORDER = ["linear", "hash", "binary"]
 GROUPS = [(c, a) for c in CASE_ORDER for a in ALGO_ORDER]
 # For overview plots that still want the classic 3-case view
-CASE_ORDER_CLASSIC = ["first", "random", "last"]
+CASE_ORDER_CLASSIC = ["first", "last"]
 
 
 def parse_ms(raw, rowno):
@@ -151,10 +151,10 @@ def plot_line(input_path, output_path, case="last"):
 def plot_unified(input_path, output_path):
     """Per-language line charts: one PNG per language, every algo x every case.
 
-    5 charts (cpp/python/go/js/java), each with 15 series (3 algos x 5
-    cases: first/middle/random/last/miss) of best-of-5 ms vs n on log-log axes, so each
+    5 charts (cpp/python/go/js/java), each with 12 series (3 algos x 4
+    cases: first/middle/last/miss) of best-of-5 ms vs n on log-log axes, so each
     PNG shows every algo time on every case for that language. Color =
-    algo, linestyle = case (first solid, middle dashdot, random dashed, last dotted, miss solid+marker).
+    algo, linestyle = case (first solid, middle dashdot, last dotted, miss solid+marker).
     Log-log is required, not cosmetic: n spans 50..1M and linear-scan ms
     vs hash/binary us differ ~1000x, so linear axes would hide both the
     growth slope and the gap. Reads the multi-size results.csv from
@@ -191,7 +191,7 @@ def plot_unified(input_path, output_path):
     ns = sorted({nn for (_, _, _, nn) in best})
 
     algo_colors = {"linear": "tab:blue", "hash": "tab:orange", "binary": "tab:green"}
-    case_styles = {"first": "-", "middle": "-.", "random": "--", "last": ":", "miss": "-"}
+    case_styles = {"first": "-", "middle": "-.", "last": ":", "miss": "-"}
     out_dir = os.path.dirname(output_path) or "."
     stem = os.path.splitext(os.path.basename(output_path))[0]
     # `plot-unified-cpp.png` -> base `plot-unified`; bare `plot-unified`
@@ -232,7 +232,7 @@ def plot_per_algo_cases(input_path, output_path):
     """Per-language grouped bars: x=algo, 3 bars best/avg/worst per algo.
 
     For each (lang, algo) at the largest n in the CSV:
-      hit_cases = first/middle/random/last (all hits)
+      hit_cases = first/middle/last (all hits)
       best  = min(hit_cases)          — linear: first, hash: ~any, binary: middle
       worst = max(hit_cases + [miss]) — linear: miss/last, hash/binary: miss
       avg   = mean(hit_cases)         — linear ~n/2, hash/binary ~constant
@@ -269,7 +269,7 @@ def plot_per_algo_cases(input_path, output_path):
         return 1
     ns = sorted({nn for (_, _, _, nn) in best})
     n_max = ns[-1]
-    hit_cases = ["first", "middle", "random", "last"]
+    hit_cases = ["first", "middle", "last"]
 
     out_dir = os.path.dirname(output_path) or "."
     stem = os.path.splitext(os.path.basename(output_path))[0]
@@ -332,7 +332,7 @@ def plot_per_algo_cases(input_path, output_path):
         ax.legend(title="case stat")
         ax.grid(True, which="both", axis="y", alpha=0.3)
         # annotate n and hit definition
-        ax.text(0.02, 0.98, f"best=min(hit)  avg=mean(hit)  worst=max(hit,miss)\nhit=first/middle/random/last",
+        ax.text(0.02, 0.98, f"best=min(hit)  avg=mean(hit)  worst=max(hit,miss)\nhit=first/middle/last",
                 transform=ax.transAxes, va="top", ha="left", fontsize=7,
                 bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.7))
         fig.tight_layout()

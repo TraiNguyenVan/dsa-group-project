@@ -22,9 +22,8 @@ Quick answers, troubleshooting, and copy-paste recipes.
 | `plot skipped: pip install matplotlib` | No matplotlib | `pip install matplotlib` — CSVs are still produced |
 | `benchmark/results.csv` has 0 rows | Wrong `n` filter | `plot.py` defaults to `n=100k`; use `--n 50` or check `wc -l benchmark/results.csv` |
 | `warn: skipped N row(s)` | Bad `ms` values or unknown lang/case/algo | Check CSV header; `plot.py:parse_ms` skips non-finite/negative |
-| `random` picks different phones per lang | RNG impl differs | Expected — check `target_index` in CSV; use `first`/`last` for strict apples-to-apples |
 | Java/JS run 1 is 10–100× slower | JIT cold start (C1/C2, TurboFan) | Compare `best` or `mean(runs 2–5)`, not `run=1` |
-| `run-benchmark-sizes` is slow | 6 sizes × 5 langs × 75 rows | Normal (~5 min); start with `make run-benchmark` (100k only, ~30s) |
+| `run-benchmark-sizes` is slow | 6 sizes × 5 langs × 60 rows | Normal (~5 min); start with `make run-benchmark` (100k only, ~30s) |
 
 ### Memory profiling
 

@@ -12,7 +12,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Random;
 import java.util.Scanner;
 
 // Faithful port of src/main.cpp - Phone Book CLI.
@@ -37,30 +36,23 @@ public class Main {
         String[] labels = {
             "first (linear best case)",
             "middle (linear avg / binary best)",
-            "random (linear average case)",
             "last (linear worst case)",
             "miss (linear worst / hash & binary worst)"
         };
-        int[] indices = new int[5];
+        int[] indices = new int[4];
         indices[0] = 0;
         indices[1] = n / 2;
-        indices[3] = n - 1;
-        indices[4] = -1;
-        if (n <= 2) {
-            indices[2] = n - 1;
-        } else {
-            Random rng = new Random();
-            indices[2] = rng.nextInt(n);
-        }
+        indices[2] = n - 1;
+        indices[3] = -1;
 
-        System.out.println("\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; "
+        System.out.println("\nBenchmarking phone search (linear: first=best / middle / last,miss=worst; "
                 + "hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary)"
                 + " (" + n + " contacts, 5 runs each, best reported).");
 
-        for (int k = 0; k < 5; k++) {
+        for (int k = 0; k < 4; k++) {
             int targetIdx = indices[k];
             String phone;
-            if (k == 4) {
+            if (k == 3) {
                 phone = "0000000000";
             } else {
                 phone = phonebook.getPhoneAt(targetIdx);
@@ -92,8 +84,8 @@ public class Main {
         return v;
     }
 
-    // Batch benchmark: every run to CSV (75 rows). Seeded RNG (42). `miss` uses
-    // phone "0000000000" (not in dataset) for true worst case of hash/binary.
+    // Batch benchmark: every run to CSV (60 rows). `miss` uses phone
+    // "0000000000" (not in dataset) for true worst case of hash/binary.
     static int runSearchBenchmarkBatch(PhoneBook phonebook, String csvInput,
                                        String outCsv, boolean append) {
         int loaded = phonebook.loadfromCSV(csvInput);
@@ -106,15 +98,12 @@ public class Main {
             System.err.println("No contacts to benchmark.");
             return 1;
         }
-        String[] cases = {"first", "middle", "random", "last", "miss"};
-        int[] indices = {0, n / 2, n - 1, n - 1, -1};
+        String[] cases = {"first", "middle", "last", "miss"};
+        int[] indices = {0, n / 2, n - 1, -1};
         indices[0] = 0;
         indices[1] = n / 2;
-        indices[3] = n - 1;
-        indices[4] = -1;
-        if (n > 2) {
-            indices[2] = new Random(42).nextInt(n);
-        }
+        indices[2] = n - 1;
+        indices[3] = -1;
 
         boolean needHeader = true;
         Path outPath = Paths.get(outCsv);
@@ -136,9 +125,9 @@ public class Main {
         }
         String timestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS).toString();
         String toolchain = "javac " + System.getProperty("java.version", "?");
-        for (int k = 0; k < 5; k++) {
+        for (int k = 0; k < 4; k++) {
             String phone;
-            if (k == 4) {
+            if (k == 3) {
                 phone = "0000000000";
             } else {
                 phone = phonebook.getPhoneAt(indices[k]);
@@ -176,7 +165,7 @@ public class Main {
             System.err.println("Cannot open output file: " + outCsv);
             return 1;
         }
-        System.out.println("Wrote 75 rows -> " + outCsv + " (" + n + " contacts).");
+        System.out.println("Wrote 60 rows -> " + outCsv + " (" + n + " contacts).");
         return 0;
     }
 

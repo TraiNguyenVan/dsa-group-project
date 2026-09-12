@@ -60,7 +60,6 @@ for key, vals in rows.items():
 | Same `case` + `algo` across langs (e.g. `last-linear` cpp vs python) | ✅ | Same position, same work — directly comparable |
 | `first` vs `last` within one lang for `linear` | ✅ | Shows `O(n)` growth — the DSA point |
 | `first` vs `last` within one lang for `hash` | ✅ | Should be flat — proves `O(1)` |
-| `random` across langs | ⚠️ | Seeded `42` but RNG impl differs — check `target_index` in CSV; same distribution, not same phone |
 | `hash` vs `linear` absolute ms | ✅ with caveat | Different algos, but same dataset — the gap is the point; cite mechanism (boxed objects, interpreter, etc.) |
 | Single run (`run=1`) across langs | ❌ | Run 1 includes cold start (JIT, cache) — use `best` or `mean(runs 2–5)` for Java/JS |
 
@@ -113,7 +112,7 @@ Two panels, log y, x = `n`, 5 grouped bars per `n`:
 | Comparing `profiler_heap` across langs as "which lang uses less RAM" | Each profiler measures a different thing (Massif heap vs tracemalloc vs HeapInuse vs heapUsed) | Compare trends within each lang, and use `peak_rss` for cross-lang whole-process comparison |
 | Reporting only `n=100k` | One point doesn't show growth | Use `run-benchmark-sizes` (6 sizes) and the log-log chart |
 | Reporting `mean` without `stdev` | Hides noise; sub-µs cells have high CV | Report `mean ± stdev (best)` and mention CV |
-| Ignoring `target_index` | `random` picks different phones per lang | Check `target_index` in CSV; for strict apples-to-apples use `first`/`last` (same index every lang) |
+| Ignoring `target_index` | Cross-language misses may be mistaken for a different phone | Check `target_index` in CSV; for strict apples-to-apples use `first`/`middle`/`last` (same index every lang) |
 | Forgetting test conditions | `0.36 ms` means nothing without CPU/compiler/flags/dataset | Always cite the machine spec (see `README.md` → Machine & toolchain) |
 
 ---

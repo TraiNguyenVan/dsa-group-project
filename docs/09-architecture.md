@@ -152,7 +152,7 @@ If you add a language, update all three places.
 ## Key invariants
 
 - **Same load path** for runtime and memory: `CSV → contacts + hash buckets + sorted index`. No search during memory measurement — just holding the data.
-- **Seeded RNG (42)** in batch mode so `random` is reproducible; `target_index` + `phone` in CSV make it auditable.
+- **Target indexing is deterministic** — `target_index` + `phone` in CSV make the benchmark auditable across languages.
 - **Every run is kept** — 5 rows per cell, not an average. `best = min(5)` is derived, not stored.
 - **Evidence is kept** — `benchmark/mem/*.out|.pprof|.jfr|.heapprofile` are not temp files; they are the proof for the report.
 
