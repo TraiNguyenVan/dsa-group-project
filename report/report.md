@@ -33,20 +33,27 @@ course syllabus (`3-Data Structure and Algorithm-CLC.pdf`, INT1306_CLC).
 
 ### A.2 Motivation — one paragraph per structure
 
-For each structure answer explicitly:
+**Linear search** exists to find a record in a collection that has no order and no index — the only way to answer "is this phone number in the phonebook?" is to look at every entry until it matches (`src/phonebook.cpp:250` scans `contacts` until `phone == target`). What was unacceptable before it was not a missing structure but missing *scale*: the naive scan is fine for a dozen contacts, but once the phonebook grows to 100k entries, every lookup walks up to 100k records, and a burst of lookups becomes unusable. It builds on nothing but the plain (unsorted) array — it is the baseline every other structure in this topic improves on, and it survives as the inner loop of hash chaining, where each bucket's chain is searched linearly (`src/hashtable.cpp:hashSearch` walks the chain). It is the wrong choice whenever lookups are frequent or the collection is large — for a phonebook queried by phone number, O(n) per lookup is unacceptable — and whenever the data is already sorted, where binary search dominates it.
 
-* What problem does it exist to solve? What was unacceptable before it?
-* Which structures does it build on, and which are built on top of it?
-* When is it the **wrong** choice? Name a concrete case where you would not use it.
 
-<!-- TODO: write the paragraphs -->
+
+**Binary search** exists to exploit order: if the phone numbers are kept sorted, each probe discards half of the remaining range, so a lookup among 100k entries needs at most ~17 comparisons instead of up to 100k. What was unacceptable before it was wasting the sorted order — scanning a sorted array linearly ignores the very information (the ordering) that was paid for when the array was built. It builds on a sorted array (the sort itself is `O(n log n)` once in `buildSortedIndex()`, and keeping it sorted costs `O(n)` per insert in our demo via hand-written `lowerBound` `O(log n)` + `vector::insert` shift `O(n)` in `src/phonebook.cpp:177`), and nothing else in this topic is built on top of it — but it is the conceptual ancestor of tree-based indexes (BST, B-trees) that halve the search space the same way. It is the wrong choice when the data is not sorted (sorting 100k entries just to run a few lookups is more expensive than scanning linearly), when the collection changes frequently (each insert/delete costs `O(n)` to keep the order — a hash table gives `O(1)` expected for both), or when the key carries no meaningful order — searching a phonebook by exact phone number does not need the numbers sorted, so hashing is the better tool.
+
+
+
+**Interpolation search** exists to do better than binary search when the keys are not just sorted but *uniformly distributed*: instead of always probing the midpoint, it estimates where the target should be by value proportion, so on uniform data it reaches the target in `O(log log n)` expected probes rather than `O(log n)`. What was unacceptable before it was binary search's indifference to the key's value — it halves the range every time even when the target is known to sit near one end. It builds on a sorted array with uniformly distributed keys (it is binary search's smarter cousin, not a replacement for it), and nothing else in this topic is built on top of it. It is the wrong choice whenever the distribution is skewed — phone numbers, names, and most real-world keys are not uniform, and on skewed data it degenerates to `O(n)` (probing one position at a time); that is exactly why our demo covers it only in theory (§2.2.4) and does not implement or benchmark it — no interpolation code exists in `src/` or any port, and phone strings are not uniformly distributed. It is also the wrong choice for small arrays, where binary search's constant factors win.
+
+
+
+**Hashing & collisions** exists to map a key directly to a location, so a lookup, insert, or delete costs `O(1)` expected *regardless of how many records there are* — no scan, no halving, no sorted order to maintain. What was unacceptable before it was the cost of order: binary search needed `O(log n)` lookups but `O(n)` inserts to keep the array sorted, and linear search needed no order but paid `O(n)` per lookup — a phonebook that grows by thousands of entries a day and is queried constantly could not afford either. It builds on an array of buckets plus a linked list per bucket (chaining) to absorb collisions — in our demo, a 64-bit polynomial hash (`hash = hash*31 + (unsigned char)(c-'0')` with wrap, `% numBuckets` in `src/hashtable.cpp:HashForSize`; start `101 → nextPrime`, rehash at `load > 0.75` to `nextPrime(2×)`, `isPrime` via `6k±1`) maps each phone to a bucket, and colliding phones share a chain searched linearly. It is the foundation of dictionaries, caches, symbol tables, and database hash indexes — nothing else in this topic is built on top of it, but almost every language's built-in `dict`/`map`/`HashMap` is. It is the wrong choice when the keys are ordered and range queries matter ("list every contact whose phone starts with 09" — a hash table cannot answer that; a sorted array or BST can), when worst-case latency must be guaranteed (a pathological collision pattern collapses one chain to `O(n)` — a balanced BST gives a guaranteed `O(log n)`), or when memory is tight (keeping the load factor low wastes buckets — a denser open-addressed table or sorted array may fit better).
+
+
 
 ### A.3 Sources
 
 * Course syllabus — *Data Structures & Algorithms (INT1306_CLC)*, PTIT,
   `3-Data Structure and Algorithm-CLC.pdf`, accessed 2026-09-11.
-* <!-- TODO: textbook chapter/page — e.g. Main & Savitch, *Data Structures
-     and Other Objects Using C++*, 4th ed., 2010, ch. on searching/hashing -->
+* Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. — *Introduction to Algorithms* (CLRS), 4th ed., MIT Press, 2022, **Chapter 11: Hash Tables** — direct-address tables (§11.1), hash tables with chaining (§11.2), hash functions (§11.3), open addressing (§11.4). 3rd ed. (2009) same chapter, pp. 253–280. Accessed 2026-09-12.
 
 ---
 
@@ -432,8 +439,15 @@ above, plus your machine spec (CPU/RAM, OS, toolchains, commit).
 
 ### D.9 Recommendation
 
-<!-- TODO: which language would you actually pick for this problem in
-     production, and why? Defend it in Q&A. -->
+For a production phonebook lookup service — frequent exact-match queries on 100k–1M contacts where latency and footprint dominate — we would pick **C++**.
+
+On our machine (i5-1135G7, `contacts_100k.csv`, `g++ -O2`, D.11) C++ is the outright winner: `last-linear` best-of-5 is 0.36 ms vs Go 0.44 ms, JS 0.93 ms, Java 1.71 ms, Python 5.07 ms (D.10); hash/binary stay ~µs and position-independent in all five (D.4/D.8). `vector<Contact>` stores structs contiguously with SSO and compiles to a tight machine loop with no per-element overhead (D.8), avoiding Python's `PyObject` boxing + bytecode dispatch and JS/Java JIT warmup variance (D.6).
+
+Memory is the floor: 173 MB heap (Massif) / 173.6 MB RSS at 1M vs Go 367/215 MB, Python 356/390 MB, JS 206/445 MB, Java 255/330 MB (D.5). No runtime baseline — 12.6 MB RSS at n=50 vs JS 55.7 MB / Java 53.2 MB — and deterministic RAII with no GC pauses.
+
+Trade-offs (D.3): Go/Java/Python/JS pay GC, interpreter/JIT tax, and larger baselines but offer faster prototyping and built-in concurrency; C++ pays manual `new/delete` and longer debug cycles but gives `-Wall`, Valgrind/Massif, and full control. For this lookup-heavy, memory-sensitive service, speed and footprint dominate, so C++ is the right tool.
+
+Industry adoption supports this: **MySQL and PostgreSQL** — the foundational bedrock of relational databases — are both heavily rooted in C/C++, as are high-performance lookup and index engines where every microsecond and megabyte counts. If the constraint were rapid prototyping or managed concurrency over raw performance, we would pick Go.
 
 ### D.10 Measurement tables
 
@@ -499,7 +513,7 @@ comparable. Use `contacts_50.csv` for demos.
 
 ### A.4 Sources
 
-<!-- TODO: textbook chapter/page or URL + access date -->
+* Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. — *Introduction to Algorithms* (CLRS), 4th ed., MIT Press, 2022, **Chapter 11: Hash Tables** (§11.1 direct-address tables, §11.2 chaining, §11.3 hash functions, §11.4 open addressing). 3rd ed. (2009) same chapter, pp. 253–280. Accessed 2026-09-12.
 
 ### A.5 Contribution statement
 
