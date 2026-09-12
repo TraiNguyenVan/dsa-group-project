@@ -50,6 +50,11 @@ report/.report.html
 .DS_Store
 Thumbs.db
 
+# Benchmark smoke-test artifacts
+benchmark/package.json
+benchmark/package-lock.json
+benchmark/node_modules/
+
 # IDE junk
 .vscode
 .idea
