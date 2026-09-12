@@ -44,7 +44,10 @@ cd benchmark && python -m http.server 8000
 data/generate.py              dataset generator (seed 42)
 include/timer.hpp             timing primitive (ported to 4 langs)
 src/main.cpp                  C++ CLI + benchmark (option 0 + --benchmark-csv)
-python|go|javascript|java/    faithful ports — same menu, same benchmark
+python/phonebook/             Python port — same menu, same benchmark
+go/phonebook/                 Go port — same menu, same benchmark
+javascript/phonebook/         JavaScript port — same menu, same benchmark
+java/phonebook/               Java port — same menu, same benchmark
 benchmark/
   results.csv                 runtime results (every run, 5 per cell)
   mem/results.csv             memory results (profiler_heap + peak_rss)

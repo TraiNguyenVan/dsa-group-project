@@ -131,7 +131,7 @@ A common question: "is benchmark code mixed with user code?"
 | `include/contact.hpp`, `hashtable.hpp`, `phonebook.hpp` | ❌ clean | Zero benchmark code |
 | `include/timer.hpp` | dual-use | `printTaskDuration` = menu; `timeIt`/`benchmark` = benchmark (but `phonebook.cpp:insertContact` uses `timeIt` for split timing) |
 | `src/main.cpp` | dual | Menu + `runSearchBenchmark` (opt 0) + `runSearchBenchmarkBatch` (--benchmark-csv) — ~30-45% of file |
-| `python|go|javascript|java/phonebook/main.*` | dual | Faithful ports of `src/main.cpp` — same split, by design |
+| `python/phonebook/main.py`, `go/phonebook/main.go`, `javascript/phonebook/src/main.js`, `java/phonebook/src/com/phonebook/Main.java` | dual | Faithful ports of `src/main.cpp` — same split, by design |
 | `go/phonebook/memprofile_test.go` | ✅ benchmark-only | Env-gated `TestMemProfile` (`MEMPROFILE_CSV`/`OUT`) |
 | `java/.../MemProfile.java` | ✅ benchmark-only | Compiled with app via `javac *.java`, run separately |
 | `benchmark/mem/profile_python.py`, `profile_js.js` | ✅ benchmark-only | Wrappers that load the real `PhoneBook` under a profiler |
