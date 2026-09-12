@@ -140,14 +140,14 @@ marks.
 
 | Criterion | C++ | Python | Java | JavaScript | Go |
 | --- | --- | --- | --- | --- | --- |
-| Built-in structure used | — | — | — | — | — |
-| Manual implementation effort | | | | | |
+| Built-in structure used | hand-rolled chain on `vector<HashNode*>`; only `vector<string>/sort` as bucket/index | hand-rolled chain on `list`; only `list/sorted()` as bucket/index | hand-rolled chain on `HashNode[]`; only `ArrayList/Collections.sort` as bucket/index | hand-rolled chain on `Array`; only `Array/sort/splice` as bucket/index | hand-rolled chain on `[]*HashNode`; only `slice/sort.Strings` as bucket/index |
+| Manual implementation effort | highest: `new/delete`, header split, `=delete` copy/move, `6k±1` primes, rehash splicing, CSV state machine, `lowerBound`, CMake/Makefile `-O2 -Iinclude` | lowest: `dataclass + list` replace boilerplate; still hand-rolled `& MASK64` wrap, `""`-escape CSV, `lowerBound`, `perf_counter` best-of-5 | high: manual `remainderUnsigned` wrap, `HashNode[]` chaining, `NIO.2` CSV, `lowerBound`, `nanoTime` timer, `package + javac -d out` build | high: manual `BigInt & MASK64` per-char hash, `perf_hooks` timer, custom `readline` CLI, `mulberry32(42)` seeded bench | medium: `uint64` wraps like C++ for free; still hand-rolled chaining, CSV parser, `lowerBound`, `time.Now` timer, `go run` no build step |
 | Runtime on your dataset | see D.4/D.10 | see D.4/D.10 | see D.4/D.10 | see D.4/D.10 | see D.4/D.10 |
 | Memory footprint | lowest: contiguous structs, SSO, ~173 MB heap at 1M (Massif) | ~2× C++: per-object boxing, ~356 MB at 1M (tracemalloc) | ~2× C++: per-node heap allocs, ~367 MB at 1M (pprof) | mid-pack live heap ~206 MB at 1M, but largest RSS baseline (~55 MB at n=50) | polled peak ~255 MB at 1M; JVM baseline ~53 MB RSS at n=50 |
 | Memory management | manual (new/delete, RAII) — deterministic, no GC pauses | reference counting + generational GC | tracing GC (low-latency, concurrent) | tracing GC (V8, generational) | tracing GC (G1, may pause) |
-| Type safety | | | | | |
-| Readability of the code | | | | | |
-| Where you would use it | | | | | |
+| Type safety | strong static: `constexpr/explicit/const`, `template timeIt`, `size_t/int` casts, `-Wall` at compile | dynamic + unchecked hints (`Contact dataclass`, `List/Callable` annotations, `holder: dict` untyped) | static + generics (`List<Contact>`, `List<String>`), hardcoded `String->int` table, checked `IOException` | dynamic plain JS (`'use strict'`, CommonJS, no TS/JSDoc; `-1/true/false` + regex guards) | static concrete (no generics/`any`; `string->int` funcs, errors as `-1/false/nil`) |
+| Readability of the code | most verbose but most explicit: `O(1)/O(n)/O(log n)` costs visible; `fstream/cin>>choice` boilerplate | most concise: `snake_case`, f-strings, `with open`, one-liner `build_sorted_index`; `main.py` CLI repeats `result={}; def work()` | verbose enterprise: `package/imports/final`, `Scanner` guards, clear but ~2× Python LOC | high: small files, C++-mirroring names/comments; `main.js` CLI duplication (376 L) | explicit mid-point: slices/`defer` replace `new/delete`; `copy`-shift insert is noisy but clearexplicit mid-point: slices/`defer` replace `new/delete`; `copy`-shift insert is noisy but clear |
+| Where you would use it | perf-critical / 1M-scale / embedded: `-O2` tight loop, no GC, deterministic Massif heap | teaching / prototyping / benchmark glue: readable reference, `csv/random/datetime` scripting; not for hot loop (use real `dict/bisect` in prod) | large-team / enterprise / Android: type-safe, GC'd, JFR-profiled, `NIO.2` I/O; not for terse scripts | demo / web / zero-build CLI: `node src/main.js` iteration, `performance.now()` tooling; not for 100k+ hot path (`BigInt` per-char cost) | backend / microservice / DevOps tool: single binary, fast compile, `pprof`, GC without manual free; natural base for concurrent server |
 
 <!-- TODO: fill from your own measurements, not numbers copied from a blog -->
 
@@ -265,6 +265,53 @@ Java is slow on run 1 but fast on run 5 (JIT compilation).
 
 <!-- TODO: mean + variance per cell from benchmark/results.csv (5 runs per
      cell already exist); add warm-up runs for Java/JS -->
+
+Method: every cell in `benchmark/results.csv` holds 5 raw timed runs
+(`timeIt`, no discard) — 450 cells × 5 = 2250 rows (5 langs × 6 sizes ×
+5 cases × 3 algos). Interactive option `0` reports best-of-5; the CSV
+keeps all 5 so mean/sample-stdev/CV are computed offline. No untimed
+warm-up exists yet in any port (see per-language paths below), so `run=1`
+includes cold start. Reproduce: `python3 -c` with `csv.DictReader`,
+`statistics.mean/stdev`, `CV=stdev/mean`, `run1divbest=run1/min`.
+
+Representative slice at n=1000000 (`last` = linear worst, same phone in
+every language; hash/binary position-independent). Values in ms,
+`mean ± stdev (best)`:
+
+| Lang | Linear-last | Hash-last | Binary-last |
+| --- | --- | --- | --- |
+| C++ | 6.76 ± 2.27 (4.80) | 0.00018 ± 0.00029 (0.000049) | 0.00057 ± 0.00080 (0.000169) |
+| Python | 65.97 ± 1.59 (64.66) | 0.00507 ± 0.00663 (0.00191) | 0.00688 ± 0.00543 (0.00430) |
+| Go | 4.77 ± 1.32 (3.99) | 0.00020 ± 0.00031 (0.000046) | 0.00102 ± 0.00180 (0.000181) |
+| JS | 16.75 ± 0.63 (16.20) | 0.00292 ± 0.00399 (0.00107) | 0.00428 ± 0.00464 (0.00211) |
+| Java | 37.28 ± 2.65 (35.58) | 0.00131 ± 0.00144 (0.000564) | 0.00586 ± 0.00373 (0.00394) |
+
+Cold-start (`first` cell, n=1M, `run1/best`): JS 101× linear / 39.6×
+hash / 21.7× binary; Java 13.9× / 66.1× / 5.1×; Python 16.0× / 3.9× /
+2.7×; C++ 7.9× / 17.6× / 19.1×; Go 4.8× / 19.5× / 18.3×. Full 75-cell
+table (`mean,stdev,min,max,CV,run1divbest`) is generated from the CSV,
+not hand-copied — see script below.
+
+Why Java is slow on run 1 but fast on run 5: JVM starts interpreted
+(+ class-load, G1), then C1/C2 compile the hot loop after ~10k
+iterations — one 100k scan trips it, so `middle-linear` falls
+39ms→17ms across runs 1–5 and tiny hash ops fall 66× once compiled.
+Same story on V8 (Ignition→TurboFan + inline caches, settled by run
+3–5; `first` is coldest because it runs first). C++/Go are AOT
+(`-O2`, `go build`) so run-1 excess is cache/branch + sub-µs timer
+floor (CV 1.4–1.8 on hash/binary), not compilation. Python has no JIT;
+run-1 excess is caches/alloc, and large linear scans are the most
+stable of all (CV 0.02–0.04 at 1M) because interpreter dispatch
+dominates noise.
+
+Fairness: best-of-5 (used in D.4/D.7/D.10) mitigates JIT but does not
+replace discarded warm-up. Fix: 3 untimed, discarded searches with the
+same phone before the timed `r=1..5` loop in `java/.../Main.java:~150`
+and `javascript/.../main.js:~76` (assign to a sink so DCE cannot drop
+them; keep `run` numbering, CSV header, seed 42, `miss=0000000000`
+unchanged). C++/Go/Python need no change. Until then, compare
+`min(best)` or `mean(runs 2–5)` for Java/JS, and state which one each
+chart uses.
 
 ### D.7 Measurement method
 
