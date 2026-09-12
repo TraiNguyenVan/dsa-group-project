@@ -36,7 +36,7 @@ run-1m: $(TARGET)
 # Option 0 in the CLI is untouched; each port's --benchmark-csv batch mode is
 # seeded (42) so the `random` target is reproducible. C++ writes header, rest append.
 BENCHCSV  := benchmark/results.csv
-BENCHDATA := data/contacts_200k.csv
+BENCHDATA := data/contacts_100k.csv
 # Multi-size scaling run: nested-prefix datasets, appended into one CSV.
 BENCHFILES := data/contacts_50.csv data/contacts_10k.csv data/contacts_100k.csv data/contacts_200k.csv data/contacts_500k.csv data/contacts_1m.csv
 
