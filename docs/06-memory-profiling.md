@@ -67,7 +67,7 @@ All run on the **same load path** — no search, just `loadfromCSV` — so the h
 
 ```sh
 valgrind --tool=massif --massif-out-file=benchmark/mem/massif-100k.out \
-  build/cpp/demo --benchmark-csv /tmp/scratch.csv data/contacts_100k.csv
+  build/cpp/demo --benchmark-csv benchmark/mem/scratch.csv data/contacts_100k.csv
 ms_print benchmark/mem/massif-100k.out > benchmark/mem/massif-100k-msprint.txt
 ```
 
@@ -150,11 +150,11 @@ rss_kib = usage.ru_maxrss           # KiB on Linux
 
 | Lang | Batch command measured |
 |------|----------------------|
-| C++ | `build/cpp/demo --benchmark-csv /tmp/scratch.csv <csv>` |
-| Python | `python3 python/phonebook/main.py --benchmark-csv /tmp/scratch.csv <csv>` |
-| Go | `benchmark/mem/phonebook-go --benchmark-csv /tmp/scratch.csv <csv>` |
-| JS | `node javascript/phonebook/src/main.js --benchmark-csv /tmp/scratch.csv <csv>` |
-| Java | `java -cp java/phonebook/out com.phonebook.Main --benchmark-csv /tmp/scratch.csv <csv>` |
+| C++ | `build/cpp/demo --benchmark-csv benchmark/mem/scratch.csv <csv>` |
+| Python | `python3 python/phonebook/main.py --benchmark-csv benchmark/mem/scratch.csv <csv>` |
+| Go | `benchmark/mem/phonebook-go --benchmark-csv benchmark/mem/scratch.csv <csv>` |
+| JS | `node javascript/phonebook/src/main.js --benchmark-csv benchmark/mem/scratch.csv <csv>` |
+| Java | `java -cp java/phonebook/out com.phonebook.Main --benchmark-csv benchmark/mem/scratch.csv <csv>` |
 
 Evidence: `benchmark/mem/rss-<lang>-<n>.txt` (e.g. `rss-cpp-100k.txt`).
 

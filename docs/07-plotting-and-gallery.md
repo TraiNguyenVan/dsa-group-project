@@ -43,7 +43,7 @@ benchmark/plot-miss-linear.png    …
 
 ```sh
 python3 benchmark/plot.py --line benchmark/results.csv benchmark/plot-runtime-vs-n.png
-python3 benchmark/plot.py --line --case first benchmark/results.csv /tmp/first.png
+python3 benchmark/plot.py --line --case first benchmark/results.csv benchmark/first.png
 ```
 
 - Reads a **multi-size** CSV (from `make run-benchmark-sizes`: 6 sizes × 5 langs × 75 rows).
