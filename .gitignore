@@ -60,3 +60,5 @@ benchmark/node_modules/
 .idea
 *.swp
 *~
+# Go language build artifact
+go/phonebook/phonebook

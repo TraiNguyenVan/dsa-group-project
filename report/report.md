@@ -56,7 +56,7 @@ Demo implements linear, binary (sorted phone index), and hash table; interpolati
 * **Sorted index** `buildSortedIndex`: bulk load then sort once O(n log n); per-insert `lowerBound` O(log n)+shift O(n) with split `hash / sorted-index` timing; delete rebuilds.
 * **Hash** `hashtable.cpp`: poly hash 64-bit wrap `% numBuckets`; 101→nextPrime; rehash 0.75→nextPrime(2×); `isPrime` 6k±1.
 * **Timer** `timer.hpp`: `timeIt` ms, `benchmark(work,5)` best-of-5, `printTaskDuration` → `\nTook: Xms.`
-* **Benchmark** `main.cpp:11-63` opt 0: auto-loads CSV, picks `first/middle/random/last/miss` phones (`miss=0000000000` true worst for hash/binary), times linear/hash/binary ×5.
+* **Benchmark** `main.cpp:11-63` opt 0: auto-loads CSV, picks `first/middle/last/miss` phones (`miss=0000000000` true worst for hash/binary), times linear/hash/binary ×5.
 
 ---
 
@@ -83,7 +83,7 @@ Differences are only runtime-forced (64-bit wrap, stdin, timing API).
 | Built-in used | hand chain `vector<HashNode*>`; only `vector/sort` | hand chain `list`; only `list/sorted()` | hand chain `HashNode[]`; only `ArrayList/sort` | hand chain `Array`; only `Array/sort/splice` | hand chain `[]*HashNode`; only `slice/sort` |
 | Effort | highest: `new/delete`, header split, `=delete`, 6k±1, rehash, CSV state machine, `lowerBound`, CMake `-O2` | lowest: `dataclass+list`, `& MASK64`, `""`-CSV, `lowerBound`, `perf_counter` | high: `remainderUnsigned`, `HashNode[]`, NIO.2 CSV, `lowerBound`, `nanoTime`, `javac -d` | high: `BigInt & MASK64`, `perf_hooks`, `readline` CLI, `mulberry32(42)` | medium: `uint64` wraps free; chaining/CSV/`lowerBound`/`time.Now`, `go run` |
 | Runtime | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 |
-| Memory | lowest: ~173 MB heap at 1M (Massif) | ~2× C++: ~356 MB at 1M (tracemalloc) | ~2× C++: ~367 MB HeapInuse at 1M (pprof) | live ~206 MB at 1M, RSS baseline ~55 MB | polled ~255 MB at 1M; RSS ~215 MB |
+| Memory | lowest: ~165 MB heap at 1M (Massif) | ~2× C++: ~340 MB at 1M (tracemalloc) | ~2× C++: ~350 MB HeapInuse at 1M (pprof) | live ~260 MB at 1M, RSS baseline ~56 MB | polled ~242 MB at 1M; RSS ~323 MB |
 | Mgmt | manual RAII, deterministic, no GC | refcount + gen. GC | tracing G1, concurrent | V8 gen. GC | G1, may pause |
 | Types | strong static `constexpr/const`, `template`, `-Wall` | dynamic + hints (`dataclass`, `List/Callable`) | static+generics, checked `IOException` | dynamic JS `'use strict'`, no TS | static concrete, no generics, errors as `-1/nil` |
 | Readability | verbose/explicit; costs visible | most concise; `with open`, f-strings | verbose enterprise; ~2× Python LOC | small, C++-mirroring | explicit; `defer`/`copy`-shift noisy but clear |
@@ -105,41 +105,41 @@ Headless on same load path (CSV→contacts+hash+sorted index) at every n, plus k
 
 | n | C++ Massif | Python tracemalloc | Go pprof HeapInuse | JS V8 heapUsed | Java polled heap |
 | --- | --- | --- | --- | --- | --- |
-| 50 | 0.1 | 0.2 | 0.8 | 5.0 | 10.0 |
-| 10k | 2.3 | 3.5 | 4.3 | 7.7 | 14.3 |
-| 100k | 19.4 | 35.9 | 39.2 | 31.6 | 31.0 |
-| 200k | 38.7 | 71.8 | 77.0 | 78.9 | 51.6 |
-| 500k | 86.5 | 178.0 | 186.4 | 142.3 | 161.3 |
-| 1M | 172.9 | 356.2 | 367.0 | 206.3 | 254.8 |
+| 50 | 0.1 | 0.2 | 0.8 | 4.8 | 9.5 |
+| 10k | 2.2 | 3.4 | 4.1 | 7.3 | 11.6 |
+| 100k | 18.5 | 34.2 | 37.3 | 49.0 | 29.4 |
+| 200k | 36.9 | 68.5 | 73.4 | 64.4 | 44.9 |
+| 500k | 82.5 | 169.7 | 177.7 | 135.9 | 143.7 |
+| 1M | 164.9 | 339.7 | 350.3 | 260.2 | 241.9 |
 
 Peak RSS (MB, same batch):
 
 | n | C++ | Python | Go | JS | Java |
 | --- | --- | --- | --- | --- | --- |
-| 50 | 12.6 | 17.1 | 12.6 | 55.7 | 53.2 |
-| 10k | 12.9 | 20.7 | 12.9 | 73.0 | 61.3 |
-| 100k | 22.9 | 54.4 | 28.7 | 158.9 | 87.6 |
-| 200k | 40.5 | 91.8 | 55.0 | 190.8 | 129.9 |
-| 500k | 89.0 | 203.7 | 115.9 | 283.1 | 215.7 |
-| 1M | 173.6 | 390.4 | 215.3 | 444.7 | 330.4 |
+| 50 | 12.6 | 16.6 | 12.7 | 55.8 | 53.5 |
+| 10k | 12.9 | 20.4 | 12.9 | 74.8 | 61.6 |
+| 100k | 21.3 | 53.7 | 25.4 | 157.0 | 85.6 |
+| 200k | 39.3 | 91.1 | 46.5 | 191.1 | 128.0 |
+| 500k | 88.5 | 202.7 | 101.7 | 282.8 | 214.4 |
+| 1M | 174.9 | 386.6 | 239.8 | 441.9 | 323.4 |
 
-*Why:* **C++** floor — contiguous `vector<Contact>` + SSO, ~173 MB at 1M is the data. **Python** ~2× — every object boxed `PyObject` + header. **Go** ~367 MB HeapInuse — `[]Contact` values but per-`HashNode` allocs; RSS lower due to span accounting. **JS** largest baseline ~55 MB RSS at n=50; live ~206 MB but RSS ~445 MB (V8 heap reservation). **Java** ~53 MB baseline (JVM+G1), ~255 MB polled heap at 1M. Honest claim: data cost ranks C++ < Python≈Go < JS < Java; whole-process cost dominated by baselines at small n. Both panels needed.
+*Why:* **C++** floor — contiguous `vector<Contact>` + SSO, ~165 MB at 1M is the data. **Python** ~2× — every object boxed `PyObject` + header. **Go** ~350 MB HeapInuse — `[]Contact` values but per-`HashNode` allocs; RSS lower due to span accounting. **JS** largest baseline ~56 MB RSS at n=50; live ~260 MB but RSS ~442 MB (V8 heap reservation). **Java** ~54 MB baseline (JVM+G1), ~242 MB polled heap at 1M. Honest claim: data cost ranks C++ < Python≈Go < JS < Java; whole-process cost dominated by baselines at small n. Both panels needed.
 
 ### D.5 Statistical fairness
 
-Every cell in `benchmark/results.csv` holds 5 raw runs (`timeIt`, no discard) — 450 cells×5=2250 rows (5 langs×6 sizes×5 cases×3 algos). Opt 0 reports best-of-5; CSV keeps all 5 for mean/stdev/CV offline. No discarded warm-up yet, so run 1 includes cold start. Reproduce: `python3 -c` with `csv.DictReader`, `statistics.mean/stdev`, `CV=stdev/mean`.
+Every cell in `benchmark/results.csv` holds 5 raw runs (`timeIt`, no discard) — 360 cells×5=1800 rows (5 langs×6 sizes×4 cases×3 algos). Opt 0 reports best-of-5; CSV keeps all 5 for mean/stdev/CV offline. No discarded warm-up yet, so run 1 includes cold start. Reproduce: `python3 -c` with `csv.DictReader`, `statistics.mean/stdev`, `CV=stdev/mean`.
 
 Representative at n=1M (`last` = linear worst, same phone every lang), ms `mean ± stdev (best)`:
 
 | Lang | Linear-last | Hash-last | Binary-last |
 | --- | --- | --- | --- |
-| C++ | 6.76 ±2.27 (4.80) | 0.00018 ±0.00029 (0.000049) | 0.00057 ±0.00080 (0.000169) |
-| Python | 65.97 ±1.59 (64.66) | 0.00507 ±0.00663 (0.00191) | 0.00688 ±0.00543 (0.00430) |
-| Go | 4.77 ±1.32 (3.99) | 0.00020 ±0.00031 (0.000046) | 0.00102 ±0.00180 (0.000181) |
-| JS | 16.75 ±0.63 (16.20) | 0.00292 ±0.00399 (0.00107) | 0.00428 ±0.00464 (0.00211) |
-| Java | 37.28 ±2.65 (35.58) | 0.00131 ±0.00144 (0.000564) | 0.00586 ±0.00373 (0.00394) |
+| C++ | 4.302890 ±0.679485 (3.814707) | 0.000212 ±0.000392 (0.000035) | 0.001013 ±0.001940 (0.000125) |
+| Python | 42.768813 ±0.532619 (41.975203) | 0.003053 ±0.003243 (0.001388) | 0.004541 ±0.003323 (0.002941) |
+| Go | 3.468332 ±0.126620 (3.300311) | 0.000275 ±0.000513 (0.000032) | 0.000810 ±0.001469 (0.000133) |
+| JS | 17.269537 ±2.736207 (13.113779) | 0.003668 ±0.004672 (0.001240) | 0.005866 ±0.006290 (0.002539) |
+| Java | 22.521668 ±0.718975 (21.738484) | 0.001006 ±0.001003 (0.000509) | 0.004678 ±0.004580 (0.002551) |
 
-Cold-start `first` n=1M `run1/best`: JS 101×/39.6×/21.7×, Java 13.9×/66.1×/5.1×, Python 16×/3.9×/2.7×, C++ 7.9×/17.6×/19.1×, Go 4.8×/19.5×/18.3×. Full 75-cell table generated from CSV (not hand-copied).
+Cold-start `first` n=1M `run1/best`: JS 58.5×/46.6×/25.9×, Java 11.8×/79.1×/5.3×, Python 11.1×/5.6×/3.6×, C++ 11.2×/22.4×/20.5×, Go 17.3×/18.1×/19.4×. Full 75-cell table generated from CSV (not hand-copied).
 
 *Why Java slow on run 1:* JVM interpreted + class-load/G1, then C1/C2 compile hot loop after ~10k iters — one 100k scan triggers it (`middle-linear` 39→17 ms runs 1–5; tiny hash ops 66× after compile). V8 same (Ignition→TurboFan, settled by run 3–5; `first` coldest as it runs first). C++/Go AOT (`-O2`/`go build`) run-1 excess is cache/branch + sub-µs timer floor (CV 1.4–1.8 on hash/binary). Python no JIT; large linear most stable (CV 0.02–0.04 at 1M).
 
@@ -164,7 +164,7 @@ make run-benchmark-sizes    # ×6 sizes → plot-runtime-vs-n.png + per-lang PNG
 make run-memory             # profilers + RSS → benchmark/mem/results.csv + plot-memory.png
 ```
 
-Batch mode (75 rows/lang: 5 cases×3 algos×5 runs, seed 42, `target_index,phone` auditable; `miss` index −1):
+Batch mode (60 rows/lang: 4 cases×3 algos×5 runs, `target_index,phone` auditable; `miss` index −1):
 
 ```sh
 make  # builds ./build/cpp/demo
@@ -175,7 +175,7 @@ python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append 
 (cd java/phonebook && javac -d out src/com/phonebook/*.java && java -cp out com.phonebook.Main --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv)
 ```
 
-CSV: `language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone` — 375 rows single-size, 2250 multi-size. `plot.py` parses all `ms` formats defensively (C++ `setprecision(17)`, Python `repr`, Go `%g`, JS, Java) and draws `plot.png` (3 linear-scale panels, split axes) + line/unified/per-algo PNGs; without matplotlib it prints `plot skipped` and CSV is still produced.
+CSV: `language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone` — 300 rows single-size, 1800 multi-size. `plot.py` parses all `ms` formats defensively (C++ `setprecision(17)`, Python `repr`, Go `%g`, JS, Java) and draws `plot.png` (3 linear-scale panels, split axes) + line/unified/per-algo PNGs; without matplotlib it prints `plot skipped` and CSV is still produced.
 
 ![Phone search: linear vs hash vs binary (5 langs, best-of-5)](../benchmark/plot.png)
 
@@ -189,23 +189,23 @@ Additional per-case PNGs (`plot-first-*` … `plot-miss-*`, 15 images) remain in
 * **JS (V8):** heap-object array + hidden-class checks + JIT warmup (best-of-5 lets TurboFan settle; spread is tier-up).
 * **Java:** `ArrayList<Contact>` refs + C2 after ~10k iters (one 100k scan trips it) + G1 pauses; startup not measured (fair — all langs same).
 
-`first`/`last` hit identical phone every lang (directly comparable); `random` seeded 42 but per-lang RNG differs — check `target_index` in CSV. Portable claim: *trend within each lang* — linear grows first→last, hash/binary flat — holds in all five (DSA point). Cross-lang magnitudes are runtime properties; cite only with mechanism + machine spec.
+`first`/`middle`/`last` hit identical phone every lang (directly comparable). Portable claim: *trend within each lang* — linear grows first→last, hash/binary flat — holds in all five (DSA point). Cross-lang magnitudes are runtime properties; cite only with mechanism + machine spec.
 
 ### D.8 Recommendation
 
-For a production phonebook (frequent exact-match, 100k–1M, latency+footprint dominate) we pick **C++**: `last-linear` 0.36 ms vs Go 0.44, JS 0.93, Java 1.71, Python 5.07 (D.7/D.10, i5-1135G7, `-O2`); hash/binary ~µs position-independent; memory floor 173 MB heap/173.6 MB RSS at 1M vs Go 367/215, Python 356/390, JS 206/445, Java 255/330 (D.4); no baseline (12.6 MB RSS at n=50 vs JS 55.7/Java 53.2), deterministic RAII, no GC pauses, `-Wall`/Massif control. Trade-off: Go/Java/Python/JS offer faster prototyping/concurrency but pay GC/JIT/baseline; C++ pays manual `new/delete` and debug cost. Industry precedent (MySQL, PostgreSQL in C/C++) supports this for lookup/index engines; if constraint were rapid prototyping/managed concurrency, pick Go.
+For a production phonebook (frequent exact-match, 100k–1M, latency+footprint dominate) we pick **C++**: `last-linear` 3.81 ms vs Go 3.30, JS 13.11, Java 21.74, Python 41.98 (D.7/D.10, i5-1135G7, `-O2`); hash/binary ~µs position-independent; memory floor 164.9 MB heap/174.9 MB RSS at 1M vs Go 350.3/239.8, Python 339.7/386.6, JS 260.2/441.9, Java 241.9/323.4 (D.4); no baseline (12.6 MB RSS at n=50 vs JS 55.8/Java 53.5), deterministic RAII, no GC pauses, `-Wall`/Massif control. Trade-off: Go/Java/Python/JS offer faster prototyping/concurrency but pay GC/JIT/baseline; C++ pays manual `new/delete` and debug cost. Industry precedent (MySQL, PostgreSQL in C/C++) supports this for lookup/index engines; if constraint were rapid prototyping/managed concurrency, pick Go.
 
 ### D.9 Measurement tables
 
-Best-of-5 ms per target (`first/random/last`) — fresh 100k run on this machine (uncommitted ports; `make run-benchmark` to refresh `results.csv`).
+Best-of-5 ms per target (`first/middle/last`) — fresh 100k run on this machine (uncommitted ports; `make run-benchmark` to refresh `results.csv`).
 
-| Lang | n | Linear (first/rand/last) | Hash (first/rand/last) | Binary (first/rand/last) |
+| Lang | n | Linear (first/middle/last) | Hash (first/middle/last) | Binary (first/middle/last) |
 | --- | --- | --- | --- | --- |
-| C++ | 100k | 0.00002 / 0.089 / 0.365 | 0.000037 / 0.000037 / 0.000042 | 0.00011 / 0.00013 / 0.00019 |
-| Python | 100k | 0.00023 / 4.04 / 5.08 | 0.00138 / 0.00128 / 0.00192 | 0.00287 / 0.00224 / 0.00375 |
-| Go | 100k | 0.00003 / 0.323 / 0.442 | 0.00005 / 0.00004 / 0.00005 | 0.00022 / 0.00023 / 0.00024 |
-| JS | 100k | 0.00031 / 0.469 / 0.934 | 0.00094 / 0.00092 / 0.00074 | 0.00188 / 0.00166 / 0.00149 |
-| Java | 100k | 0.00066 / 0.698 / 1.71 | 0.00050 / 0.00048 / 0.00057 | 0.00290 / 0.00182 / 0.00228 |
+| C++ | 100k | 0.000017 / 0.107453 / 0.216328 | 0.000034 / 0.000034 / 0.000032 | 0.000102 / 0.000093 / 0.000103 |
+| Python | 100k | 0.000297 / 1.892173 / 3.873464 | 0.001344 / 0.001210 / 0.001342 | 0.002711 / 0.002295 / 0.002762 |
+| Go | 100k | 0.000021 / 0.108283 / 0.224579 | 0.000038 / 0.000038 / 0.000034 | 0.000145 / 0.000121 / 0.000122 |
+| JS | 100k | 0.000289 / 0.331141 / 1.156205 | 0.000793 / 0.000993 / 0.000742 | 0.001739 / 0.001320 / 0.001489 |
+| Java | 100k | 0.000660 / 0.854805 / 1.298942 | 0.000450 / 0.000482 / 0.000418 | 0.002910 / 0.001614 / 0.001879 |
 
 Dataset `contacts_100k.csv`, seed 42, toolchains in D.10.
 

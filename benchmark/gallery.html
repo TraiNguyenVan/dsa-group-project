@@ -526,11 +526,23 @@
 
   <script>
     const LANG_ORDER = ["cpp", "python", "go", "js", "java"];
-    const CASE_ORDER = ["first", "middle", "random", "last", "miss"];
+    const CASE_ORDER = ["first", "middle", "last", "miss"];
     const ALGO_ORDER = ["linear", "hash", "binary"];
     const MEMORY_METRICS = ["profiler_heap", "peak_rss"];
     const COLORS = { cpp: "#1f77b4", python: "#ff7f0e", go: "#2ca02c", js: "#d62728", java: "#9467bd" };
     const MEMORY_COLORS = { profiler_heap: "#2a9d8f", peak_rss: "#e76f51" };
+    const MEMORY_SERIES_COLORS = {
+      "cpp/profiler_heap": "#1f77b4",
+      "cpp/peak_rss": "#aec7e8",
+      "python/profiler_heap": "#ff7f0e",
+      "python/peak_rss": "#ffbb78",
+      "go/profiler_heap": "#2ca02c",
+      "go/peak_rss": "#98df8a",
+      "js/profiler_heap": "#d62728",
+      "js/peak_rss": "#ff9896",
+      "java/profiler_heap": "#9467bd",
+      "java/peak_rss": "#c5b0d5"
+    };
 
     let runtimeRows = [];
     let memoryRows = [];
@@ -779,12 +791,14 @@
 
       for (const l of langs) {
         for (const metric of MEMORY_METRICS) {
+          const seriesKey = `${l}/${metric}`;
+          const color = MEMORY_SERIES_COLORS[seriesKey] || COLORS[l];
           datasets.push({
             label: `${l} / ${metric}`,
             type: "bar",
             data: labels.map(nn => memoryMap.get(memKey(l, nn, metric)) ?? null),
-            borderColor: COLORS[l],
-            backgroundColor: COLORS[l] + "aa",
+            borderColor: color,
+            backgroundColor: color + "aa",
             borderWidth: 1,
             order: metric === "profiler_heap" ? 0 : 1
           });

@@ -52,7 +52,13 @@ INLINE_RE = re.compile(
 
 
 def inline(text):
-    """Apply inline formatting; escape everything else."""
+    """Apply inline formatting; escape everything else and preserve
+    raw HTML break tags by moving them to a private sentinel before
+    escaping, then restoring them in the final HTML output.
+    """
+    # Support HTML `<br>` and `<br/>` inside Markdown prose or table cells.
+    text = re.sub(r"<br\s*/?>", "__BR_TAG__", text, flags=re.IGNORECASE)
+
     out = []
     for part in INLINE_RE.split(text):
         if part is None:
@@ -71,18 +77,28 @@ def inline(text):
             out.append(f"<em>{inline(part[1:-1])}</em>")
         else:
             out.append(html.escape(part))
-    return "".join(out)
+
+    return "".join(out).replace("__BR_TAG__", "<br>")
 
 
 def parse_table(lines):
-    """lines: consecutive '|'-prefixed lines. Returns HTML table."""
-    rows = [inline(l.strip().strip("|")) for l in lines]
+    """lines: consecutive '|'-prefixed lines. Returns HTML table.
+
+    Apply inline formatting cell-by-cell so raw HTML line breaks inside
+    a table cell survive as real `<br>` tags in the generated HTML.
+    """
+    rows = [l.strip().strip("|") for l in lines]
     cells = [[c.strip() for c in r.split("|")] for r in rows]
     header, body = cells[0], cells[2:]  # row 1 is the --- separator
-    thead = "<tr>" + "".join(f"<th>{c}</th>" for c in header) + "</tr>"
+
+    header_cells = [inline(c) for c in header]
+    thead = "<tr>" + "".join(f"<th>{c}</th>" for c in header_cells) + "</tr>"
+
     tbody = ""
     for row in body:
-        tbody += "<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>"
+        body_cells = [inline(c) for c in row]
+        tbody += "<tr>" + "".join(f"<td>{c}</td>" for c in body_cells) + "</tr>"
+
     return f"<table><thead>{thead}</thead><tbody>{tbody}</tbody></table>"
 
 

@@ -28,15 +28,14 @@ python3 benchmark/plot.py --n 50 benchmark/results.csv benchmark/plot.png  # for
 - Filters to `n=100k` by default (so a multi-size CSV doesn't collapse to `n=50`). Override with `--n`.
 - Takes `best = min(5 runs)` per `(lang, case, algo)` — same as the live CLI.
 - 3 linear-scale panels: `Linear scan ms` / `Hash lookup ms` / `Binary search ms`. Separate panels so hash/binary µs bars aren't flattened by linear ms bars.
-- Also writes 15 per-case PNGs: `plot-first-linear.png` … `plot-miss-binary.png` (one per `case × algo`, horizontal bars sorted fastest-first).
+- Also writes 12 per-case PNGs: `plot-first-linear.png` … `plot-miss-binary.png` (one per `case × algo`, horizontal bars sorted fastest-first).
 
 ```
 benchmark/plot.png
 benchmark/plot-first-linear.png   benchmark/plot-first-hash.png   benchmark/plot-first-binary.png
-benchmark/plot-middle-linear.png  …
-benchmark/plot-random-linear.png  …
-benchmark/plot-last-linear.png    …
-benchmark/plot-miss-linear.png    …
+benchmark/plot-middle-linear.png  benchmark/plot-middle-hash.png  benchmark/plot-middle-binary.png
+benchmark/plot-last-linear.png    benchmark/plot-last-hash.png    benchmark/plot-last-binary.png
+benchmark/plot-miss-linear.png    benchmark/plot-miss-hash.png    benchmark/plot-miss-binary.png
 ```
 
 ### Scaling — `--line`
@@ -46,7 +45,7 @@ python3 benchmark/plot.py --line benchmark/results.csv benchmark/plot-runtime-vs
 python3 benchmark/plot.py --line --case first benchmark/results.csv benchmark/first.png
 ```
 
-- Reads a **multi-size** CSV (from `make run-benchmark-sizes`: 6 sizes × 5 langs × 75 rows).
+- Reads a **multi-size** CSV (from `make run-benchmark-sizes`: 6 sizes × 5 langs × 60 rows).
 - Groups `best = min(5 runs)` by `(lang, algo, case, n)` and plots `ms vs n` on **log-log** axes (required: `n` spans 50..1M and linear ms vs hash µs differ ~1000×).
 - 3 panels (one per algo), one line per language, `case` defaults to `last` (index `n-1`, same position every lang, worst for linear — so the `O(n)` slope is visible).
 
@@ -57,8 +56,8 @@ python3 benchmark/plot.py --unified benchmark/results.csv benchmark/plot-unified
 # writes plot-unified-cpp.png, plot-unified-python.png, … (5 files)
 ```
 
-- One PNG per language, each with **15 series** (3 algos × 5 cases) vs `n` on log-log.
-- Color = algo (`linear` blue, `hash` orange, `binary` green), linestyle = case (`first` solid, `middle` dashdot, `random` dashed, `last` dotted, `miss` solid+marker).
+- One PNG per language, each with **12 series** (3 algos × 4 cases) vs `n` on log-log.
+- Color = algo (`linear` blue, `hash` orange, `binary` green), linestyle = case (`first` solid, `middle` dashdot, `last` dotted, `miss` solid+marker).
 - Shows every algo on every case for that language — the most complete view.
 
 ### Per-algo — `--per-algo`
@@ -69,7 +68,7 @@ python3 benchmark/plot.py --per-algo benchmark/results.csv benchmark/plot-per-al
 ```
 
 - One PNG per language, at the **largest `n`** in the CSV.
-- For each `(lang, algo)`: `hit = first/middle/random/last` (all hits), `best = min(hit)`, `worst = max(hit + [miss])`, `avg = mean(hit)`.
+- For each `(lang, algo)`: `hit = first/middle/last` (all hits), `best = min(hit)`, `worst = max(hit + [miss])`, `avg = mean(hit)`.
 - Log y (linear worst ms vs hash best µs differ ~1000×). 9 bars per PNG (3 algos × 3 stats).
 
 ### Memory — `--mem`

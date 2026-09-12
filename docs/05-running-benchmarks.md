@@ -133,7 +133,7 @@ printf '0\n9\n' | (cd java/phonebook && javac -d out src/com/phonebook/*.java &&
 
 | File | Produced by | Rows | Purpose |
 |------|-------------|------|---------|
-| `benchmark/results.csv` | `run-benchmark` / `run-benchmark-sizes` | 375 / 2250 | runtime: every run |
+| `benchmark/results.csv` | `run-benchmark` / `run-benchmark-sizes` | 300 / 1800 | runtime: every run |
 | `benchmark/mem/results.csv` | `run-memory` | 60 | memory: profiler + RSS |
 | `benchmark/plot.png` | `plot.py` (default) | — | 3-panel overview |
 | `benchmark/plot-runtime-vs-n.png` | `plot.py --line` | — | scaling line chart |
@@ -145,7 +145,7 @@ printf '0\n9\n' | (cd java/phonebook && javac -d out src/com/phonebook/*.java &&
 ## Tips
 
 - **Start small:** `make run-benchmark` (100k, ~30s) before `run-benchmark-sizes` (1M, ~5 min) or `run-memory` (~10 min).
-- **Reproducibility:** batch mode seeds `random` with `42` and writes `target_index`+`phone` so you can audit that every lang searched the same position.
+- **Reproducibility:** batch mode records `target_index`+`phone` so you can audit that every language searched the same deterministic position.
 - **Without matplotlib:** CSVs are still produced; only PNGs are skipped.
 - **Datasets missing?** `python3 data/generate.py --seed 42` recreates all six.
 

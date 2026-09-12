@@ -9,18 +9,6 @@ const { benchmark, printTaskDuration, timeIt } = require('./timer');
 
 const BENCH_HEADER = 'language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone';
 
-// mulberry32: small seeded RNG so batch `random` target is reproducible.
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 function csvEscape(v) {
   v = String(v);
   if (v.includes(',') || v.includes('"') || v.includes('\n')) {
@@ -29,8 +17,8 @@ function csvEscape(v) {
   return v;
 }
 
-// Batch benchmark: every run to CSV (75 rows). Seeded RNG (42). `miss` uses
-// phone "0000000000" (not in dataset) for true worst case of hash/binary.
+// Batch benchmark: every run to CSV (60 rows). `miss` uses phone
+// "0000000000" (not in dataset) for true worst case of hash/binary.
 function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
   const loaded = phonebook.loadfromCSV(csvInput);
   if (loaded === -1) {
@@ -42,13 +30,12 @@ function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
     console.error('No contacts to benchmark.');
     return 1;
   }
-  const cases = ['first', 'middle', 'random', 'last', 'miss'];
-  const indices = [0, Math.floor(n / 2), n - 1, n - 1, -1];
+  const cases = ['first', 'middle', 'last', 'miss'];
+  const indices = [0, Math.floor(n / 2), n - 1, -1];
   indices[0] = 0;
   indices[1] = Math.floor(n / 2);
-  indices[3] = n - 1;
-  indices[4] = -1;
-  if (n > 2) indices[2] = Math.floor(mulberry32(42)() * n);
+  indices[2] = n - 1;
+  indices[3] = -1;
 
   let needHeader = true;
   if (append && fs.existsSync(outCsv) && fs.statSync(outCsv).size > 0) {
@@ -66,9 +53,9 @@ function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
   if (needHeader) lines.push(BENCH_HEADER);
   const timestamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
   const toolchain = `node ${process.version}`;
-  for (let k = 0; k < 5; k++) {
+  for (let k = 0; k < 4; k++) {
     let phone;
-    if (k === 4) phone = '0000000000';
+    if (k === 3) phone = '0000000000';
     else {
       phone = phonebook.getPhoneAt(indices[k]);
       if (!phone) continue;
@@ -87,7 +74,7 @@ function runSearchBenchmarkBatch(phonebook, csvInput, outCsv, append) {
   }
   fs.writeSync(fd, lines.join('\n') + '\n');
   fs.closeSync(fd);
-  console.log(`Wrote 75 rows -> ${outCsv} (${n} contacts).`);
+  console.log(`Wrote 60 rows -> ${outCsv} (${n} contacts).`);
   return 0;
 }
 
@@ -110,29 +97,23 @@ function runSearchBenchmark(phonebook, csvInput) {
   const labels = [
     'first (linear best case)',
     'middle (linear avg / binary best)',
-    'random (linear average case)',
     'last (linear worst case)',
     'miss (linear worst / hash & binary worst)',
   ];
-  const indices = [0, Math.floor(n / 2), 0, n - 1, -1];
+  const indices = [0, Math.floor(n / 2), n - 1, -1];
   indices[0] = 0;
   indices[1] = Math.floor(n / 2);
-  indices[3] = n - 1;
-  indices[4] = -1;
-  if (n <= 2) {
-    indices[2] = n - 1;
-  } else {
-    indices[2] = Math.floor(Math.random() * n);
-  }
+  indices[2] = n - 1;
+  indices[3] = -1;
 
   console.log(
-    `\nBenchmarking phone search (linear: first=best / middle,random=avg / last,miss=worst; hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary) (${n} contacts, 5 runs each, best reported).`
+    `\nBenchmarking phone search (linear: first=best / middle / last,miss=worst; hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary) (${n} contacts, 5 runs each, best reported).`
   );
 
-  for (let k = 0; k < 5; k++) {
+  for (let k = 0; k < 4; k++) {
     const targetIdx = indices[k];
     let phone;
-    if (k === 4) phone = '0000000000';
+    if (k === 3) phone = '0000000000';
     else {
       phone = phonebook.getPhoneAt(targetIdx);
       if (!phone) {
@@ -212,7 +193,7 @@ async function main() {
     if (eof) return null;
     try {
       output.write(prompt);
-    } catch (_) {}
+    } catch (_) { }
     try {
       const { value, done } = await lineIter.next();
       if (done) {
@@ -237,7 +218,7 @@ async function main() {
     const raw = await ask('Enter your choice: ');
     if (raw === null || closed) {
       console.log('\nGoodbye');
-      try { rl.close(); } catch (_) {}
+      try { rl.close(); } catch (_) { }
       return 0;
     }
     const choice = parseChoice(raw);
@@ -262,9 +243,9 @@ async function main() {
       else console.log('Cannot open output file.');
     } else if (choice === 3) {
       const name = await ask('\nEnter name: ');
-      if (name === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+      if (name === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
       const phone = await ask('Enter phone: ');
-      if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+      if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
       const result = {};
       printTaskDuration(() => { result.v = phonebook.insertContact(name, phone); });
       if (result.v) console.log('Contact inserted successfully.');
@@ -279,7 +260,7 @@ async function main() {
       console.log('5. Back');
       console.log('============================');
       const sraw = await ask('Enter your choice: ');
-      if (sraw === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+      if (sraw === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
       const searchChoice = parseChoice(sraw);
       if (Number.isNaN(searchChoice)) {
         console.log('Invalid search choice.');
@@ -287,7 +268,7 @@ async function main() {
       }
       if (searchChoice === 1) {
         const phone = await ask('Enter phone number: ');
-        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
         const result = {};
         printTaskDuration(() => { result.v = phonebook.searchLinearByPhone(phone); });
         if (result.v === -1) console.log('Phone number not found.');
@@ -298,7 +279,7 @@ async function main() {
         }
       } else if (searchChoice === 2) {
         const phone = await ask('Enter phone number: ');
-        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
         const result = {};
         printTaskDuration(() => { result.v = phonebook.searchHashByPhone(phone); });
         if (result.v === -1) console.log('Phone number not found.');
@@ -309,7 +290,7 @@ async function main() {
         }
       } else if (searchChoice === 3) {
         const phone = await ask('Enter phone number: ');
-        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
         const result = {};
         printTaskDuration(() => { result.v = phonebook.searchBinaryByPhone(phone); });
         if (result.v === -1) console.log('Phone number not found.');
@@ -320,7 +301,7 @@ async function main() {
         }
       } else if (searchChoice === 4) {
         const name = await ask('Enter name: ');
-        if (name === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+        if (name === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
         const result = {};
         printTaskDuration(() => { result.v = phonebook.searchLinearByName(name); });
         if (result.v === -1) console.log('Name not found.');
@@ -341,7 +322,7 @@ async function main() {
       console.log('==============================');
     } else if (choice === 6) {
       const iraw = await ask('\nEnter contact index: ');
-      if (iraw === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+      if (iraw === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
       const idx = parseChoice(iraw);
       if (Number.isNaN(idx)) {
         console.log('Invalid index.');
@@ -354,14 +335,14 @@ async function main() {
       console.log(`\nNumber of contacts: ${phonebook.size()}`);
     } else if (choice === 8) {
       const phone = await ask('\nEnter phone number to delete: ');
-      if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) {} return 0; }
+      if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
       const result = {};
       printTaskDuration(() => { result.v = phonebook.deleteContactByPhone(phone); });
       if (result.v) console.log('Contact deleted successfully.');
       else console.log('Failed to delete contact.');
     } else if (choice === 9) {
       console.log('Goodbye');
-      try { rl.close(); } catch (_) {}
+      try { rl.close(); } catch (_) { }
       return 0;
     } else {
       console.log('Invalid choice. Please choose from 0 to 9.');
