@@ -1,6 +1,6 @@
 # Phonebook Lookup — Group Report (Parts A, B, D)
 
-**Group G4 — Searching & Hash tables (§2.2)** · Linear · Binary · Interpolation · Hashing & collisions · Demo: phone-book lookup (n ≥ 100k) · Members: <!-- TODO: names + IDs --> · Build/run & machine spec: [`README.md`](../README.md)
+**Group G4 — Searching & Hash tables (§2.2)** · Linear · Binary · Interpolation · Hashing & collisions · Demo: phone-book lookup (n ≥ 100k) · Members: <!-- TODO: names + IDs --> · Build/run & machine spec: `README.md`
 
 > Parts A, B, D of `C0B_Group_Project_Guide.pdf`. Contribution & AI-use declarations in Appendix.
 
