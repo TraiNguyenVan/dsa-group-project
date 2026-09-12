@@ -101,12 +101,12 @@ Batch mode is just a CLI flag — you can run any language alone:
 ```sh
 # C++ (build first)
 make
-./build/cpp/demo --benchmark-csv /tmp/out.csv data/contacts_100k.csv
-./build/cpp/demo --benchmark-csv /tmp/out.csv --append data/contacts_200k.csv  # append
+./build/cpp/demo --benchmark-csv benchmark/results.csv data/contacts_100k.csv
+./build/cpp/demo --benchmark-csv benchmark/results.csv --append data/contacts_200k.csv  # append
 
 # Python
-python3 python/phonebook/main.py --benchmark-csv /tmp/out.csv data/contacts_100k.csv
-python3 python/phonebook/main.py --benchmark-csv /tmp/out.csv --append data/contacts_100k.csv
+python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv data/contacts_100k.csv
+python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append data/contacts_100k.csv
 
 # Go
 cd go/phonebook && go run . --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv

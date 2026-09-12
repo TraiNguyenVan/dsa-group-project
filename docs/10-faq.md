@@ -60,7 +60,7 @@ ls -lh benchmark/results.csv benchmark/plot.png
 ```sh
 make run-benchmark-sizes
 ls -lh benchmark/results.csv benchmark/plot-runtime-vs-n.png
-python3 benchmark/plot.py --line --case last benchmark/results.csv /tmp/scaling.png
+python3 benchmark/plot.py --line --case last benchmark/results.csv benchmark/scaling.png
 ```
 
 ### "How much RAM does it use?" (10 minutes)
@@ -77,15 +77,15 @@ ls -lh benchmark/plot-memory.png benchmark/mem/rss-*.txt
 # 1. Rebuild
 make
 # 2. Benchmark one size, one lang (fastest feedback)
-./build/cpp/demo --benchmark-csv /tmp/before.csv data/contacts_100k.csv
+./build/cpp/demo --benchmark-csv benchmark/before.csv data/contacts_100k.csv
 # ... edit src/hashtable.cpp ...
 make
-./build/cpp/demo --benchmark-csv /tmp/after.csv data/contacts_100k.csv
+./build/cpp/demo --benchmark-csv benchmark/after.csv data/contacts_100k.csv
 # 3. Compare best-of-5 for last-linear
 python3 -c "
 import csv
 from collections import defaultdict
-for path in ['/tmp/before.csv','/tmp/after.csv']:
+for path in ['benchmark/before.csv','benchmark/after.csv']:
     best={}
     for r in csv.DictReader(open(path)):
         k=(r['case'],r['algo']); v=float(r['ms'])
@@ -97,8 +97,8 @@ for path in ['/tmp/before.csv','/tmp/after.csv']:
 ### "Run one language only"
 
 ```sh
-python3 python/phonebook/main.py --benchmark-csv /tmp/py.csv data/contacts_100k.csv
-cat /tmp/py.csv
+python3 python/phonebook/main.py --benchmark-csv benchmark/py.csv data/contacts_100k.csv
+cat benchmark/py.csv
 ```
 
 ### "Compute mean ± stdev for a cell"

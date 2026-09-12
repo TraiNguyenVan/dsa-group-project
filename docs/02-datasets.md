@@ -53,7 +53,7 @@ Source: `data/generate.py` (stdlib only).
 ```sh
 python3 data/generate.py --seed 42            # default: writes to data/
 python3 data/generate.py --seed 42 --out-dir data
-python3 data/generate.py --seed 123 --out-dir /tmp/other
+python3 data/generate.py --seed 123 --out-dir benchmark/output
 ```
 
 - `--seed` controls the RNG (default `42`). Same seed → identical files, byte-for-byte, across runs and Python versions (phones are appended in RNG order, not via `set` iteration).
@@ -89,7 +89,7 @@ python3 python/phonebook/main.py data/contacts_50.csv
 ./build/cpp/demo                          # same as above
 
 # Custom output file (second positional arg)
-./build/cpp/demo data/contacts_100k.csv /tmp/out.csv
+./build/cpp/demo data/contacts_100k.csv benchmark/results.csv
 ```
 
 > **Tip:** use `contacts_50.csv` for demos and correctness checks (you can print all 50). Use `100k`+ for timing — small `n` is dominated by overhead and timer noise.
