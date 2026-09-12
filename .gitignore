@@ -23,8 +23,35 @@ data/*.dat
 grading/*.csv
 !grading/marking_sheet_template.csv
 
+# Memory-profiling artifacts (regenerable via `make run-memory`)
+# Keep: benchmark/mem/results.csv + the wrapper scripts (committed evidence).
+# Ignore raw tool output: binaries (jfr/pprof/heapprofile/go binary) and
+# regenerable text dumps (msprint, pprof top, jfr summary, tracemalloc, rss).
+benchmark/mem/*.pprof
+benchmark/mem/*.jfr
+benchmark/mem/*.heapprofile
+benchmark/mem/*-msprint.txt
+benchmark/mem/*-pprof-top.txt
+benchmark/mem/*-jfr-summary.txt
+benchmark/mem/js-*.txt
+benchmark/mem/rss-*.txt
+benchmark/mem/tracemalloc-*.txt
+benchmark/mem/scratch.csv
+benchmark/mem/phonebook-go
+benchmark/scratch.csv
+benchmark/phonebook-go
+benchmark/massif-*.txt
+benchmark/rss-*.txt
+
+# PDF export temp
+report/.report.html
+
 # OS junk
 .DS_Store
+Thumbs.db
 
 # IDE junk
 .vscode
+.idea
+*.swp
+*~

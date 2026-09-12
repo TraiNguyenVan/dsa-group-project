@@ -332,6 +332,75 @@ def plot_per_algo_cases(input_path, output_path):
     return 0
 
 
+def plot_mem(input_path, output_path):
+    """Two-panel peak-memory bar chart from benchmark/mem/results.csv.
+
+    Panel 1: profiler heap per language (Massif / tracemalloc / pprof /
+    node --heap-prof / JFR-polled) — the guide's language-specific tools.
+    Panel 2: kernel-measured peak process RSS (wait4/ru_maxrss) of the
+    same batch program — one uniform yardstick across languages.
+    x = the 6 dataset sizes (log), 5 grouped bars per size (lang colors),
+    log y (Python's per-object overhead dwarfs C++ ~10-30x).
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    data = {}  # (lang, metric, n) -> MB
+    with open(input_path, "r", encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            lang = (row.get("language") or "").strip()
+            metric = (row.get("metric") or "").strip()
+            try:
+                n = int((row.get("n") or "").strip())
+                mb = float((row.get("mb") or "").strip())
+            except ValueError:
+                continue
+            if lang not in LANG_ORDER or metric not in ("profiler_heap", "peak_rss"):
+                continue
+            data[(lang, metric, n)] = mb
+
+    if not data:
+        print("error: no plottable rows found", file=sys.stderr)
+        return 1
+    ns = sorted({n for (_, _, n) in data})
+
+    cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    lang_color = {lang: cycle[i % len(cycle)] for i, lang in enumerate(LANG_ORDER)}
+    width = 0.8 / len(LANG_ORDER)
+
+    panels = [
+        ("profiler_heap", "Peak heap per language profiler (MB)"),
+        ("peak_rss", "Peak process RSS, kernel wait4/ru_maxrss (MB)"),
+    ]
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    for ax, (metric, title) in zip(axes, panels):
+        x = range(len(ns))
+        for i, lang in enumerate(LANG_ORDER):
+            vals = [data.get((lang, metric, n), float("nan")) for n in ns]
+            offs = [p + (i - (len(LANG_ORDER) - 1) / 2) * width for p in x]
+            bars = ax.bar(offs, vals, width=width, label=lang,
+                          color=lang_color[lang])
+            for b, v in zip(bars, vals):
+                if v == v and v > 0:
+                    ax.text(b.get_x() + b.get_width() / 2, v * 1.02, f"{v:.2g}",
+                            ha="center", va="bottom", fontsize=7, rotation=45)
+        ax.set_xticks(list(x))
+        ax.set_xticklabels([str(n) for n in ns])
+        ax.set_xlabel("n (rows)")
+        ax.set_ylabel("MB (log scale)")
+        ax.set_yscale("log")
+        ax.set_title(title)
+        ax.grid(True, which="both", axis="y", alpha=0.3)
+    axes[0].legend()
+    fig.suptitle("Peak memory across 5 implementations (all dataset sizes)")
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=120)
+    print(f"Wrote {output_path} ({len(ns)} sizes, {len(data)} cells).")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="Plot benchmark/results.csv (best of 5).")
     ap.add_argument("input", help="input CSV (benchmark/results.csv)")
@@ -345,6 +414,9 @@ def main():
                     "every algo on every case vs n (log-log)")
     ap.add_argument("--per-algo", action="store_true",
                     help="per-language grouped bars: x=algo, 3 bars best/avg/worst per algo (log y)")
+    ap.add_argument("--mem", action="store_true",
+                    help="peak-memory bar chart from benchmark/mem/results.csv "
+                    "(two panels: profiler heap + kernel peak RSS)")
     ap.add_argument("--n", type=int, default=None,
                     help="(kept for compat; the unified line chart uses all "
                     "sizes in the CSV)")
@@ -367,6 +439,9 @@ def main():
 
     if args.per_algo:
         return plot_per_algo_cases(args.input, args.output)
+
+    if args.mem:
+        return plot_mem(args.input, args.output)
 
     try:
         best, dataset, n = load_best(args.input)

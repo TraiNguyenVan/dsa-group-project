@@ -84,7 +84,7 @@ CLI phonebook lookup that compares **linear search vs hash search vs binary sear
 
 | Language   | Normal run                        | Benchmark run (`--benchmark-csv`) | Plot generation                         |
 | ---------- | --------------------------------- | --------------------------------- | --------------------------------------- |
-| C++        | `g++` with C++17 (or CMake 3.16+) | same, no extras                   | —                                       |
+| C++        | `g++` (C++17) + `make`, or CMake 3.16+ + a C++17 compiler | same, no extras | — |
 | Python     | `python3` stdlib only, no deps    | same, no extras                   | `matplotlib` (`pip install matplotlib`) |
 | Go         | `go 1.21+`                        | same, no extras                   | —                                       |
 | JavaScript | `node >=18`, no `npm install`     | same, no extras                   | —                                       |
@@ -96,7 +96,9 @@ produced normally.
 
 ## C++ — build and run
 
-Prereqs: `g++` with C++17, or CMake 3.16+.
+Prereqs: `g++` with C++17. CMake is an alternative build driver, not a
+replacement for the compiler — it still invokes `g++` (or clang++/MSVC)
+underneath, so you need CMake 3.16+ **and** a C++17 compiler.
 
 ```sh
 # Makefile (mirrors CMakeLists.txt)
@@ -189,7 +191,7 @@ node src/main.js ../../data/contacts_100k.csv ../../out.csv
 
 ### Java
 
-Prereq: JDK 17. In this workspace: `openjdk17`.
+Prereq: JDK 17. eg: `openjdk17`.
 
 ```sh
 cd java/phonebook
