@@ -192,9 +192,10 @@ h1 { font-size: 20pt; border-bottom: 2px solid #333; padding-bottom: 6px; }
 h2 { font-size: 15pt; border-bottom: 1px solid #ccc; padding-bottom: 3px;
      margin-top: 22px; }
 h3 { font-size: 12.5pt; margin-top: 16px; }
-table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 10px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 10px 0;
+        table-layout: fixed; }
 th, td { border: 1px solid #bbb; padding: 4px 6px; text-align: left;
-         vertical-align: top; }
+         vertical-align: top; overflow-wrap: anywhere; }
 th { background: #f0f0f0; }
 pre { background: #f6f8fa; border: 1px solid #ddd; border-radius: 4px;
       padding: 8px; font-size: 8.5pt; white-space: pre-wrap;

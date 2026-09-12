@@ -68,6 +68,15 @@ run-benchmark-sizes: $(TARGET)
 	python3 benchmark/plot.py --unified $(BENCHCSV) benchmark/plot-unified-cpp.png || echo "plot skipped: pip install matplotlib"
 	python3 benchmark/plot.py --per-algo $(BENCHCSV) benchmark/plot-per-algo-cpp.png || echo "plot skipped: pip install matplotlib"
 
+# Peak-memory profiling (guide Part D.5): language-specific profilers
+# (Massif / tracemalloc / pprof / node --heap-prof / JFR) + kernel peak RSS,
+# all 6 dataset sizes -> benchmark/mem/results.csv + evidence files, then
+# the two-panel bar chart benchmark/plot-memory.png.
+run-memory: $(TARGET)
+	mkdir -p benchmark/mem
+	python3 benchmark/mem_profile.py
+	python3 benchmark/plot.py --mem benchmark/mem/results.csv benchmark/plot-memory.png || echo "plot skipped: pip install matplotlib"
+
 clean:
 	rm -rf $(BUILDDIR)
 
@@ -75,6 +84,6 @@ clean:
 pdf:
 	python3 report/export_pdf.py
 
-.PHONY: all run run-50 run-100k run-200k run-1m run-benchmark run-benchmark-sizes pdf clean
+.PHONY: all run run-50 run-100k run-200k run-1m run-benchmark run-benchmark-sizes run-memory pdf clean
 
 
