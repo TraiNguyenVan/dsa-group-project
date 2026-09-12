@@ -230,6 +230,24 @@ Dataset `contacts_100k.csv`, seed 42, toolchains in D.10.
 
 **A.1 Test conditions** — see D.10. **A.2 Dataset** — `Name,Phone` per line, no header; `python3 data/generate.py --seed 42`; sizes 50/10k/100k/200k/500k/1M nested prefixes (seed 42); `contacts_50.csv` for demos; see `data/README.md`. **A.3 Ports** — Python `perf_counter`/`randint`/`& MASK64`/`(ord(c)-48)&0xFF`; Go `uint64`/`time.Now`/`math/rand`/`bufio.Reader`; JS `perf_hooks`/`Math.random`/`readline/promises`/`BigInt & MASK64`/`fs.readFileSync`; Java `nanoTime/1e6`/`Random`/`Scanner`/`Long.remainderUnsigned`, `out/` git-ignored. **A.4 Sources** — CLRS 4th ed. Ch.11 (§11.1–11.4), 3rd ed. pp.253–280, accessed 2026-09-12.
 
-**A.5 Contribution** — Members: [Name — ID] ← TODO roster. C++ core `src/*.cpp`/`include/*.hpp` — Trai (lead, 49 commits) + Tuan + Alex; Ports `go|python|java|javascript` — Tuan scaffold + Trai extension; Benchmark/plots `benchmark/plot.py`/`mem_profile.py`/`results.csv`/`plot-*.png` — Tuan started, Trai scaling/mem; Data `data/generate.py` — Trai; Report+PDF `report/report.md`/`export_pdf.py` — Trai+Tuan; Slides — Quoc Toan; Build `CMakeLists.txt`/`Makefile` — Tuan.
+**A.5 Contribution** 
+
+| Deliverable | Name | Student Code |
+| --- | --- | --- |
+| C++ core | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| Linear Search | Trần Quốc Anh<br>Nguyễn Quốc Toàn | N25DECE077<br>N25DECE070 |
+| Binary Search | Trần Quốc Anh<br>Nguyễn Quốc Toàn | N25DECE077<br>N25DECE070 |
+| Interpolation Search | Nguyễn Quốc Toàn | N25DECE070 |
+| Hash & Hash Function | Nguyễn Phương Quốc Vương<br>Nguyễn Phạm Thành Trung | N25DECE086<br>N25DECE072 |
+| Collision Handling | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| Language ports (Go / Python / Java / JS) | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| Benchmark & plotting | Nguyễn Văn Trãi | N25DECE085 |
+| Dataset generation | Nguyễn Văn Trãi | N25DECE085 |
+| Report & PDF export | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| Slides | Nguyễn Quốc Toàn<br>Trần Quốc Anh | N25DECE070<br>N25DECE077 |
+| Build system | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| Exercise | Nguyễn Phương Quốc Vương<br>Nguyễn Phạm Thành Trung | N25DECE086<br>N25DECE072 |
+| Grade the assignment | Nguyễn Phương Quốc Vương<br>Nguyễn Phạm Thành Trung | N25DECE086<br>N25DECE072 |
+
 
 **A.6 AI-use** — OpenCode/Copilot/web chat for brainstorming + boilerplate translation/tooling. **C++ hand-written** — no AI in `src/`/`include/` (`contact.hpp`, `hashtable.hpp/.cpp`, `phonebook.hpp/.cpp`, `timer.hpp`, `main.cpp`); all AI output reviewed/compiled/executed. AI-assisted: ports (`python|go|javascript|java/phonebook/*`) faithful translations + tooling (`benchmark/plot.py`, `mem_profile.py`, `report/export_pdf.py`). Not AI-assisted: C++ core, report prose/analysis (A/B/D), measurements (`results.csv`, `mem/*`, D.3–D.5/D.9–D.10 — real `make run-benchmark` runs on D.10 machine).
