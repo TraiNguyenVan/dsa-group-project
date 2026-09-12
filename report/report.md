@@ -517,7 +517,19 @@ comparable. Use `contacts_50.csv` for demos.
 
 ### A.5 Contribution statement
 
-<!-- TODO: who did what -->
+
+**Members:** [Name — ID], ... ← still need roster to fill header.
+
+| Area | Deliverable | Owner |
+| --- | --- | --- |
+| C++ core | `src/*.cpp`, `include/*.hpp` | Trai Nguyen Van (lead, 49 commits; `adc5440`, `ab48f17`) +  Tuan (coding support) + Alex (algorithm search) |
+| Go / Python / Java / JS ports | `go/phonebook/*.go`, `python/phonebook/*.py`, `java/.../*.java`, `javascript/.../*.js` | Owner per issue #2; git: Tuan scaffold (`1807ca0`, `c6bd782`), Trai extension (`adc5440`, `86026a4`) |
+| Benchmark & plots | `benchmark/plot.py`, `mem_profile.py`, `results.csv`, `plot-*.png` | Tuan started (`2c1954c`), Trai owns scaling/mem/plots (`25e1070`, `86026a4`) |
+| Data & generator | `data/generate.py`, `contacts_*.csv` | Trai (`f3d0e2f`, `c1714bb`) |
+| Report A/B/D + PDF | `report/report.md`, `export_pdf.py` | Trai (`8b9be08`, `1299ed6`, `ceb6987`) + Tuan (`23e5af3` D.3/D.6) |
+| Slides | `slides/` (planned) | Quoc Toan |
+| Build/CMake | `CMakeLists.txt`, `Makefile` | Tuan (`0cfe0d5`) |
+
 
 ### A.6 AI-use declaration
 
