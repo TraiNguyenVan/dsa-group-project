@@ -185,16 +185,16 @@ def md_to_html(md_text, warnings):
 
 
 CSS = """
-@page { size: A4; margin: 18mm 16mm; }
-body { font-family: 'DejaVu Sans', sans-serif; font-size: 10.5pt;
-       line-height: 1.5; color: #1a1a1a; }
-h1 { font-size: 20pt; border-bottom: 2px solid #333; padding-bottom: 6px; }
-h2 { font-size: 15pt; border-bottom: 1px solid #ccc; padding-bottom: 3px;
-     margin-top: 22px; }
-h3 { font-size: 12.5pt; margin-top: 16px; }
-table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 10px 0;
+@page { size: A4; margin: 14mm 13mm; }
+body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt;
+       line-height: 1.4; color: #1a1a1a; }
+h1 { font-size: 17pt; border-bottom: 2px solid #333; padding-bottom: 4px; margin: 8px 0 10px; }
+h2 { font-size: 12pt; border-bottom: 1px solid #ccc; padding-bottom: 2px;
+     margin-top: 16px; margin-bottom: 6px; }
+h3 { font-size: 10pt; margin-top: 10px; margin-bottom: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 7.5pt; margin: 6px 0;
         table-layout: fixed; }
-th, td { border: 1px solid #bbb; padding: 4px 6px; text-align: left;
+th, td { border: 1px solid #bbb; padding: 3px 4px; text-align: left;
          vertical-align: top; overflow-wrap: anywhere; }
 th { background: #f0f0f0; }
 pre { background: #f6f8fa; border: 1px solid #ddd; border-radius: 4px;
