@@ -46,8 +46,11 @@ def parse_ms(raw, rowno):
     return v
 
 
-def load_best(path):
-    """Return (best[(lang, case, algo)], meta). best = min of runs."""
+def load_best(path, n_filter=None):
+    """Return (best[(lang, case, algo)], meta). best = min of runs.
+
+    If n_filter is set, only rows with n == n_filter are considered.
+    """
     best = {}
     skipped = 0
     dataset = "?"
@@ -65,6 +68,14 @@ def load_best(path):
             if lang not in LANG_ORDER or case not in CASE_ORDER or algo not in ALGO_ORDER:
                 skipped += 1
                 continue
+            if n_filter is not None:
+                try:
+                    row_n = int((row.get("n") or "").strip())
+                except ValueError:
+                    skipped += 1
+                    continue
+                if row_n != n_filter:
+                    continue
             v = parse_ms(row.get("ms"), rowno)
             if v is None:
                 skipped += 1
@@ -418,8 +429,8 @@ def main():
                     help="peak-memory bar chart from benchmark/mem/results.csv "
                     "(two panels: profiler heap + kernel peak RSS)")
     ap.add_argument("--n", type=int, default=None,
-                    help="(kept for compat; the unified line chart uses all "
-                    "sizes in the CSV)")
+                    help="filter to this n for the overview plot (default: 100000; "
+                    "use e.g. --n 50 to force the 50-row demo)")
     args = ap.parse_args()
 
     try:
@@ -443,8 +454,11 @@ def main():
     if args.mem:
         return plot_mem(args.input, args.output)
 
+    # Overview 3-panel plot: default to n=100k so a multi-size CSV
+    # (from run-benchmark-sizes) does not collapse to n=50 (the min).
+    n_filter = args.n if args.n is not None else 100000
     try:
-        best, dataset, n = load_best(args.input)
+        best, dataset, n = load_best(args.input, n_filter=n_filter)
     except FileNotFoundError:
         print(f"error: input not found: {args.input}", file=sys.stderr)
         return 1
@@ -452,6 +466,14 @@ def main():
         print(f"error: cannot read {args.input}: {e}", file=sys.stderr)
         return 1
 
+    if not best:
+        # No rows for the requested n — fall back to unfiltered so the
+        # command still produces something, but warn loudly.
+        print(f"warn: no rows for n={n_filter}, falling back to all n", file=sys.stderr)
+        try:
+            best, dataset, n = load_best(args.input, n_filter=None)
+        except (FileNotFoundError, OSError):
+            pass
     if not best:
         print("error: no plottable rows found", file=sys.stderr)
         return 1
