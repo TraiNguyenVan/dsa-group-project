@@ -264,11 +264,11 @@ Dataset `contacts_100k.csv`, seed 42, toolchains in D.10.
 | Binary Search | Trần Quốc Anh<br>Nguyễn Quốc Toàn | N25DECE077<br>N25DECE070 |
 | Interpolation Search | Nguyễn Quốc Toàn | N25DECE070 |
 | Hash & Hash Function | Nguyễn Phương Quốc Vương<br>Nguyễn Phạm Thành Trung | N25DECE086<br>N25DECE072 |
-| Collision Handling | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| Collision Handling | Nguyễn Văn Trãi<br>Trương Quang Tuấn<br>Nguyễn Phương Quốc Vương | N25DECE085<br>N25DECE074<br>N25DECE086 |
 | Language ports (Go / Python / Java / JS) | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
 | Benchmark & plotting | Nguyễn Văn Trãi | N25DECE085 |
 | Dataset generation | Nguyễn Văn Trãi | N25DECE085 |
-| Report & PDF export | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| Report & PDF export | Nguyễn Văn Trãi<br>Trương Quang Tuấn<br>Nguyễn Phương Quốc Vương | N25DECE085<br>N25DECE074<br> N25DECE086 |
 | Slides | Nguyễn Quốc Toàn<br>Trần Quốc Anh | N25DECE070<br>N25DECE077 |
 | Build system | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
 | Exercise | Nguyễn Phương Quốc Vương<br>Nguyễn Phạm Thành Trung | N25DECE086<br>N25DECE072 |
