@@ -45,6 +45,8 @@ benchmark/rss-*.txt
 
 # PDF export temp
 report/.report.html
+report/node_modules/
+report/package-lock.json
 
 # OS junk
 .DS_Store
