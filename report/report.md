@@ -1,6 +1,6 @@
 # Phonebook Lookup — Group Report (Parts A, B, D)
 
-**Group G4 — Searching & Hash tables (§2.2)** · Linear · Binary · Interpolation · Hashing & collisions · Demo: phone-book lookup (n ≥ 100k) · Members: <!-- TODO: names + IDs --> · Build/run & machine spec: `README.md`
+**Group G4 — Searching & Hash tables (§2.2)** · Linear · Binary · Interpolation · Hashing & collisions · Demo: phone-book lookup ($n \ge 100k$) · Members: <!-- TODO: names + IDs --> · Build/run & machine spec: `README.md`
 
 > Parts A, B, D of `C0B_Group_Project_Guide.pdf`. Contribution & AI-use declarations in Appendix.
 
@@ -62,22 +62,22 @@ Demo implements linear, binary (sorted phone index), and hash table; interpolati
 
 | Operation | Best | Avg | Worst | Space | Why |
 | --- | --- | --- | --- | --- | --- |
-| Linear search by phone | O(1) | O(n) | O(n) | O(1) | No index — scan until found; first hit O(1), miss scans n. |
-| Binary search by phone | O(1) | O(log n) | O(log n) | O(1) | Halves range per probe; needs sorted array. |
-| Interpolation search | O(1) | O(log log n) | O(n) | O(1) | Value-proportion probe; O(log log n) only if uniform, else O(n). |
-| Hash insert | O(1) | O(1) | O(n) | O(1) | Hash→bucket, append to chain; O(n) if all collide. |
-| Hash search | O(1) | O(1) | O(n) | O(1) | Hash→bucket, walk chain; expected O(1), worst single chain. |
-| Hash delete | O(1) | O(1) | O(n) | O(1) | Find in chain then unlink; same as search. |
-| Rehash (load>0.75) | O(n) | O(n) | O(n) | O(n) | Reinsert all keys into doubled buckets; amortised O(1)/insert. |
+| Linear search by phone | $O(1)$ | $O(n)$ | $O(n)$ | $O(1)$ | No index — scan until found; first hit $O(1)$, miss scans $n$. |
+| Binary search by phone | $O(1)$ | $O(\log n)$ | $O(\log n)$ | $O(1)$ | Halves range per probe; needs sorted array. |
+| Interpolation search | $O(1)$ | $O(\log \log n)$ | $O(n)$ | $O(1)$ | Value-proportion probe; $O(\log \log n)$ only if uniform, else $O(n)$. |
+| Hash insert | $O(1)$ | $O(1)$ | $O(n)$ | $O(1)$ | Hash→bucket, append to chain; $O(n)$ if all collide. |
+| Hash search | $O(1)$ | $O(1)$ | $O(n)$ | $O(1)$ | Hash→bucket, walk chain; expected $O(1)$, worst single chain. |
+| Hash delete | $O(1)$ | $O(1)$ | $O(n)$ | $O(1)$ | Find in chain then unlink; same as search. |
+| Rehash (load>0.75) | $O(n)$ | $O(n)$ | $O(n)$ | $O(n)$ | Reinsert all keys into doubled buckets; amortised $O(1)$/insert. |
 
 ### B.2 Implementation notes (C++ source)
 
 * **CSV** `phonebook.cpp:30-83`: quoted `"Do, Thanh Tuan"` with `""` escapes, unquoted split on last comma, trim/strip quotes/`\r`, skip blank/empty-name/non-digit-phone.
 * **Insert** `143-164`: reject empty/non-digit/duplicate phone (hash check), store `CapitalizeFirst(ToLower(name))` + hash index.
-* **Delete** (opt 8): O(n) vector erase + full hash rebuild; missing phone → `Phone number not found`.
-* **Search:** `searchLinearByPhone` exact scan; `searchHashByPhone` chain lookup; `searchBinaryByPhone` binary search on sorted index (O(log n) → hash resolve); `searchLinearByName` case-insensitive scan.
-* **Sorted index** `buildSortedIndex`: bulk load then merge-sort once O(n log n); per-insert `lowerBound` O(log n)+shift O(n) with split `hash / sorted-index` timing; delete rebuilds.
-* **Hash** `hashtable.cpp`: poly hash 64-bit wrap `% numBuckets`; 101→nextPrime; rehash 0.75→nextPrime(2×); `isPrime` 6k±1.
+* **Delete** (opt 8): $O(n)$ vector erase + full hash rebuild; missing phone → `Phone number not found`.
+* **Search:** `searchLinearByPhone` exact scan; `searchHashByPhone` chain lookup; `searchBinaryByPhone` binary search on sorted index ($O(\log n)$ → hash resolve); `searchLinearByName` case-insensitive scan.
+* **Sorted index** `buildSortedIndex`: bulk load then merge-sort once $O(n \log n)$; per-insert `lowerBound` $O(\log n)$+shift $O(n)$ with split `hash / sorted-index` timing; delete rebuilds.
+* **Hash** `hashtable.cpp`: poly hash 64-bit wrap `% numBuckets`; 101→nextPrime; rehash 0.75→nextPrime(2×); `isPrime` $6k \pm 1$.
 * **Timer** `timer.hpp`: `timeIt` ms, `benchmark(work,5)` best-of-5, `printTaskDuration` → `\nTook: Xms.`
 * **Benchmark** `main.cpp:11-63` opt 0: auto-loads CSV, picks `first/middle/last/miss` phones (`miss=0000000000` true worst for hash/binary), times linear/hash/binary ×5.
 
@@ -87,7 +87,7 @@ Demo implements linear, binary (sorted phone index), and hash table; interpolati
 
 ### D.1 Scope & file map
 
-Same chained hash table + linear scan + binary on sorted index over `contacts_100k.csv` (n=100k) in all five languages — no `dict`/`map`/`HashMap`. This is a *language+runtime* comparison of equivalent code, not C++ vs Python's built-in `dict` (different question).
+Same chained hash table + linear scan + binary on sorted index over `contacts_100k.csv` ($n=100k$) in all five languages — no `dict`/`map`/`HashMap`. This is a *language+runtime* comparison of equivalent code, not C++ vs Python's built-in `dict` (different question).
 
 | C++ | Python | Go | JS (Node) | Java |
 | --- | --- | --- | --- | --- |
@@ -114,7 +114,7 @@ Differences are only runtime-forced (64-bit wrap, stdin, timing API).
 
 ### D.3 Runtime growth
 
-Best-of-5 ms at `last` (index n−1, same phone every lang) across n=50/10k/100k/200k/500k/1M (log-log). Linear ~linear with n; hash flat O(1), binary near-flat O(log n), both position-independent unlike linear.
+Best-of-5 ms at `last` (index $n-1$, same phone every lang) across $n = 50/10k/100k/200k/500k/1M$ (log-log). Linear ~linear with $n$; hash flat $O(1)$, binary near-flat $O(\log n)$, both position-independent unlike linear.
 
 ![Runtime vs n (5 langs, log-log)](../benchmark/plot-runtime-vs-n.png)
 
@@ -150,7 +150,7 @@ Peak RSS (MB, same batch):
 
 ### D.5 Statistical fairness
 
-Every cell in `benchmark/results.csv` holds 5 raw runs (`timeIt`, no discard) — 360 cells×5=1800 rows (5 langs×6 sizes×4 cases×3 algos). Opt 0 reports best-of-5; CSV keeps all 5 for mean/stdev/CV offline. No discarded warm-up yet, so run 1 includes cold start. Reproduce: `python3 -c` with `csv.DictReader`, `statistics.mean/stdev`, `CV=stdev/mean`.
+Every cell in `benchmark/results.csv` holds 5 raw runs (`timeIt`, no discard) — 360 cells×5=1800 rows (5 langs×6 sizes×4 cases×3 algos). Opt 0 reports best-of-5; CSV keeps all 5 for mean/stdev/CV offline. No discarded warm-up yet, so run 1 includes cold start. Reproduce: `python3 -c` with `csv.DictReader`, `statistics.mean/stdev`, $CV = stdev/mean$.
 
 Representative at n=1M (`last` = linear worst, same phone every lang), ms `mean ± stdev (best)`:
 
@@ -207,7 +207,7 @@ Additional per-case PNGs (`plot-first-*` … `plot-miss-*`, 12 images) remain in
 ### D.7 Why the gap
 
 * **C++ `-O2`:** contiguous structs + SSO → tight machine loop, no per-element overhead (baseline).
-* **Python:** every `Contact`/`str` boxed `PyObject` + bytecode dispatch + dict lookups → `last-linear` ~10× (100k interpreter steps vs instructions); hash stays small (O(1) → tax once).
+* **Python:** every `Contact`/`str` boxed `PyObject` + bytecode dispatch + dict lookups → `last-linear` ~10× (100k interpreter steps vs instructions); hash stays small ($O(1)$ → tax once).
 * **Go:** compiled value slices → real machine loop, gap is bounds checks + GC barriers, not interpretation — closest to C++.
 * **JS (V8):** heap-object array + hidden-class checks + JIT warmup (best-of-5 lets TurboFan settle; spread is tier-up).
 * **Java:** `ArrayList<Contact>` refs + C2 after ~10k iters (one 100k scan trips it) + G1 pauses; startup not measured (fair — all langs same).
