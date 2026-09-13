@@ -312,7 +312,8 @@ func main() {
 			fmt.Println("2. Search phone - Hash Search")
 			fmt.Println("3. Search phone - Binary Search (sorted index)")
 			fmt.Println("4. Search name - Linear Search")
-			fmt.Println("5. Back")
+			fmt.Println("5. Prefix phone search")
+			fmt.Println("6. Back")
 			fmt.Println("============================")
 			fmt.Print("Enter your choice: ")
 			sline, ok := readChoiceLine(reader)
@@ -395,6 +396,24 @@ func main() {
 					phonebook.PrintContact(index)
 				}
 			} else if searchChoice == 5 {
+				fmt.Print("Enter phone number: ")
+				phone, ok := readRawLine(reader)
+				if !ok {
+					fmt.Println("\nGoodbye")
+					return
+				}
+				results := []int{}
+				PrintTaskDuration(func() { results = phonebook.SearchPrefixByPhone(phone, 10) })
+				if len(results) == 0 {
+					fmt.Println("This does not match any phone prefix.")
+				} else {
+					fmt.Println("Found, here is the first 10 results (sorted index). ")
+					for _, idx := range results {
+						fmt.Printf("Contact index: %d\n", idx)
+						phonebook.PrintContact(idx)
+					}
+				}
+			} else if searchChoice == 6 {
 				fmt.Println("Back to main menu.")
 			} else {
 				fmt.Println("Invalid search choice.")

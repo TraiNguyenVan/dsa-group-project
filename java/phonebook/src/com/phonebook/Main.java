@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicReference;
 
 // Faithful port of src/main.cpp - Phone Book CLI.
 public class Main {
@@ -274,7 +275,8 @@ public class Main {
                 System.out.println("2. Search phone - Hash Search");
                 System.out.println("3. Search phone - Binary Search (sorted index)");
                 System.out.println("4. Search name - Linear Search");
-                System.out.println("5. Back");
+                System.out.println("5. Prefix phone search");
+                System.out.println("6. Back");
                 System.out.println("============================");
                 System.out.print("Enter your choice: ");
                 if (!sc.hasNext()) {
@@ -375,6 +377,27 @@ public class Main {
                         phonebook.printContact(index[0]);
                     }
                 } else if (searchChoice == 5) {
+                    System.out.print("Enter phone number: ");
+                    String phone;
+                    try {
+                        phone = sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    final String fPhone5 = phone;
+                    final AtomicReference<List<Integer>> results = new AtomicReference<>();
+                    Timer.printTaskDuration(() -> results.set(phonebook.searchPrefixByPhone(fPhone5, 10)));
+                    if (results.get().isEmpty()) {
+                        System.out.println("This does not match any phone prefix.");
+                    } else {
+                        System.out.println("Found, here is the first 10 results (sorted index). ");
+                        for (int idx : results.get()) {
+                            System.out.println("Contact index: " + idx);
+                            phonebook.printContact(idx);
+                        }
+                    }
+                } else if (searchChoice == 6) {
                     System.out.println("Back to main menu.");
                 } else {
                     System.out.println("Invalid search choice.");

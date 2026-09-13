@@ -55,6 +55,40 @@ function parseCsvLine(line) {
   return [true, name, phone];
 }
 
+// mix merges a[left..middle] and a[middle+1..right] into a sorted run.
+function mix(a, left, middle, right) {
+  const temp = new Array(right - left + 1);
+  let i = left;
+  let j = middle + 1;
+  let k = 0;
+  while (i <= middle && j <= right) {
+    if (a[i] <= a[j]) {
+      temp[k++] = a[i++];
+    } else {
+      temp[k++] = a[j++];
+    }
+  }
+  while (i <= middle) {
+    temp[k++] = a[i++];
+  }
+  while (j <= right) {
+    temp[k++] = a[j++];
+  }
+  for (let x = left; x <= right; x++) {
+    a[x] = temp[x - left];
+  }
+}
+
+// split/divide
+function divide(a, left, right) {
+  const middle = Math.floor((left + right) / 2);
+  if (left < right) {
+    divide(a, left, middle);
+    divide(a, middle + 1, right);
+    mix(a, left, middle, right);
+  }
+}
+
 class PhoneBook {
   constructor(initialCapacity = DEFAULT_TABLE_SIZE) {
     this.contacts = [];
@@ -77,7 +111,11 @@ class PhoneBook {
 
   // Rebuild the sorted index from scratch (O(n log n)); called once after load.
   buildSortedIndex() {
-    this.sortedPhones = this.contacts.map((c) => c.phone).sort();
+    this.sortedPhones = this.contacts.map((c) => c.phone);
+    // Guard: mirrors C++ size_t underflow protection; 0/1 elements need no sort.
+    if (this.sortedPhones.length >= 2) {
+      divide(this.sortedPhones, 0, this.sortedPhones.length - 1);
+    }
   }
 
   static isAllDigits(s) {
@@ -190,6 +228,19 @@ class PhoneBook {
       if (PhoneBook.toLower(this.contacts[i].name) === target) return i;
     }
     return -1;
+  }
+
+  // Prefix search using lower_bound + linear for first k results.
+  searchPrefixByPhone(phone, k) {
+    const result = [];
+    const pos = PhoneBook.lowerBound(this.sortedPhones, phone);
+    for (let i = pos; i < pos + k && i < this.sortedPhones.length; i++) {
+      // stop as soon as the sorted phone no longer starts with the prefix
+      if (!this.sortedPhones[i].startsWith(phone)) break;
+      const index = this.hashtable.hashSearch(this.sortedPhones[i]);
+      if (index !== -1) result.push(index);
+    }
+    return result;
   }
 
   printAll() {
