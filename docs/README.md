@@ -38,6 +38,8 @@ cd benchmark && python -m http.server 8000
 
 > All three `make` targets are idempotent. Re-running overwrites the CSVs. Without `matplotlib` the plot step prints `plot skipped` but CSVs are still produced.
 
+> **Platform support:** the harness is tested on **Linux only** (Windows/macOS untested) — see [`README.md`](../README.md) and [05 — Running Benchmarks](05-running-benchmarks.md).
+
 ## Where things live
 
 ```

@@ -21,6 +21,8 @@ Check yours:
 g++ --version; python3 --version; go version; node --version; javac -version; valgrind --version
 ```
 
+> **Platform support:** the harness was **tested on Linux only** — Windows/macOS are not yet tested. The `make` targets assume a POSIX shell; on Windows use the CMake presets (`cmake --preset mingw-release`) for C++ or the manual commands below. Full notice: `README.md`.
+
 ## Make targets (the easy way)
 
 All targets are idempotent — re-running overwrites the CSVs.

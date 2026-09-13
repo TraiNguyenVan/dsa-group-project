@@ -212,6 +212,14 @@ report appendix.
 
 ## Machine & toolchain used for measurements
 
+> **Platform support:** the benchmark harness (`make run-benchmark` /
+> `run-benchmark-sizes` / `run-memory`) was **tested on Linux only** —
+> Windows/macOS are not yet tested. The C++ program is verified on Windows
+> via `cmake --preset mingw-release` (MSYS2 MinGW, manual build flags and
+> CMake preset both checked); the Python/Go/JS/Java ports are expected to
+> work on any OS with the runtime installed. Numbers from an untested
+> platform are not comparable to the tables below.
+
 | Component | Value |
 | --- | --- |
 | CPU | Intel Core i5-1135G7 @ 2.40 GHz (4 cores / 8 threads) |
