@@ -511,7 +511,7 @@ def main():
     fig.savefig(args.output, dpi=120)
     print(f"Wrote {args.output} ({len(best)} cells).")
 
-    # 9 per-group charts: one PNG per (case, algo), horizontal bars sorted
+    # 12 per-group charts: one PNG per (case, algo), horizontal bars sorted
     # fastest-first. Same LANG_ORDER colors as the overview.
     cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     lang_color = {lang: cycle[i % len(cycle)] for i, lang in enumerate(LANG_ORDER)}

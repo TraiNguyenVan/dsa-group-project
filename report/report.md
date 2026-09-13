@@ -162,7 +162,7 @@ Representative at n=1M (`last` = linear worst, same phone every lang), ms `mean 
 | JS | 17.269537 ±2.736207 (13.113779) | 0.003668 ±0.004672 (0.001240) | 0.005866 ±0.006290 (0.002539) |
 | Java | 22.521668 ±0.718975 (21.738484) | 0.001006 ±0.001003 (0.000509) | 0.004678 ±0.004580 (0.002551) |
 
-Cold-start `first` n=1M `run1/best`: JS 58.5×/46.6×/25.9×, Java 11.8×/79.1×/5.3×, Python 11.1×/5.6×/3.6×, C++ 11.2×/22.4×/20.5×, Go 17.3×/18.1×/19.4×. Full 75-cell table generated from CSV (not hand-copied).
+Cold-start `first` n=1M `run1/best`: JS 58.5×/46.6×/25.9×, Java 11.8×/79.1×/5.3×, Python 11.1×/5.6×/3.6×, C++ 11.2×/22.4×/20.5×, Go 17.3×/18.1×/19.4×. Full 60-cell table generated from CSV (not hand-copied).
 
 *Why Java slow on run 1:* JVM interpreted + class-load/G1, then C1/C2 compile hot loop after ~10k iters — one 100k scan triggers it (`middle-linear` 39→17 ms runs 1–5; tiny hash ops 66× after compile). V8 same (Ignition→TurboFan, settled by run 3–5; `first` coldest as it runs first). C++/Go AOT (`-O2`/`go build`) run-1 excess is cache/branch + sub-µs timer floor (CV 1.4–1.8 on hash/binary). Python no JIT; large linear most stable (CV 0.02–0.04 at 1M).
 
@@ -202,7 +202,7 @@ CSV: `language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone
 
 ![Phone search: linear vs hash vs binary (5 langs, best-of-5)](../benchmark/plot.png)
 
-Additional per-case PNGs (`plot-first-*` … `plot-miss-*`, 15 images) remain in `benchmark/` and `benchmark/gallery.html`; omitted here for length.
+Additional per-case PNGs (`plot-first-*` … `plot-miss-*`, 12 images) remain in `benchmark/` and `benchmark/gallery.html`; omitted here for length.
 
 ### D.7 Why the gap
 
