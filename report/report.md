@@ -104,7 +104,7 @@ Differences are only runtime-forced (64-bit wrap, stdin, timing API).
 | Criterion | C++ | Python | Java | JavaScript | Go |
 | --- | --- | --- | --- | --- | --- |
 | Built-in structures | `vector` (contacts, buckets, sorted index) | `list` (contacts, buckets, sorted index) | `ArrayList` (contacts, sorted index) + `HashNode[]` (buckets) | `Array` (contacts, buckets, sorted index) | slices `[]Contact`, `[]*HashNode`, `[]string` |
-| Effort | highest: `new/delete`, header split, `=delete`, 6k±1, rehash, CSV state machine, `lowerBound`, CMake `-O2` | lowest: `dataclass+list`, `& MASK64`, `""`-CSV, `lowerBound`, `perf_counter` | high: `remainderUnsigned`, `HashNode[]`, NIO.2 CSV, `lowerBound`, `nanoTime`, `javac -d` | high: `BigInt & MASK64`, `perf_hooks`, `readline` CLI, `mulberry32(42)` | medium: `uint64` wraps free; chaining/CSV/`lowerBound`/`time.Now`, `go run` |
+| Effort | highest: `new/delete`, header split, `=delete`, rehash, CSV state machine, `lowerBound`, CMake `-O2` | lowest: `dataclass+list`, `& MASK64`, `""`-CSV, `lowerBound`, `perf_counter` | high: `remainderUnsigned`, `HashNode[]`, NIO.2 CSV, `lowerBound`, `nanoTime`, `javac -d` | high: `BigInt & MASK64`, `perf_hooks`, `readline` CLI, `mulberry32(42)` | medium: `uint64` wraps free; chaining/CSV/`lowerBound`/`time.Now`, `go run` |
 | Runtime | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 |
 | Memory | lowest: ~165 MB heap at 1M (Massif) | ~2× C++: ~340 MB at 1M (tracemalloc) | ~2× C++: ~350 MB HeapInuse at 1M (pprof) | live ~260 MB at 1M, RSS baseline ~56 MB | polled ~242 MB at 1M; RSS ~323 MB |
 | Mgmt | manual RAII, deterministic, no GC | refcount + gen. GC | tracing G1, concurrent | V8 gen. GC | G1, may pause |
