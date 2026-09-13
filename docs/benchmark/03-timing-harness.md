@@ -101,8 +101,8 @@ Run 5: 0.36 ms
 
 ### Where `benchmark` is used
 
-- **Interactive mode** (option `0`): `runSearchBenchmark()` calls `benchmark()` for each of the 15 cells (5 cases × 3 algos) and prints `Linear best of 5: 0.365ms`.
-- **Batch mode** (`--benchmark-csv`): `runSearchBenchmarkBatch()` calls `timeIt()` 5 times per cell and writes **every run** as a separate CSV row (75 rows per language per dataset). `plot.py` then takes `min()` per cell — same result, but auditable.
+- **Interactive mode** (option `0`): `runSearchBenchmark()` calls `benchmark()` for each of the 12 cells (4 cases × 3 algos) and prints `Linear best of 5: 0.365ms`.
+- **Batch mode** (`--benchmark-csv`): `runSearchBenchmarkBatch()` calls `timeIt()` 5 times per cell and writes **every run** as a separate CSV row (60 rows per language per dataset). `plot.py` then takes `min()` per cell — same result, but auditable.
 
 ### `printTaskDuration` — the menu helper
 

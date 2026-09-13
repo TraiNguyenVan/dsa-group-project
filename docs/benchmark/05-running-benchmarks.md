@@ -48,12 +48,12 @@ g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.
 make run-benchmark
 ```
 
-Runs **all 5 languages** on `data/contacts_100k.csv` (75 rows each → 375 rows) → `benchmark/results.csv`, then `benchmark/plot.py` → `benchmark/plot.png` + 9 per-case PNGs.
+Runs **all 5 languages** on `data/contacts_100k.csv` (60 rows each → 300 rows) → `benchmark/results.csv`, then `benchmark/plot.py` → `benchmark/plot.png` + 12 per-case PNGs.
 
 ```
-benchmark/results.csv   375 rows (5 langs × 5 cases × 3 algos × 5 runs)
+benchmark/results.csv   300 rows (5 langs × 4 cases × 3 algos × 5 runs)
 benchmark/plot.png      3-panel overview (linear | hash | binary)
-benchmark/plot-first-linear.png … plot-miss-binary.png  (9 splits)
+benchmark/plot-first-linear.png … plot-miss-binary.png  (12 splits)
 ```
 
 ### `make run-benchmark-sizes` — scaling (6 sizes)
@@ -62,12 +62,12 @@ benchmark/plot-first-linear.png … plot-miss-binary.png  (9 splits)
 make run-benchmark-sizes
 ```
 
-Regenerates datasets (`python3 data/generate.py --seed 42`), then loops `50, 10k, 100k, 200k, 500k, 1M` × 5 langs → one appended `benchmark/results.csv` (2250 rows), then three plot families:
+Regenerates datasets (`python3 data/generate.py --seed 42`), then loops `50, 10k, 100k, 200k, 500k, 1M` × 5 langs → one appended `benchmark/results.csv` (1800 rows), then three plot families:
 
 ```
-benchmark/results.csv              2250 rows (6 sizes × 375)
+benchmark/results.csv              1800 rows (6 sizes × 300)
 benchmark/plot-runtime-vs-n.png    line chart: ms vs n, log-log, 3 panels (one per algo)
-benchmark/plot-unified-*.png       5 PNGs (one per lang, 15 series each: 3 algos × 5 cases)
+benchmark/plot-unified-*.png       5 PNGs (one per lang, 12 series each: 3 algos × 4 cases)
 benchmark/plot-per-algo-*.png      5 PNGs (one per lang, best/avg/worst per algo)
 ```
 

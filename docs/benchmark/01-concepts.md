@@ -82,6 +82,10 @@ Think of memory as three nested boxes:
 
 At `n=50` the heap is tiny (0.1 MB in C++) but RSS is 12–55 MB — the runtime baseline dominates. At `n=1M` the heap dominates. You need both to answer "how much does the data cost?" vs "how much does the whole process cost?" The report's `plot-memory.png` shows both panels for this reason.
 
+### Peak vs current
+
+Memory use isn't a single number — a program allocates, frees, and allocates more as it runs. The number that matters is the **peak**: the most memory used at any one moment, because that decides whether the program fits in RAM. The profilers below all report a peak (or a post-GC "live" number that approximates it).
+
 ### Kernel RSS — `ru_maxrss`
 
 On Linux the kernel tracks each process's peak RSS in `struct rusage.ru_maxrss` (kilobytes). The harness forks a child, runs the batch program, and calls `os.wait4(pid, 0)` in the parent — the kernel returns the child's peak RSS without any instrumentation inside the child. This is the **uniform yardstick**: same kernel measurement for all five languages, no profiler bias.
@@ -113,6 +117,16 @@ Each language has its own way to measure "how much heap did the phonebook actual
 
 All are invoked headlessly by `benchmark/mem_profile.py` on the **same load path** (`CSV → contacts + hash + sorted index`) so numbers are comparable. See [06 — Memory Profiling](06-memory-profiling.md) for details.
 
+In plain English, each tool answers "how much heap did the phonebook use?" in its own way:
+
+- **Massif** — a debugger that watches every `malloc`/`free` and records the heap's peak. Slow but exact; the floor.
+- **tracemalloc** — Python's built-in allocation tracker; reports the peak of Python-side objects.
+- **pprof** — Go's built-in profiler; we turn GC off so the heap only grows, then read the peak.
+- **V8 `heapUsed`** — Node's engine; we force a garbage collection first so we measure live data, not garbage.
+- **JFR** — Java's built-in recorder; samples the JVM heap every few ms during load to catch the peak.
+
+Because each tool measures slightly differently, the numbers won't match byte-for-byte — compare *shapes*, not exact values. That's why the harness also measures kernel RSS (one uniform measurement for all five languages).
+
 ## 6. JIT, GC, and warmup
 
 - **JIT (Just-In-Time compilation)** — Java (C1/C2) and JS (V8 TurboFan) start interpreted, then compile hot code after ~10k iterations. Run 1 is slow (interpreted + class loading), runs 2–5 are fast (compiled). C++ and Go are AOT-compiled (`-O2` / `go build`) so run 1 is already fast.
@@ -122,6 +136,18 @@ All are invoked headlessly by `benchmark/mem_profile.py` on the **same load path
 ## 7. Complexity vs measured time
 
 Complexity (`O(n)`, `O(1)`, `O(log n)`) predicts *growth* with `n`, not absolute milliseconds. The harness verifies this by running `n = 50, 10k, 100k, 200k, 500k, 1M` and plotting `ms vs n` on log-log axes — linear should be a diagonal, hash/binary should be flat. See [08 — Interpreting Results](08-interpreting-results.md).
+
+## 8. Mini glossary
+
+| Term | Meaning |
+|------|---------|
+| **Allocation** | The program asking the OS/runtime for a chunk of memory (e.g. a new `Contact`). |
+| **Garbage collection (GC)** | The runtime automatically reclaiming memory the program no longer references. Python, Go, Java, JS have it; C++ doesn't. |
+| **Heap snapshot** | A point-in-time dump of everything currently allocated (e.g. a `.heapprofile` you open in Chrome DevTools). |
+| **Sampling** | Measuring periodically (e.g. every 5 ms) instead of continuously — JFR's approach. |
+| **Peak** | The highest memory usage reached at any moment during the run. |
+| **Resident Set Size (RSS)** | RAM the OS has actually mapped for the process right now — heap + stacks + code + runtime. |
+| **Profiler bias** | Each profiler measures a slightly different thing, so its number differs from other tools' by a constant-ish factor. |
 
 ---
 

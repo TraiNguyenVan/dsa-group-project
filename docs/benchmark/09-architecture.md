@@ -59,7 +59,7 @@ How the harness is organized, how data flows, and where benchmark code lives vs 
     ├── 01-concepts.md               # wall-clock, RSS, heap, JIT, complexity
     ├── 02-datasets.md               # generator, schema, nested prefixes
     ├── 03-timing-harness.md         # timeIt / benchmark
-    ├── 04-benchmark-modes.md        # interactive vs batch, 15 cells, CSV schema
+    ├── 04-benchmark-modes.md        # interactive vs batch, 12 cells, CSV schema
     ├── 05-running-benchmarks.md     # make targets, manual commands
     ├── 06-memory-profiling.md       # mem_profile.py, 5 profilers, wait4
     ├── 07-plotting-and-gallery.md   # plot.py modes, gallery.html
@@ -103,8 +103,8 @@ flowchart TD
 ```mermaid
 flowchart LR
     A[CSV] --> B[PhoneBook.loadfromCSV\n+ hash + sorted index]
-    B --> C{5 cases × 3 algos × 5 runs}
-    C -->|timeIt| D[75 ms values]
+    B --> C{4 cases × 3 algos × 5 runs}
+    C -->|timeIt| D[60 ms values]
     D --> E[results.csv\none row per run]
     E --> F[plot.py: best = min 5]
     F --> G[PNGs]
