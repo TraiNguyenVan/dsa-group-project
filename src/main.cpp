@@ -155,7 +155,7 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
         }
     }
     out.close();
-    cout << "Wrote 75 rows -> " << outCsv << " (" << n << " contacts).\n";
+    cout << "Wrote 60 rows -> " << outCsv << " (" << n << " contacts).\n";
     return 0;
 }
 
