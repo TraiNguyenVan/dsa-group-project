@@ -85,11 +85,11 @@ All measure **wall-clock** and write `ms` to CSV. Each writes its own float form
 
 For **this problem** — a phonebook lookup at n ≥ 100k, read-heavy, single machine:
 
-- **Pick C++** if the hot path is the point: `-O2`, no GC, contiguous `vector<Contact>`, ~165 MB heap at 1M (Massif). The cost is manual memory management and the most code.
+- **Pick C++** if the hot path is the point: `-O2`, no GC, contiguous `vector<Contact>`, whole-process floor (~218 MB RSS at 1M). The cost is manual memory management and the most code.
 - **Pick Go** if you want ~C++ speed with less effort and a single static binary: `go build`, `pprof` built in, GC is concurrent. The `[]Contact` values are contiguous; per-`HashNode` allocs are the main overhead.
 - **Pick Python** for teaching/prototyping/glue — but **not** for the hot loop. The interpreter + boxed objects make linear search ~10× slower than C++ at 1M; use the built-in `dict` if you need speed in Python.
-- **Pick Java** for large-team/enterprise/Android — but the JVM baseline (~54 MB RSS at n=50) and JIT warm-up mean it's not the leanest choice for a small CLI.
-- **Pick JS** for a demo/web/zero-build CLI — but `BigInt` for the 64-bit wrap and the V8 baseline (~56 MB RSS) make it a poor fit for a 100k+ hot path.
+- **Pick Java** for large-team/enterprise/Android — but the JVM baseline (~51 MB RSS at n=50) and JIT warm-up mean it's not the leanest choice for a small CLI.
+- **Pick JS** for a demo/web/zero-build CLI — but `BigInt` for the 64-bit wrap and the V8 baseline (~53 MB RSS) make it a poor fit for a 100k+ hot path.
 
 **Defend it:** the recommendation is *for this problem* — a read-heavy lookup at n ≥ 100k. If the workload were write-heavy or the team were Python-only, the answer changes. The DSA point (linear O(n) vs hash O(1) vs binary O(log n)) holds in **all five** languages — the language changes the constant, not the complexity.
 

@@ -1,61 +1,61 @@
 language,dataset,n,metric,mb,tool
 cpp,data/contacts_50.csv,50,profiler_heap,0.093,valgrind/massif
-cpp,data/contacts_50.csv,50,peak_rss,12.637,kernel wait4/ru_maxrss
-python,data/contacts_50.csv,50,profiler_heap,0.159,tracemalloc
-python,data/contacts_50.csv,50,peak_rss,16.625,kernel wait4/ru_maxrss
-go,data/contacts_50.csv,50,profiler_heap,0.758,"pprof (HeapInuse, GC off)"
-go,data/contacts_50.csv,50,peak_rss,12.652,kernel wait4/ru_maxrss
-js,data/contacts_50.csv,50,profiler_heap,4.794,node --heap-prof (V8 heapUsed)
-js,data/contacts_50.csv,50,peak_rss,55.797,kernel wait4/ru_maxrss
-java,data/contacts_50.csv,50,profiler_heap,9.461,JFR + polled heap
-java,data/contacts_50.csv,50,peak_rss,53.508,kernel wait4/ru_maxrss
-cpp,data/contacts_10k.csv,10000,profiler_heap,2.151,valgrind/massif
-cpp,data/contacts_10k.csv,10000,peak_rss,12.887,kernel wait4/ru_maxrss
-python,data/contacts_10k.csv,10000,profiler_heap,3.384,tracemalloc
-python,data/contacts_10k.csv,10000,peak_rss,20.355,kernel wait4/ru_maxrss
-go,data/contacts_10k.csv,10000,profiler_heap,4.117,"pprof (HeapInuse, GC off)"
-go,data/contacts_10k.csv,10000,peak_rss,12.891,kernel wait4/ru_maxrss
-js,data/contacts_10k.csv,10000,profiler_heap,7.329,node --heap-prof (V8 heapUsed)
-js,data/contacts_10k.csv,10000,peak_rss,74.832,kernel wait4/ru_maxrss
-java,data/contacts_10k.csv,10000,profiler_heap,11.587,JFR + polled heap
-java,data/contacts_10k.csv,10000,peak_rss,61.562,kernel wait4/ru_maxrss
-cpp,data/contacts_100k.csv,100000,profiler_heap,18.505,valgrind/massif
-cpp,data/contacts_100k.csv,100000,peak_rss,21.348,kernel wait4/ru_maxrss
-python,data/contacts_100k.csv,100000,profiler_heap,34.223,tracemalloc
-python,data/contacts_100k.csv,100000,peak_rss,53.746,kernel wait4/ru_maxrss
-go,data/contacts_100k.csv,100000,profiler_heap,37.305,"pprof (HeapInuse, GC off)"
-go,data/contacts_100k.csv,100000,peak_rss,25.418,kernel wait4/ru_maxrss
-js,data/contacts_100k.csv,100000,profiler_heap,49.020,node --heap-prof (V8 heapUsed)
-js,data/contacts_100k.csv,100000,peak_rss,156.965,kernel wait4/ru_maxrss
-java,data/contacts_100k.csv,100000,profiler_heap,29.364,JFR + polled heap
-java,data/contacts_100k.csv,100000,peak_rss,85.648,kernel wait4/ru_maxrss
-cpp,data/contacts_200k.csv,200000,profiler_heap,36.931,valgrind/massif
-cpp,data/contacts_200k.csv,200000,peak_rss,39.336,kernel wait4/ru_maxrss
-python,data/contacts_200k.csv,200000,profiler_heap,68.488,tracemalloc
-python,data/contacts_200k.csv,200000,peak_rss,91.051,kernel wait4/ru_maxrss
-go,data/contacts_200k.csv,200000,profiler_heap,73.398,"pprof (HeapInuse, GC off)"
-go,data/contacts_200k.csv,200000,peak_rss,46.480,kernel wait4/ru_maxrss
-js,data/contacts_200k.csv,200000,profiler_heap,64.414,node --heap-prof (V8 heapUsed)
-js,data/contacts_200k.csv,200000,peak_rss,191.082,kernel wait4/ru_maxrss
-java,data/contacts_200k.csv,200000,profiler_heap,44.909,JFR + polled heap
-java,data/contacts_200k.csv,200000,peak_rss,127.996,kernel wait4/ru_maxrss
-cpp,data/contacts_500k.csv,500000,profiler_heap,82.505,valgrind/massif
-cpp,data/contacts_500k.csv,500000,peak_rss,88.504,kernel wait4/ru_maxrss
-python,data/contacts_500k.csv,500000,profiler_heap,169.721,tracemalloc
-python,data/contacts_500k.csv,500000,peak_rss,202.707,kernel wait4/ru_maxrss
-go,data/contacts_500k.csv,500000,profiler_heap,177.695,"pprof (HeapInuse, GC off)"
-go,data/contacts_500k.csv,500000,peak_rss,101.707,kernel wait4/ru_maxrss
-js,data/contacts_500k.csv,500000,profiler_heap,135.889,node --heap-prof (V8 heapUsed)
-js,data/contacts_500k.csv,500000,peak_rss,282.797,kernel wait4/ru_maxrss
-java,data/contacts_500k.csv,500000,profiler_heap,143.687,JFR + polled heap
-java,data/contacts_500k.csv,500000,peak_rss,214.406,kernel wait4/ru_maxrss
-cpp,data/contacts_1m.csv,1000000,profiler_heap,164.925,valgrind/massif
-cpp,data/contacts_1m.csv,1000000,peak_rss,174.902,kernel wait4/ru_maxrss
-python,data/contacts_1m.csv,1000000,profiler_heap,339.655,tracemalloc
-python,data/contacts_1m.csv,1000000,peak_rss,386.637,kernel wait4/ru_maxrss
-go,data/contacts_1m.csv,1000000,profiler_heap,350.258,"pprof (HeapInuse, GC off)"
-go,data/contacts_1m.csv,1000000,peak_rss,239.832,kernel wait4/ru_maxrss
-js,data/contacts_1m.csv,1000000,profiler_heap,260.240,node --heap-prof (V8 heapUsed)
-js,data/contacts_1m.csv,1000000,peak_rss,441.938,kernel wait4/ru_maxrss
-java,data/contacts_1m.csv,1000000,profiler_heap,241.946,JFR + polled heap
-java,data/contacts_1m.csv,1000000,peak_rss,323.391,kernel wait4/ru_maxrss
+cpp,data/contacts_50.csv,50,peak_rss,12.633,kernel wait4/ru_maxrss
+python,data/contacts_50.csv,50,profiler_heap,0.157,tracemalloc
+python,data/contacts_50.csv,50,peak_rss,16.449,kernel wait4/ru_maxrss
+go,data/contacts_50.csv,50,profiler_heap,0.247,"pprof (HeapAlloc live, GC on)"
+go,data/contacts_50.csv,50,peak_rss,12.656,kernel wait4/ru_maxrss
+js,data/contacts_50.csv,50,profiler_heap,5.406,node --heap-prof (V8 heapUsed)
+js,data/contacts_50.csv,50,peak_rss,53.488,kernel wait4/ru_maxrss
+java,data/contacts_50.csv,50,profiler_heap,9.459,JFR + polled heap
+java,data/contacts_50.csv,50,peak_rss,50.992,kernel wait4/ru_maxrss
+cpp,data/contacts_10k.csv,10000,profiler_heap,2.364,valgrind/massif
+cpp,data/contacts_10k.csv,10000,peak_rss,12.875,kernel wait4/ru_maxrss
+python,data/contacts_10k.csv,10000,profiler_heap,3.409,tracemalloc
+python,data/contacts_10k.csv,10000,peak_rss,20.234,kernel wait4/ru_maxrss
+go,data/contacts_10k.csv,10000,profiler_heap,1.595,"pprof (HeapAlloc live, GC on)"
+go,data/contacts_10k.csv,10000,peak_rss,12.875,kernel wait4/ru_maxrss
+js,data/contacts_10k.csv,10000,profiler_heap,7.870,node --heap-prof (V8 heapUsed)
+js,data/contacts_10k.csv,10000,peak_rss,71.863,kernel wait4/ru_maxrss
+java,data/contacts_10k.csv,10000,profiler_heap,11.619,JFR + polled heap
+java,data/contacts_10k.csv,10000,peak_rss,67.754,kernel wait4/ru_maxrss
+cpp,data/contacts_100k.csv,100000,profiler_heap,21.557,valgrind/massif
+cpp,data/contacts_100k.csv,100000,peak_rss,24.449,kernel wait4/ru_maxrss
+python,data/contacts_100k.csv,100000,profiler_heap,34.605,tracemalloc
+python,data/contacts_100k.csv,100000,peak_rss,54.094,kernel wait4/ru_maxrss
+go,data/contacts_100k.csv,100000,profiler_heap,14.449,"pprof (HeapAlloc live, GC on)"
+go,data/contacts_100k.csv,100000,peak_rss,32.516,kernel wait4/ru_maxrss
+js,data/contacts_100k.csv,100000,profiler_heap,46.135,node --heap-prof (V8 heapUsed)
+js,data/contacts_100k.csv,100000,peak_rss,156.289,kernel wait4/ru_maxrss
+java,data/contacts_100k.csv,100000,profiler_heap,38.941,JFR + polled heap
+java,data/contacts_100k.csv,100000,peak_rss,98.238,kernel wait4/ru_maxrss
+cpp,data/contacts_200k.csv,200000,profiler_heap,43.036,valgrind/massif
+cpp,data/contacts_200k.csv,200000,peak_rss,44.727,kernel wait4/ru_maxrss
+python,data/contacts_200k.csv,200000,profiler_heap,69.252,tracemalloc
+python,data/contacts_200k.csv,200000,peak_rss,91.773,kernel wait4/ru_maxrss
+go,data/contacts_200k.csv,200000,profiler_heap,28.452,"pprof (HeapAlloc live, GC on)"
+go,data/contacts_200k.csv,200000,peak_rss,60.141,kernel wait4/ru_maxrss
+js,data/contacts_200k.csv,200000,profiler_heap,63.838,node --heap-prof (V8 heapUsed)
+js,data/contacts_200k.csv,200000,peak_rss,192.699,kernel wait4/ru_maxrss
+java,data/contacts_200k.csv,200000,profiler_heap,53.918,JFR + polled heap
+java,data/contacts_200k.csv,200000,peak_rss,130.762,kernel wait4/ru_maxrss
+cpp,data/contacts_500k.csv,500000,profiler_heap,97.767,valgrind/massif
+cpp,data/contacts_500k.csv,500000,peak_rss,103.871,kernel wait4/ru_maxrss
+python,data/contacts_500k.csv,500000,profiler_heap,171.630,tracemalloc
+python,data/contacts_500k.csv,500000,peak_rss,203.180,kernel wait4/ru_maxrss
+go,data/contacts_500k.csv,500000,profiler_heap,68.533,"pprof (HeapAlloc live, GC on)"
+go,data/contacts_500k.csv,500000,peak_rss,149.016,kernel wait4/ru_maxrss
+js,data/contacts_500k.csv,500000,profiler_heap,151.987,node --heap-prof (V8 heapUsed)
+js,data/contacts_500k.csv,500000,peak_rss,288.891,kernel wait4/ru_maxrss
+java,data/contacts_500k.csv,500000,profiler_heap,148.313,JFR + polled heap
+java,data/contacts_500k.csv,500000,peak_rss,283.699,kernel wait4/ru_maxrss
+cpp,data/contacts_1m.csv,1000000,profiler_heap,195.445,valgrind/massif
+cpp,data/contacts_1m.csv,1000000,peak_rss,218.473,kernel wait4/ru_maxrss
+python,data/contacts_1m.csv,1000000,profiler_heap,343.471,tracemalloc
+python,data/contacts_1m.csv,1000000,peak_rss,393.664,kernel wait4/ru_maxrss
+go,data/contacts_1m.csv,1000000,profiler_heap,135.659,"pprof (HeapAlloc live, GC on)"
+go,data/contacts_1m.csv,1000000,peak_rss,287.016,kernel wait4/ru_maxrss
+js,data/contacts_1m.csv,1000000,profiler_heap,226.630,node --heap-prof (V8 heapUsed)
+js,data/contacts_1m.csv,1000000,peak_rss,434.641,kernel wait4/ru_maxrss
+java,data/contacts_1m.csv,1000000,profiler_heap,343.489,JFR + polled heap
+java,data/contacts_1m.csv,1000000,peak_rss,374.609,kernel wait4/ru_maxrss

@@ -106,7 +106,7 @@ Differences are only runtime-forced (64-bit wrap, stdin, timing API).
 | Built-in structures | `vector` (contacts, buckets, sorted index) | `list` (contacts, buckets, sorted index) | `ArrayList` (contacts, sorted index) + `HashNode[]` (buckets) | `Array` (contacts, buckets, sorted index) | slices `[]Contact`, `[]*HashNode`, `[]string` |
 | Effort | highest: `new/delete`, header split, `=delete`, rehash, CSV state machine, `lowerBound`, CMake `-O2` | lowest: `dataclass+list`, `& MASK64`, `""`-CSV, `lowerBound`, `perf_counter` | high: `remainderUnsigned`, `HashNode[]`, NIO.2 CSV, `lowerBound`, `nanoTime`, `javac -d` | high: `BigInt & MASK64`, `perf_hooks`, `readline` CLI, `mulberry32(42)` | medium: `uint64` wraps free; chaining/CSV/`lowerBound`/`time.Now`, `go run` |
 | Runtime | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 |
-| Memory | lowest: ~165 MB heap at 1M (Massif) | ~2× C++: ~340 MB at 1M (tracemalloc) | ~2× C++: ~350 MB HeapInuse at 1M (pprof) | live ~260 MB at 1M, RSS baseline ~56 MB | polled ~242 MB at 1M; RSS ~323 MB |
+| Memory | ~195 MB heap at 1M (Massif peak) | ~343 MB at 1M (tracemalloc) | ~343 MB polled heap at 1M; RSS ~375 MB | live ~227 MB at 1M, RSS baseline ~53 MB | ~136 MB live at 1M (pprof HeapAlloc, GC on); RSS ~287 MB |
 | Mgmt | manual RAII, deterministic, no GC | refcount + gen. GC | tracing G1, concurrent | V8 gen. GC | G1, may pause |
 | Types | strong static `constexpr/const`, `template`, `-Wall` | dynamic + hints (`dataclass`, `List/Callable`) | static+generics, checked `IOException` | dynamic JS `'use strict'`, no TS | static concrete, no generics, errors as `-1/nil` |
 | Readability | verbose/explicit; costs visible | most concise; `with open`, f-strings | verbose enterprise; ~2× Python LOC | small, C++-mirroring | explicit; `defer`/`copy`-shift noisy but clear |
@@ -126,27 +126,27 @@ Headless on same load path (CSV→contacts+hash+sorted index) at every n, plus k
 
 ![Peak memory (profiler heap, top; RSS, bottom)](../benchmark/plot-memory.png)
 
-| n | C++ Massif | Python tracemalloc | Go pprof HeapInuse | JS V8 heapUsed | Java polled heap |
+| n | C++ Massif | Python tracemalloc | Go pprof HeapAlloc (GC on) | JS V8 heapUsed | Java polled heap |
 | --- | --- | --- | --- | --- | --- |
-| 50 | 0.1 | 0.2 | 0.8 | 4.8 | 9.5 |
-| 10k | 2.2 | 3.4 | 4.1 | 7.3 | 11.6 |
-| 100k | 18.5 | 34.2 | 37.3 | 49.0 | 29.4 |
-| 200k | 36.9 | 68.5 | 73.4 | 64.4 | 44.9 |
-| 500k | 82.5 | 169.7 | 177.7 | 135.9 | 143.7 |
-| 1M | 164.9 | 339.7 | 350.3 | 260.2 | 241.9 |
+| 50 | 0.1 | 0.2 | 0.2 | 5.4 | 9.5 |
+| 10k | 2.4 | 3.4 | 1.6 | 7.9 | 11.6 |
+| 100k | 21.6 | 34.6 | 14.4 | 46.1 | 38.9 |
+| 200k | 43.0 | 69.3 | 28.5 | 63.8 | 53.9 |
+| 500k | 97.8 | 171.6 | 68.5 | 152.0 | 148.3 |
+| 1M | 195.4 | 343.5 | 135.7 | 226.6 | 343.5 |
 
 Peak RSS (MB, same batch):
 
 | n | C++ | Python | Go | JS | Java |
 | --- | --- | --- | --- | --- | --- |
-| 50 | 12.6 | 16.6 | 12.7 | 55.8 | 53.5 |
-| 10k | 12.9 | 20.4 | 12.9 | 74.8 | 61.6 |
-| 100k | 21.3 | 53.7 | 25.4 | 157.0 | 85.6 |
-| 200k | 39.3 | 91.1 | 46.5 | 191.1 | 128.0 |
-| 500k | 88.5 | 202.7 | 101.7 | 282.8 | 214.4 |
-| 1M | 174.9 | 386.6 | 239.8 | 441.9 | 323.4 |
+| 50 | 12.6 | 16.4 | 12.7 | 53.5 | 51.0 |
+| 10k | 12.9 | 20.2 | 12.9 | 71.9 | 67.8 |
+| 100k | 24.4 | 54.1 | 32.5 | 156.3 | 98.2 |
+| 200k | 44.7 | 91.8 | 60.1 | 192.7 | 130.8 |
+| 500k | 103.9 | 203.2 | 149.0 | 288.9 | 283.7 |
+| 1M | 218.5 | 393.7 | 287.0 | 434.6 | 374.6 |
 
-*Why:* **C++** floor — contiguous `vector<Contact>` + SSO, ~165 MB at 1M is the data. **Python** ~2× — every object boxed `PyObject` + header. **Go** ~350 MB HeapInuse — `[]Contact` values but per-`HashNode` allocs; RSS lower due to span accounting. **JS** largest baseline ~56 MB RSS at n=50; live ~260 MB but RSS ~442 MB (V8 heap reservation). **Java** ~54 MB baseline (JVM+G1), ~242 MB polled heap at 1M. Honest claim: data cost ranks C++ < Python≈Go < JS < Java; whole-process cost dominated by baselines at small n. Both panels needed.
+*Why:* **C++** Massif peak ~195 MB at 1M (heap+allocator overhead, includes transient rehash peaks — peak-allocated floor). **Python** ~343 MB — every object boxed `PyObject` + header. **Go** ~136 MB live `HeapAlloc` after GC (GC on, same rule as JS `heapUsed` after `gc()` and Java polled heap; transients freed, so always `< RSS ~287 MB`). **JS** largest baseline ~53 MB RSS at n=50; live ~227 MB but RSS ~435 MB (V8 heap reservation). **Java** ~51 MB baseline (JVM+G1), ~343 MB polled peak at 1M. Honest claim: whole-process RSS ranks C++ < Go < Java < Python < JS at 1M; live-heap numbers mix peak (Massif) vs live-after-GC (Go/JS/Java) definitions so rank shapes, not bytes, and always compare against RSS. Both panels needed.
 
 ### D.5 Statistical fairness
 
@@ -216,7 +216,7 @@ Additional per-case PNGs (`plot-first-*` … `plot-miss-*`, 12 images) remain in
 
 ### D.8 Recommendation
 
-For a production phonebook (frequent exact-match, 100k–1M, latency+footprint dominate) we pick **C++**: `last-linear` 3.81 ms vs Go 3.30, JS 13.11, Java 21.74, Python 41.98 (D.7/D.10, i5-1135G7, `-O2`); hash/binary ~µs position-independent; memory floor 164.9 MB heap/174.9 MB RSS at 1M vs Go 350.3/239.8, Python 339.7/386.6, JS 260.2/441.9, Java 241.9/323.4 (D.4); no baseline (12.6 MB RSS at n=50 vs JS 55.8/Java 53.5), deterministic RAII, no GC pauses, `-Wall`/Massif control. Trade-off: Go/Java/Python/JS offer faster prototyping/concurrency but pay GC/JIT/baseline; C++ pays manual `new/delete` and debug cost. Industry precedent (MySQL, PostgreSQL in C/C++) supports this for lookup/index engines; if constraint were rapid prototyping/managed concurrency, pick Go.
+For a production phonebook (frequent exact-match, 100k–1M, latency+footprint dominate) we pick **C++**: `last-linear` 3.81 ms vs Go 3.30, JS 13.11, Java 21.74, Python 41.98 (D.7/D.10, i5-1135G7, `-O2`); hash/binary ~µs position-independent; whole-process floor 195.4 MB heap-peak/218.5 MB RSS at 1M vs Go 135.7 live/287.0 RSS, Python 343.5/393.7, JS 226.6/434.6, Java 343.5/374.6 (D.4) — Go live-heap reads lowest only because it is live-after-GC while Massif is peak-including-transients; on the uniform RSS yardstick C++ stays floor; no baseline (12.6 MB RSS at n=50 vs JS 53.5/Java 51.0), deterministic RAII, no GC pauses, `-Wall`/Massif control. Trade-off: Go/Java/Python/JS offer faster prototyping/concurrency but pay GC/JIT/baseline; C++ pays manual `new/delete` and debug cost. Industry precedent (MySQL, PostgreSQL in C/C++) supports this for lookup/index engines; if constraint were rapid prototyping/managed concurrency, pick Go.
 
 ### D.9 Measurement tables
 

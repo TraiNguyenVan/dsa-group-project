@@ -142,7 +142,7 @@ head -3 data/contacts_50.csv
 | **ru_maxrss** | Kernel's peak RSS for a child process (`wait4` on Linux, KiB) |
 | **Massif** | Valgrind heap profiler (C++) |
 | **tracemalloc** | Python allocation tracker (stdlib) |
-| **pprof** | Go heap profiler (`HeapInuse` with GC off) |
+| **pprof** | Go heap profiler (`HeapAlloc` live after GC, GC on) |
 | **V8 heapUsed** | JS live heap after GC (`process.memoryUsage()`) |
 | **JFR** | Java Flight Recorder (VisualVM-readable) |
 | **JIT** | Just-In-Time compilation (Java C1/C2, JS TurboFan) — run 1 slow, runs 2–5 fast |

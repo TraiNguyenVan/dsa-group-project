@@ -26,7 +26,7 @@ How the harness is organized, how data flows, and where benchmark code lives vs 
 ├── go/phonebook/
 │   ├── main.go                      # faithful port of src/main.cpp
 │   ├── phonebook.go / hashtable.go / contact.go / timer.go
-│   ├── memprofile_test.go           # env-gated TestMemProfile (pprof, GC off)
+│   ├── memprofile_test.go           # env-gated TestMemProfile (pprof, GC on live HeapAlloc)
 │   └── go.mod
 ├── javascript/phonebook/
 │   ├── src/main.js                  # faithful port of src/main.cpp

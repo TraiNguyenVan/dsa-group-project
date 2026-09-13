@@ -102,14 +102,14 @@ Two metrics per `(lang, n)`:
 
 Two panels, log y, x = `n`, 5 grouped bars per `n`:
 
-- **Left — profiler heap:** data cost. C++ is the floor (contiguous `vector<Contact>` + SSO). Python ~2× (every object is a `PyObject` + header). Go `HeapInuse` includes per-`HashNode` allocs. JS `heapUsed` is live V8 heap after GC. Java is polled `used heap`.
-- **Right — peak RSS:** whole-process cost. At `n=50` baselines dominate (JS ~55 MB, Java ~53 MB, C++/Go ~12 MB). At `n=1M` heap dominates. You need both panels for an honest claim.
+- **Left — profiler heap:** data cost. C++ is the peak-allocated floor (Massif peak, transients included). Python ~2× (every object is a `PyObject` + header). Go `HeapAlloc` is live after GC (GC on, same rule as JS/Java — transients freed, always `< RSS`). JS `heapUsed` is live V8 heap after GC. Java is polled `used heap`. Massif-peak vs live-after-GC definitions differ: rank shapes, verify against RSS.
+- **Right — peak RSS:** whole-process cost. At `n=50` baselines dominate (JS ~53 MB, Java ~51 MB, C++/Go ~12.6 MB). At `n=1M` heap dominates. You need both panels for an honest claim.
 
 ### Common pitfalls
 
 | Pitfall | Why it's wrong | What to do |
 |---------|---------------|------------|
-| Comparing `profiler_heap` across langs as "which lang uses less RAM" | Each profiler measures a different thing (Massif heap vs tracemalloc vs HeapInuse vs heapUsed) | Compare trends within each lang, and use `peak_rss` for cross-lang whole-process comparison |
+| Comparing `profiler_heap` across langs as "which lang uses less RAM" | Each profiler measures a different thing (Massif peak vs tracemalloc peak vs HeapAlloc live vs heapUsed live) | Compare trends within each lang, and use `peak_rss` for cross-lang whole-process comparison |
 | Reporting only `n=100k` | One point doesn't show growth | Use `run-benchmark-sizes` (6 sizes) and the log-log chart |
 | Reporting `mean` without `stdev` | Hides noise; sub-µs cells have high CV | Report `mean ± stdev (best)` and mention CV |
 | Ignoring `target_index` | Cross-language misses may be mistaken for a different phone | Check `target_index` in CSV; for strict apples-to-apples use `first`/`middle`/`last` (same index every lang) |
