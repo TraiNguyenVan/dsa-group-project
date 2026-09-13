@@ -21,6 +21,8 @@ Check yours:
 g++ --version; python3 --version; go version; node --version; javac -version; valgrind --version
 ```
 
+> **Platform support:** the harness was **tested on Linux only** — Windows/macOS are not yet tested. The `make` targets assume a POSIX shell; on Windows use the CMake presets (`cmake --preset mingw-release`) for C++ or the manual commands below. Full notice: `README.md`.
+
 ## Make targets (the easy way)
 
 All targets are idempotent — re-running overwrites the CSVs.
@@ -33,6 +35,12 @@ make
 ```
 
 Compiles `src/*.cpp` with `-std=c++17 -Wall -O2 -Iinclude` → `build/cpp/demo`.
+
+No `make`/CMake? Just the compiler:
+
+```sh
+g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.cpp -o build/cpp/demo
+```
 
 ### `make run-benchmark` — single size (100k)
 
