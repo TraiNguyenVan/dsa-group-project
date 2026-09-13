@@ -139,7 +139,7 @@ def profile_go(n_label, csv_path, evidence, go_tool):
         f.write(out)
         f.write("\n--- go tool pprof -top ---\n")
         f.write(top if rc2 == 0 else "(pprof -top failed)")
-    evidence.append(f"go HeapInuse (GC disabled during load) = {peak} bytes")
+    evidence.append(f"go HeapAlloc live after GC = {peak} bytes")
     return peak
 
 
@@ -311,7 +311,7 @@ def main() -> int:
                 tool = "tracemalloc"
             elif lang == "go":
                 peak = profile_go(label, csv_path, evidence, "go")
-                tool = "pprof (HeapInuse, GC off)"
+                tool = "pprof (HeapAlloc live, GC on)"
             elif lang == "js":
                 peak = profile_js(label, csv_path, evidence)
                 tool = "node --heap-prof (V8 heapUsed)"

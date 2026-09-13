@@ -111,7 +111,7 @@ Each language has its own way to measure "how much heap did the phonebook actual
 |------|------|------------------|---------------|
 | C++ | **Valgrind/Massif** | `mem_heap_B + mem_heap_extra_B + mem_stacks_B` peak over snapshots | `massif-<n>.out` + `massif-<n>-msprint.txt` |
 | Python | **tracemalloc** | peak of Python-side allocations (`get_traced_memory`) | `tracemalloc-<n>.txt` |
-| Go | **pprof** (`HeapInuse`, GC off during load) | live heap after load | `go-<n>.pprof` + `go-<n>-pprof-top.txt` |
+| Go | **pprof** (`HeapAlloc` live after GC, GC on) | live heap after load | `go-<n>.pprof` + `go-<n>-pprof-top.txt` |
 | JS | **V8 `heapUsed`** after forced GC + `--heap-prof` | live V8 heap | `js-<n>.heapprofile` + `js-<n>.txt` |
 | Java | **JFR + polled `used heap`** | peak used heap sampled during load | `java-<n>.jfr` + `java-<n>-jfr-summary.txt` |
 
@@ -121,7 +121,7 @@ In plain English, each tool answers "how much heap did the phonebook use?" in it
 
 - **Massif** — a debugger that watches every `malloc`/`free` and records the heap's peak. Slow but exact; the floor.
 - **tracemalloc** — Python's built-in allocation tracker; reports the peak of Python-side objects.
-- **pprof** — Go's built-in profiler; we turn GC off so the heap only grows, then read the peak.
+- **pprof** — Go's built-in profiler; GC stays on and we settle with `GC()` + `KeepAlive`, then read live `HeapAlloc` (same rule as JS/Java).
 - **V8 `heapUsed`** — Node's engine; we force a garbage collection first so we measure live data, not garbage.
 - **JFR** — Java's built-in recorder; samples the JVM heap every few ms during load to catch the peak.
 

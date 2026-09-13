@@ -39,7 +39,7 @@ Each language's profiler measures a slightly different thing:
 
 - **Massif** counts every byte the C++ allocator hands out.
 - **tracemalloc** counts Python objects (every `str`/`Contact` is a `PyObject` with overhead).
-- **pprof** counts Go's heap in use.
+- **pprof** counts Go's live heap (`HeapAlloc` after explicit GC, GC on — same rule as V8/JFR).
 - **V8** counts the JS heap after a forced garbage collection.
 - **JFR** samples the JVM heap over time.
 
@@ -172,9 +172,9 @@ Flag by flag:
 | `benchmark/mem/tracemalloc-100k.txt` | Second positional argument: where to write the top-10 allocation sites (the evidence file). |
 | `# stdout: peak_tracemalloc_bytes 35840000` | The script also prints the peak on screen — this is the number that goes into `results.csv`. |
 
-### Go — pprof (HeapInuse, GC off)
+### Go — pprof (HeapAlloc live, GC on)
 
-**What it does:** pprof is Go's built-in profiler. Go normally runs a garbage collector that frees dead objects *during* load, which would shrink the heap before we read it. We disable GC (`SetGCPercent(-1)`) so the heap only grows — then `HeapInuse` after load is the true peak.
+**What it does:** pprof is Go's built-in profiler. GC stays enabled (default `GOGC`, same rule as JS `heapUsed` after `gc()` and Java G1 polled heap) so the number is the live footprint under normal runtime. Two explicit `runtime.GC()` calls settle floating garbage, then `HeapAlloc` is read; `runtime.KeepAlive(pb)` keeps the phonebook live across the GCs.
 
 `go/phonebook/memprofile_test.go` — env-gated test:
 
@@ -200,7 +200,7 @@ Flag by flag:
 | `benchmark/mem/go-100k.pprof` | The profile file to read (the one the test wrote). |
 | `> benchmark/mem/go-100k-pprof-top.txt` | Shell redirect: save the text summary to a file. |
 
-- `debug.SetGCPercent(-1)` disables GC during load, so `HeapInuse` after load == peak live heap.
+- `runtime.GC()` twice settles floating garbage, then `HeapAlloc` == live footprint (always `< RSS`); `runtime.KeepAlive(pb)` prevents the GCs from collecting the phonebook itself.
 - `go-*.pprof` is the binary profile (open with `go tool pprof`); `go-*-pprof-top.txt` is the text summary.
 
 ### JavaScript — V8 heapUsed + --heap-prof
@@ -296,7 +296,7 @@ Evidence: `benchmark/mem/rss-<lang>-<n>.txt` (e.g. `rss-cpp-100k.txt`).
 
 `benchmark/plot-memory.png` — two panels, log y, x = dataset size, 5 grouped bars per size:
 
-- **Left panel — profiler heap:** data cost. C++ is the floor (~173 MB at 1M); Python ~2× (boxed objects); Go ~367 MB HeapInuse; JS live ~206 MB; Java ~255 MB.
+- **Left panel — profiler heap:** data cost. C++ is the peak-allocated floor (~195 MB Massif peak at 1M, transients included); Python ~343 MB (boxed objects); Go ~136 MB live `HeapAlloc` (GC on, transients freed — lowest live number but peak-vs-live definitions differ, so rank shapes and check RSS); JS live ~227 MB; Java ~343 MB polled peak.
 - **Right panel — peak RSS:** whole-process cost. Baselines dominate at small n (JS ~55 MB, Java ~53 MB, C++/Go ~12 MB at n=50).
 
 Both panels are needed for an honest claim. See [08 — Interpreting Results](08-interpreting-results.md).

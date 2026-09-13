@@ -107,7 +107,7 @@ Each language has its own way to measure "how much heap did the phonebook actual
 |------|------|------------------|---------------|
 | C++ | **Valgrind/Massif** | `mem_heap_B + mem_heap_extra_B + mem_stacks_B` peak over snapshots | `massif-<n>.out` + `massif-<n>-msprint.txt` |
 | Python | **tracemalloc** | peak of Python-side allocations (`get_traced_memory`) | `tracemalloc-<n>.txt` |
-| Go | **pprof** (`HeapInuse`, GC off during load) | live heap after load | `go-<n>.pprof` + `go-<n>-pprof-top.txt` |
+| Go | **pprof** (`HeapAlloc` live after GC, GC on) | live heap after load | `go-<n>.pprof` + `go-<n>-pprof-top.txt` |
 | JS | **V8 `heapUsed`** after forced GC + `--heap-prof` | live V8 heap | `js-<n>.heapprofile` + `js-<n>.txt` |
 | Java | **JFR + polled `used heap`** | peak used heap sampled during load | `java-<n>.jfr` + `java-<n>-jfr-summary.txt` |
 

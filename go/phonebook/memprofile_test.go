@@ -5,14 +5,15 @@ package main
 //
 //	MEMPROFILE_CSV=<csv> MEMPROFILE_OUT=<pprof-out> go test -v -run TestMemProfile
 //
-// GC is disabled during load so runtime.MemStats HeapInuse after load is
-// the peak live heap (no collection can shrink it mid-load).
+// GC is left enabled (default GOGC) so the number matches the guide's
+// "peak footprint of the data structure" under normal runtime — same rule
+// as JS (GC + heapUsed) and Java (G1 polled). Two explicit GCs settle
+// floating garbage, then HeapAlloc is the live footprint.
 
 import (
 	"fmt"
 	"os"
 	"runtime"
-	"runtime/debug"
 	"runtime/pprof"
 	"testing"
 )
@@ -24,16 +25,17 @@ func TestMemProfile(t *testing.T) {
 		t.Skip("MEMPROFILE_CSV/MEMPROFILE_OUT not set; skipping memory profile")
 	}
 
-	// Disable GC so HeapInuse after load == peak live heap.
-	old := debug.SetGCPercent(-1)
-	defer debug.SetGCPercent(old)
-
 	pb := NewPhoneBook()
 	loaded := pb.LoadFromCSV(csvPath)
 	if loaded == -1 {
 		t.Fatalf("Cannot open file: %s", csvPath)
 	}
 
+	// Settle floating garbage so HeapAlloc == live footprint.
+	// KeepAlive: pb is unused after this point, without it the
+	// explicit GCs below could collect the phonebook itself.
+	runtime.GC()
+	runtime.GC()
 	var ms runtime.MemStats
 	runtime.ReadMemStats(&ms)
 
@@ -46,9 +48,10 @@ func TestMemProfile(t *testing.T) {
 		t.Fatalf("pprof write failed: %v", err)
 	}
 	f.Close()
+	runtime.KeepAlive(pb)
 
 	fmt.Printf("loaded %d contacts\n", loaded)
-	fmt.Printf("peak_go_heap_bytes %d\n", ms.HeapInuse)
-	fmt.Printf("go HeapAlloc=%d HeapSys=%d Sys=%d NumGC=%d\n",
-		ms.HeapAlloc, ms.HeapSys, ms.Sys, ms.NumGC)
+	fmt.Printf("peak_go_heap_bytes %d\n", ms.HeapAlloc)
+	fmt.Printf("go HeapAlloc=%d HeapInuse=%d HeapSys=%d Sys=%d NumGC=%d\n",
+		ms.HeapAlloc, ms.HeapInuse, ms.HeapSys, ms.Sys, ms.NumGC)
 }
