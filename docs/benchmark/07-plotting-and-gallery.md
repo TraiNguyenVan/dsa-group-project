@@ -12,9 +12,9 @@ python3 benchmark/plot.py <input.csv> <output.png> [flags]
 
 | Mode | Flag | Input | Output | What it draws |
 |------|------|-------|--------|---------------|
-| **Overview** | *(none)* | `results.csv` | `plot.png` + 15 splits | 3 panels (linear / hash / binary) at `n=100k`, bars = langs, x = case |
+| **Overview** | *(none)* | `results.csv` | `plot.png` + 12 splits | 3 panels (linear / hash / binary) at `n=100k`, bars = langs, x = case |
 | **Scaling** | `--line [--case last]` | multi-size `results.csv` | `plot-runtime-vs-n.png` | 3 panels (one per algo), lines = langs, x = n (log-log), y = best ms |
-| **Unified** | `--unified` | multi-size `results.csv` | `plot-unified-<lang>.png` ×5 | Per-lang: 15 series (3 algos × 5 cases) vs n, log-log |
+| **Unified** | `--unified` | multi-size `results.csv` | `plot-unified-<lang>.png` ×5 | Per-lang: 12 series (3 algos × 4 cases) vs n, log-log |
 | **Per-algo** | `--per-algo` | multi-size `results.csv` | `plot-per-algo-<lang>.png` ×5 | Per-lang: x=algo, 3 bars best/avg/worst at largest n, log y |
 | **Memory** | `--mem` | `mem/results.csv` | `plot-memory.png` | 2 panels: profiler heap (left) + kernel RSS (right), x=n, bars=langs, log y |
 
@@ -116,7 +116,7 @@ What you get:
 
 - Uses `Chart.js` + `PapaParse` from CDN, with a minimal CSV fallback if offline.
 - Same `best = min(5 runs)` logic as `plot.py`.
-- Static PNG fallback at the bottom (the 9 overview splits) if JS is disabled.
+- Static PNG fallback at the bottom (the 12 overview splits) if JS is disabled.
 
 > **Tip:** use the gallery to pick the interesting `n`/`case`/`algo` before running `plot.py` for a publication PNG.
 
