@@ -75,8 +75,8 @@ Demo implements linear, binary (sorted phone index), and hash table; interpolati
 * **CSV** `phonebook.cpp:30-83`: quoted `"Do, Thanh Tuan"` with `""` escapes, unquoted split on last comma, trim/strip quotes/`\r`, skip blank/empty-name/non-digit-phone.
 * **Insert** `143-164`: reject empty/non-digit/duplicate phone (hash check), store `CapitalizeFirst(ToLower(name))` + hash index.
 * **Delete** (opt 8): O(n) vector erase + full hash rebuild; missing phone → `Phone number not found`.
-* **Search:** `searchLinearByPhone` exact scan; `searchHashByPhone` chain lookup; `searchBinaryByPhone` hand-written binary on sorted index (O(log n) → hash resolve); `searchLinearByName` case-insensitive scan.
-* **Sorted index** `buildSortedIndex`: bulk load then sort once O(n log n); per-insert `lowerBound` O(log n)+shift O(n) with split `hash / sorted-index` timing; delete rebuilds.
+* **Search:** `searchLinearByPhone` exact scan; `searchHashByPhone` chain lookup; `searchBinaryByPhone` binary search on sorted index (O(log n) → hash resolve); `searchLinearByName` case-insensitive scan.
+* **Sorted index** `buildSortedIndex`: bulk load then merge-sort once O(n log n); per-insert `lowerBound` O(log n)+shift O(n) with split `hash / sorted-index` timing; delete rebuilds.
 * **Hash** `hashtable.cpp`: poly hash 64-bit wrap `% numBuckets`; 101→nextPrime; rehash 0.75→nextPrime(2×); `isPrime` 6k±1.
 * **Timer** `timer.hpp`: `timeIt` ms, `benchmark(work,5)` best-of-5, `printTaskDuration` → `\nTook: Xms.`
 * **Benchmark** `main.cpp:11-63` opt 0: auto-loads CSV, picks `first/middle/last/miss` phones (`miss=0000000000` true worst for hash/binary), times linear/hash/binary ×5.
@@ -87,7 +87,7 @@ Demo implements linear, binary (sorted phone index), and hash table; interpolati
 
 ### D.1 Scope & file map
 
-Same hand-rolled chained hash + linear scan + binary on sorted index over `contacts_100k.csv` (n=100k) in all five languages — no `dict`/`map`/`HashMap`. This is a *language+runtime* comparison of equivalent code, not hand-written C++ vs Python's built-in `dict` (different question).
+Same chained hash table + linear scan + binary on sorted index over `contacts_100k.csv` (n=100k) in all five languages — no `dict`/`map`/`HashMap`. This is a *language+runtime* comparison of equivalent code, not C++ vs Python's built-in `dict` (different question).
 
 | C++ | Python | Go | JS (Node) | Java |
 | --- | --- | --- | --- | --- |
@@ -103,7 +103,7 @@ Differences are only runtime-forced (64-bit wrap, stdin, timing API).
 
 | Criterion | C++ | Python | Java | JavaScript | Go |
 | --- | --- | --- | --- | --- | --- |
-| Built-in used | hand chain `vector<HashNode*>`; only `vector/sort` | hand chain `list`; only `list/sorted()` | hand chain `HashNode[]`; only `ArrayList/sort` | hand chain `Array`; only `Array/sort/splice` | hand chain `[]*HashNode`; only `slice/sort` |
+| Built-in structures | `vector` (contacts, buckets, sorted index) | `list` (contacts, buckets, sorted index) | `ArrayList` (contacts, sorted index) + `HashNode[]` (buckets) | `Array` (contacts, buckets, sorted index) | slices `[]Contact`, `[]*HashNode`, `[]string` |
 | Effort | highest: `new/delete`, header split, `=delete`, 6k±1, rehash, CSV state machine, `lowerBound`, CMake `-O2` | lowest: `dataclass+list`, `& MASK64`, `""`-CSV, `lowerBound`, `perf_counter` | high: `remainderUnsigned`, `HashNode[]`, NIO.2 CSV, `lowerBound`, `nanoTime`, `javac -d` | high: `BigInt & MASK64`, `perf_hooks`, `readline` CLI, `mulberry32(42)` | medium: `uint64` wraps free; chaining/CSV/`lowerBound`/`time.Now`, `go run` |
 | Runtime | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 | D.3/D.7 |
 | Memory | lowest: ~165 MB heap at 1M (Massif) | ~2× C++: ~340 MB at 1M (tracemalloc) | ~2× C++: ~350 MB HeapInuse at 1M (pprof) | live ~260 MB at 1M, RSS baseline ~56 MB | polled ~242 MB at 1M; RSS ~323 MB |
@@ -275,4 +275,4 @@ Dataset `contacts_100k.csv`, seed 42, toolchains in D.10.
 | Grade the assignment | Nguyễn Phương Quốc Vương<br>Nguyễn Phạm Thành Trung | N25DECE086<br>N25DECE072 |
 
 
-**A.6 AI-use** — OpenCode/Copilot/web chat for brainstorming + boilerplate translation/tooling. **C++ hand-written** — no AI in `src/`/`include/` (`contact.hpp`, `hashtable.hpp/.cpp`, `phonebook.hpp/.cpp`, `timer.hpp`, `main.cpp`); all AI output reviewed/compiled/executed. AI-assisted: ports (`python|go|javascript|java/phonebook/*`) faithful translations + tooling (`benchmark/plot.py`, `mem_profile.py`, `report/export_pdf.py`). Not AI-assisted: C++ core, report prose/analysis (A/B/D), measurements (`results.csv`, `mem/*`, D.3–D.5/D.9–D.10 — real `make run-benchmark` runs on D.10 machine).
+**A.6 AI-use** — OpenCode/Copilot/web chat for brainstorming + boilerplate translation/tooling. **C++ core** — no AI in `src/`/`include/` (`contact.hpp`, `hashtable.hpp/.cpp`, `phonebook.hpp/.cpp`, `timer.hpp`, `main.cpp`); all AI output reviewed/compiled/executed. AI-assisted: ports (`python|go|javascript|java/phonebook/*`) faithful translations + tooling (`benchmark/plot.py`, `mem_profile.py`, `report/export_pdf.py`). Not AI-assisted: C++ core, report prose/analysis (A/B/D), measurements (`results.csv`, `mem/*`, D.3–D.5/D.9–D.10 — real `make run-benchmark` runs on D.10 machine).
