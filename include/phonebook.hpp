@@ -43,6 +43,8 @@ public:
     int searchBinaryByPhone(const std::string& phone) const;
     // linear search name (enter full name to search)
     int searchLinearByName(const std::string& name) const;
+    // Prefix search using lower_bow + linear for first k results
+    std::vector<std::size_t>searchPrefixByPhone(const std::string& phone, std::size_t k) const;
     // print all the contacts
     void printAll() const;
     // print one contact in one a specific location

@@ -259,7 +259,7 @@ int PhoneBook::searchLinearByPhone(const std::string& phone) const {
 int PhoneBook::searchHashByPhone(const std::string& phone) const {
     return hashtable.hashSearch(phone);
 }
-// Hand-written binary search: first index where v[i] >= target.
+// first index where v[i] >= target.
 std::size_t PhoneBook::lowerBound(const std::vector<std::string>& v,
                                   const std::string& target) {
     std::size_t lo = 0, hi = v.size();
@@ -290,6 +290,53 @@ int PhoneBook::searchBinaryByPhone(const std::string& phone) const {
     }
     return -1;
 }
+// Prefix search using lower_bound + linear for first k results
+std::vector<std::size_t> PhoneBook::searchPrefixByPhone(const std::string& phone, std::size_t k) const {
+    std::vector<std::size_t> result;
+    std::size_t pos = lowerBound(sortedPhones, phone);
+    for (std::size_t i = pos; (i < pos + k) && (i < sortedPhones.size()); ++i) {
+        // stop as soon as the sorted phone no longer starts with the prefix
+        if (sortedPhones[i].compare(0, phone.size(), phone) != 0) break;
+        int index = hashtable.hashSearch(sortedPhones[i]);
+        if (index != -1) result.push_back(static_cast<std::size_t>(index));
+    }
+    return result;
+}
+
+void mix(std::vector<std::string>& a, int left, int middle, int right) {
+    std::vector<std::string> temp(right - left + 1);
+    int i = left;
+    int j = middle + 1;
+    int k = 0;
+    while (i <= middle && j <= right) {
+        if (a[i] <= a[j]) {
+            temp[k++] = a[i++];
+        } else {
+            temp[k++] = a[j++];
+        }
+    }
+    while (i <= middle) {
+        temp[k++] = a[i++];
+    }
+    while (j <= right) {
+        temp[k++] = a[j++];
+    }
+    for (int x = left; x <= right; x++) {
+        a[x] = temp[x - left];
+    }
+}
+
+// split/divide
+void divide(std::vector<std::string>& a, int left, int right) {
+    int middle = (left + right) / 2;
+    if (left < right) {
+        divide(a, left, middle);
+        divide(a, middle + 1, right);
+        mix(a, left, middle, right);
+    }
+}
+
+
 // Rebuild the sorted index from scratch (O(n log n)); called once after load.
 void PhoneBook::buildSortedIndex() {
     sortedPhones.clear(); // drop old sorted phone numbers so the index starts fresh
@@ -297,7 +344,11 @@ void PhoneBook::buildSortedIndex() {
     for (const auto& c : contacts) {
         sortedPhones.push_back(c.phone);
     }
-    std::sort(sortedPhones.begin(), sortedPhones.end());
+    // Guard: size_t underflows on an empty vector (0 - 1 wraps to a huge
+    // number), which would make divide recurse forever. 0/1 elements need no sort.
+    if (sortedPhones.size() >= 2) {
+        divide(sortedPhones, 0, static_cast<int>(sortedPhones.size()) - 1);
+    }
 }
 // linear search name (enter full name to search)
 int PhoneBook::searchLinearByName(const std::string& name) const {

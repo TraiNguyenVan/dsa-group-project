@@ -249,7 +249,8 @@ def main() -> int:
             print("2. Search phone - Hash Search")
             print("3. Search phone - Binary Search (sorted index)")
             print("4. Search name - Linear Search")
-            print("5. Back")
+            print("5. Prefix phone search")
+            print("6. Back")
             print("============================")
             print("Enter your choice: ", end="")
             try:
@@ -339,6 +340,26 @@ def main() -> int:
                     print(f"Contact index: {result['v']}")
                     phonebook.print_contact(result["v"])
             elif search_choice == 5:
+                try:
+                    print("Enter phone number: ", end="")
+                    phone = input()
+                except EOFError:
+                    print("\nGoodbye")
+                    return 0
+                result = {}
+
+                def wprefix():
+                    result["v"] = phonebook.search_prefix_by_phone(phone, 10)
+
+                print_task_duration(wprefix)
+                if not result["v"]:
+                    print("This does not match any phone prefix.")
+                else:
+                    print(f"Found, here is the first 10 results (sorted index). ")
+                    for idx in result["v"]:
+                        print(f"Contact index: {idx}")
+                        phonebook.print_contact(idx)
+            elif search_choice == 6:
                 print("Back to main menu.")
             else:
                 print("Invalid search choice.")

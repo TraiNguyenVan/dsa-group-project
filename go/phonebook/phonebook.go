@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 )
 
@@ -33,13 +32,58 @@ func lowerBound(v []string, target string) int {
 	return lo
 }
 
+// mix merges a[left..middle] and a[middle+1..right] into a sorted run.
+func mix(a []string, left, middle, right int) {
+	temp := make([]string, right-left+1)
+	i := left
+	j := middle + 1
+	k := 0
+	for i <= middle && j <= right {
+		if a[i] <= a[j] {
+			temp[k] = a[i]
+			k++
+			i++
+		} else {
+			temp[k] = a[j]
+			k++
+			j++
+		}
+	}
+	for i <= middle {
+		temp[k] = a[i]
+		k++
+		i++
+	}
+	for j <= right {
+		temp[k] = a[j]
+		k++
+		j++
+	}
+	for x := left; x <= right; x++ {
+		a[x] = temp[x-left]
+	}
+}
+
+// split/divide
+func divide(a []string, left, right int) {
+	middle := (left + right) / 2
+	if left < right {
+		divide(a, left, middle)
+		divide(a, middle+1, right)
+		mix(a, left, middle, right)
+	}
+}
+
 // BuildSortedIndex rebuilds the sorted index from scratch (O(n log n)); called once after load.
 func (p *PhoneBook) BuildSortedIndex() {
 	p.sortedPhones = p.sortedPhones[:0]
 	for _, c := range p.contacts {
 		p.sortedPhones = append(p.sortedPhones, c.Phone)
 	}
-	sort.Strings(p.sortedPhones)
+	// Guard: mirrors C++ size_t underflow protection; 0/1 elements need no sort.
+	if len(p.sortedPhones) >= 2 {
+		divide(p.sortedPhones, 0, len(p.sortedPhones)-1)
+	}
 }
 
 // NewPhoneBook creates an empty phonebook.
@@ -243,6 +287,23 @@ func (p *PhoneBook) SearchLinearByName(name string) int {
 		}
 	}
 	return -1
+}
+
+// SearchPrefixByPhone prefix search using lower_bound + linear for first k results.
+func (p *PhoneBook) SearchPrefixByPhone(phone string, k int) []int {
+	result := []int{}
+	pos := lowerBound(p.sortedPhones, phone)
+	for i := pos; i < pos+k && i < len(p.sortedPhones); i++ {
+		// stop as soon as the sorted phone no longer starts with the prefix
+		if !strings.HasPrefix(p.sortedPhones[i], phone) {
+			break
+		}
+		index := p.hashtable.HashSearch(p.sortedPhones[i])
+		if index != -1 {
+			result = append(result, index)
+		}
+	}
+	return result
 }
 
 // PrintAll prints "i. Name - Phone" per line.

@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 // Faithful port of include/phonebook.hpp + src/phonebook.cpp.
@@ -32,13 +31,61 @@ public class PhoneBook {
         return lo;
     }
 
+    // mix merges a[left..middle] and a[middle+1..right] into a sorted run.
+    private static void mix(List<String> a, int left, int middle, int right) {
+        List<String> temp = new ArrayList<>(right - left + 1);
+        for (int t = 0; t < right - left + 1; t++) {
+            temp.add("");
+        }
+        int i = left;
+        int j = middle + 1;
+        int k = 0;
+        while (i <= middle && j <= right) {
+            if (a.get(i).compareTo(a.get(j)) <= 0) {
+                temp.set(k, a.get(i));
+                k++;
+                i++;
+            } else {
+                temp.set(k, a.get(j));
+                k++;
+                j++;
+            }
+        }
+        while (i <= middle) {
+            temp.set(k, a.get(i));
+            k++;
+            i++;
+        }
+        while (j <= right) {
+            temp.set(k, a.get(j));
+            k++;
+            j++;
+        }
+        for (int x = left; x <= right; x++) {
+            a.set(x, temp.get(x - left));
+        }
+    }
+
+    // split/divide
+    private static void divide(List<String> a, int left, int right) {
+        int middle = (left + right) / 2;
+        if (left < right) {
+            divide(a, left, middle);
+            divide(a, middle + 1, right);
+            mix(a, left, middle, right);
+        }
+    }
+
     // Rebuild the sorted index from scratch (O(n log n)); called once after load.
     public void buildSortedIndex() {
         sortedPhones.clear();
         for (Contact c : contacts) {
             sortedPhones.add(c.phone);
         }
-        Collections.sort(sortedPhones);
+        // Guard: mirrors C++ size_t underflow protection; 0/1 elements need no sort.
+        if (sortedPhones.size() >= 2) {
+            divide(sortedPhones, 0, sortedPhones.size() - 1);
+        }
     }
 
     public PhoneBook() {
@@ -253,6 +300,23 @@ public class PhoneBook {
             }
         }
         return -1;
+    }
+
+    // Prefix search using lower_bound + linear for first k results.
+    public List<Integer> searchPrefixByPhone(String phone, int k) {
+        List<Integer> result = new ArrayList<>();
+        int pos = lowerBound(sortedPhones, phone);
+        for (int i = pos; i < pos + k && i < sortedPhones.size(); i++) {
+            // stop as soon as the sorted phone no longer starts with the prefix
+            if (!sortedPhones.get(i).startsWith(phone)) {
+                break;
+            }
+            int index = hashtable.hashSearch(sortedPhones.get(i));
+            if (index != -1) {
+                result.add(index);
+            }
+        }
+        return result;
     }
 
     public void printAll() {

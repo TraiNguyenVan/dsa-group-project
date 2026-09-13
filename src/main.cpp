@@ -268,7 +268,8 @@ int main(int argc, char* argv[]) {
             cout << "2. Search phone - Hash Search\n";
             cout << "3. Search phone - Binary Search (sorted index)\n";
             cout << "4. Search name - Linear Search\n";
-            cout << "5. Back\n";
+            cout << "5. Prefix phone search\n";
+            cout << "6. Back\n";
             cout << "============================\n";
 
             cout << "Enter your choice: ";
@@ -335,7 +336,28 @@ int main(int argc, char* argv[]) {
 
                     phonebook.printContact(index);
                 }
-            } else if (searchChoice == 5) {
+            } 
+            else if (searchChoice == 5) {
+                string phone;
+                cout << "Enter phone number: ";
+                getline(cin, phone);
+                std::vector<std::size_t> results;
+                // we can develop to make it prints a certain number of results
+                // or make it prints results by pages
+                std::size_t numResults = 10;
+                printTaskDuration([&]() { results = phonebook.searchPrefixByPhone(phone, numResults); });
+                if (results.empty()) {
+                    cout << "This does not match any phone prefix.\n";
+                } else {
+                    cout << "Found, here is the first " << numResults << " results (sorted index). \n";
+                    for (size_t i = 0; i < results.size(); ++i) {
+                        cout << "Contact index: " << results[i] << "\n";
+                        phonebook.printContact(results[i]);
+
+                    }
+                }
+            }            
+            else if (searchChoice == 6) {
                 cout << "Back to main menu.\n";
             } else {
                 cout << "Invalid search choice.\n";

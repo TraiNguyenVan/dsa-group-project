@@ -257,7 +257,8 @@ async function main() {
       console.log('2. Search phone - Hash Search');
       console.log('3. Search phone - Binary Search (sorted index)');
       console.log('4. Search name - Linear Search');
-      console.log('5. Back');
+      console.log('5. Prefix phone search');
+      console.log('6. Back');
       console.log('============================');
       const sraw = await ask('Enter your choice: ');
       if (sraw === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
@@ -311,6 +312,19 @@ async function main() {
           phonebook.printContact(result.v);
         }
       } else if (searchChoice === 5) {
+        const phone = await ask('Enter phone number: ');
+        if (phone === null) { console.log('\nGoodbye'); try { rl.close(); } catch (_) { } return 0; }
+        const result = {};
+        printTaskDuration(() => { result.v = phonebook.searchPrefixByPhone(phone, 10); });
+        if (result.v.length === 0) console.log('This does not match any phone prefix.');
+        else {
+          console.log('Found, here is the first 10 results (sorted index). ');
+          for (const idx of result.v) {
+            console.log(`Contact index: ${idx}`);
+            phonebook.printContact(idx);
+          }
+        }
+      } else if (searchChoice === 6) {
         console.log('Back to main menu.');
       } else {
         console.log('Invalid search choice.');

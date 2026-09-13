@@ -60,6 +60,41 @@ def _parse_csv_line(line: str) -> Tuple[bool, str, str]:
     return True, name, phone
 
 
+def _mix(a: List[str], left: int, middle: int, right: int) -> None:
+    temp = [""] * (right - left + 1)
+    i = left
+    j = middle + 1
+    k = 0
+    while i <= middle and j <= right:
+        if a[i] <= a[j]:
+            temp[k] = a[i]
+            k += 1
+            i += 1
+        else:
+            temp[k] = a[j]
+            k += 1
+            j += 1
+    while i <= middle:
+        temp[k] = a[i]
+        k += 1
+        i += 1
+    while j <= right:
+        temp[k] = a[j]
+        k += 1
+        j += 1
+    for x in range(left, right + 1):
+        a[x] = temp[x - left]
+
+
+# split/divide
+def _divide(a: List[str], left: int, right: int) -> None:
+    middle = (left + right) // 2
+    if left < right:
+        _divide(a, left, middle)
+        _divide(a, middle + 1, right)
+        _mix(a, left, middle, right)
+
+
 class PhoneBook:
     def __init__(self, initial_capacity: int = HashTable.DEFAULT_TABLE_SIZE):
         self.contacts: List[Contact] = []
@@ -82,7 +117,10 @@ class PhoneBook:
 
     def build_sorted_index(self) -> None:
         """Rebuild the sorted index from scratch (O(n log n)); called once after load."""
-        self.sorted_phones = sorted(c.phone for c in self.contacts)
+        self.sorted_phones = [c.phone for c in self.contacts]
+        # Guard: mirrors C++ size_t underflow protection; 0/1 elements need no sort.
+        if len(self.sorted_phones) >= 2:
+            _divide(self.sorted_phones, 0, len(self.sorted_phones) - 1)
 
     @staticmethod
     def is_all_digits(s: str) -> bool:
@@ -190,6 +228,21 @@ class PhoneBook:
             if self.to_lower(c.name) == target:
                 return i
         return -1
+
+    def search_prefix_by_phone(self, phone: str, k: int) -> List[int]:
+        """Prefix search using lower_bound + linear for first k results."""
+        result: List[int] = []
+        pos = self.lower_bound(self.sorted_phones, phone)
+        i = pos
+        while i < pos + k and i < len(self.sorted_phones):
+            # stop as soon as the sorted phone no longer starts with the prefix
+            if not self.sorted_phones[i].startswith(phone):
+                break
+            index = self.hashtable.hash_search(self.sorted_phones[i])
+            if index != -1:
+                result.append(index)
+            i += 1
+        return result
 
     def print_all(self) -> None:
         for i, c in enumerate(self.contacts):
