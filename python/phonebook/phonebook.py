@@ -4,9 +4,11 @@ from typing import List, Tuple
 try:
     from contact import Contact
     from hashtable import HashTable
+    from timer import time_it
 except ImportError:  # package-style run: python -m python.phonebook.main
     from python.phonebook.contact import Contact
     from python.phonebook.hashtable import HashTable
+    from python.phonebook.timer import time_it
 
 
 def _trim_csv(s: str) -> str:
@@ -58,10 +60,67 @@ def _parse_csv_line(line: str) -> Tuple[bool, str, str]:
     return True, name, phone
 
 
+def _mix(a: List[str], left: int, middle: int, right: int) -> None:
+    temp = [""] * (right - left + 1)
+    i = left
+    j = middle + 1
+    k = 0
+    while i <= middle and j <= right:
+        if a[i] <= a[j]:
+            temp[k] = a[i]
+            k += 1
+            i += 1
+        else:
+            temp[k] = a[j]
+            k += 1
+            j += 1
+    while i <= middle:
+        temp[k] = a[i]
+        k += 1
+        i += 1
+    while j <= right:
+        temp[k] = a[j]
+        k += 1
+        j += 1
+    for x in range(left, right + 1):
+        a[x] = temp[x - left]
+
+
+# split/divide
+def _divide(a: List[str], left: int, right: int) -> None:
+    middle = (left + right) // 2
+    if left < right:
+        _divide(a, left, middle)
+        _divide(a, middle + 1, right)
+        _mix(a, left, middle, right)
+
+
 class PhoneBook:
     def __init__(self, initial_capacity: int = HashTable.DEFAULT_TABLE_SIZE):
         self.contacts: List[Contact] = []
         self.hashtable = HashTable(initial_capacity)
+        # Sorted copy of phone numbers (kept sorted incrementally) so binary
+        # search is O(log n). The main list + hash table are untouched.
+        self.sorted_phones: List[str] = []
+
+    @staticmethod
+    def lower_bound(v: List[str], target: str) -> int:
+        """Hand-written binary search: first index where v[i] >= target."""
+        lo, hi = 0, len(v)
+        while lo < hi:
+            mid = lo + (hi - lo) // 2
+            if v[mid] < target:
+                lo = mid + 1
+            else:
+                hi = mid
+        return lo
+
+    def build_sorted_index(self) -> None:
+        """Rebuild the sorted index from scratch (O(n log n)); called once after load."""
+        self.sorted_phones = [c.phone for c in self.contacts]
+        # Guard: mirrors C++ size_t underflow protection; 0/1 elements need no sort.
+        if len(self.sorted_phones) >= 2:
+            _divide(self.sorted_phones, 0, len(self.sorted_phones) - 1)
 
     @staticmethod
     def is_all_digits(s: str) -> bool:
@@ -106,8 +165,23 @@ class PhoneBook:
             print("Phone number is already exist")
             return False
         normalized = self.capitalize_first(self.to_lower(name))
-        self.contacts.append(Contact(normalized, phone))
-        self.hashtable.hash_insert(phone, len(self.contacts) - 1)
+        # add contact to list + hashtable (O(1))
+        holder = {}
+
+        def do_hash():
+            self.contacts.append(Contact(normalized, phone))
+            self.hashtable.hash_insert(phone, len(self.contacts) - 1)
+
+        t_hash = time_it(do_hash)
+
+        # keep the sorted index sorted: binary-search the spot (O(log n)) + shift (O(n))
+        def do_index():
+            pos = self.lower_bound(self.sorted_phones, phone)
+            self.sorted_phones.insert(pos, phone)
+
+        t_index = time_it(do_index)
+        print(f"  hash insert: {t_hash}ms, sorted-index insert: {t_index}ms"
+              " (the cost of keeping binary search possible)")
         return True
 
     def delete_contact_by_phone(self, phone: str) -> bool:
@@ -120,6 +194,7 @@ class PhoneBook:
         self.hashtable.clear()
         for i, c in enumerate(self.contacts):
             self.hashtable.hash_insert(c.phone, i)
+        self.build_sorted_index()  # delete is O(n) anyway; rebuild the sorted index
         return True
 
     def search_linear_by_phone(self, phone: str) -> int:
@@ -131,12 +206,43 @@ class PhoneBook:
     def search_hash_by_phone(self, phone: str) -> int:
         return self.hashtable.hash_search(phone)
 
+    def search_binary_by_phone(self, phone: str) -> int:
+        """Binary search by phone on the sorted index (O(log n)).
+
+        Returns the contact index via the hash table, or -1 if not found.
+        """
+        lo, hi = 0, len(self.sorted_phones)
+        while lo < hi:
+            mid = lo + (hi - lo) // 2
+            if self.sorted_phones[mid] == phone:
+                return self.hashtable.hash_search(phone)
+            if self.sorted_phones[mid] < phone:
+                lo = mid + 1
+            else:
+                hi = mid
+        return -1
+
     def search_linear_by_name(self, name: str) -> int:
         target = self.to_lower(name)
         for i, c in enumerate(self.contacts):
             if self.to_lower(c.name) == target:
                 return i
         return -1
+
+    def search_prefix_by_phone(self, phone: str, k: int) -> List[int]:
+        """Prefix search using lower_bound + linear for first k results."""
+        result: List[int] = []
+        pos = self.lower_bound(self.sorted_phones, phone)
+        i = pos
+        while i < pos + k and i < len(self.sorted_phones):
+            # stop as soon as the sorted phone no longer starts with the prefix
+            if not self.sorted_phones[i].startswith(phone):
+                break
+            index = self.hashtable.hash_search(self.sorted_phones[i])
+            if index != -1:
+                result.append(index)
+            i += 1
+        return result
 
     def print_all(self) -> None:
         for i, c in enumerate(self.contacts):
@@ -179,8 +285,15 @@ class PhoneBook:
                     continue
                 if not name or not self.is_all_digits(phone):
                     continue
-                if self.insert_contact(name, phone):
-                    count += 1
+                if self.search_hash_by_phone(phone) != -1:
+                    continue
+                # Push directly (no per-row index maintenance — that would be O(n^2));
+                # the sorted index is built once below.
+                normalized = self.capitalize_first(self.to_lower(name))
+                self.contacts.append(Contact(normalized, phone))
+                self.hashtable.hash_insert(phone, len(self.contacts) - 1)
+                count += 1
+        self.build_sorted_index()
         return count
 
     def saveto_csv(self, path: str) -> bool:
@@ -211,6 +324,8 @@ class PhoneBook:
     deleteContactByPhone = delete_contact_by_phone
     searchLinearByPhone = search_linear_by_phone
     searchHashByPhone = search_hash_by_phone
+    searchBinaryByPhone = search_binary_by_phone
+    buildSortedIndex = build_sorted_index
     searchLinearByName = search_linear_by_name
     printAll = print_all
     printContact = print_contact

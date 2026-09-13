@@ -36,19 +36,16 @@ git checkout -b feature/<your-branch>
 
 ## 4. Definition of done (this project)
 
-- [ ] Compiles and runs (C++ demo: `make && ./demo`)
-- [ ] Runs on the shared dataset (n ≥ 100 000)
-- [ ] Measurements recorded **with conditions** (CPU/RAM, OS, compiler + flags, dataset) — a measurement without its conditions is not a measurement
-- [ ] Relevant docs updated (`docs/PART_A..D`)
-- [ ] Sources cited — textbook chapter/page or URL + access date; adapted code cited in a comment at the point of use
-- [ ] AI use declared in the PR description
+- [x] Compiles and runs (C++ demo: `make && ./demo`)
+- [x] Runs on the shared dataset (n ≥ 100 000)
+- [x] Measurements recorded **with conditions** (CPU/RAM, OS, compiler + flags, dataset) — a measurement without its conditions is not a measurement
+- [x] Relevant docs updated (`report/report.pdf`)
+- [x] Sources cited — textbook chapter/page or URL + access date; adapted code cited in a comment at the point of use
+- [x] AI use declared
 
 ## 5. Communication
 
-- **Telegram channel** = announcements only (coordinator posts).
-- **Telegram group** = free discussion, ideas, questions.
-- **GitHub issues/PRs** = decisions and source of truth. If it matters, it's written here.
-- Write questions in English in issues so everyone sees the answer.
+- **GitHub issues/PRs** Write questions in English in issues so everyone sees the answer.
 
 ## 6. Rules (enforced, from README)
 
@@ -60,4 +57,4 @@ git checkout -b feature/<your-branch>
 
 ## 7. Roles
 
-See issue #2. One owner per language dir; coordinator owns docs/slides/report/grading. Owner is accountable for their dir, but PRs from anyone are welcome.
+- Flexible right now, things change too fast..

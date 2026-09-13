@@ -12,8 +12,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicReference;
 
 // Faithful port of src/main.cpp - Phone Book CLI.
 public class Main {
@@ -36,40 +36,46 @@ public class Main {
         int n = phonebook.size();
         String[] labels = {
             "first (linear best case)",
-            "random (linear average case)",
-            "last (linear worst case)"
+            "middle (linear avg / binary best)",
+            "last (linear worst case)",
+            "miss (linear worst / hash & binary worst)"
         };
-        int[] indices = new int[3];
+        int[] indices = new int[4];
         indices[0] = 0;
+        indices[1] = n / 2;
         indices[2] = n - 1;
-        if (n <= 2) {
-            indices[1] = n - 1;
-        } else {
-            Random rng = new Random();
-            indices[1] = rng.nextInt(n);
-        }
+        indices[3] = -1;
 
-        System.out.println("\nBenchmarking phone search (linear cases: first=best / random=average / last=worst; "
-                + "hash is ~O(1) in all cases)"
+        System.out.println("\nBenchmarking phone search (linear: first=best / middle / last,miss=worst; "
+                + "hash ~O(1) and binary O(log n), both position-independent; miss=worst for hash/binary)"
                 + " (" + n + " contacts, 5 runs each, best reported).");
 
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < 4; k++) {
             int targetIdx = indices[k];
-            String phone = phonebook.getPhoneAt(targetIdx);
-            if (phone.isEmpty()) {
-                System.out.println("[" + labels[k] + "] index " + targetIdx + ": cannot pick target.");
-                continue;
+            String phone;
+            if (k == 3) {
+                phone = "0000000000";
+            } else {
+                phone = phonebook.getPhoneAt(targetIdx);
+                if (phone.isEmpty()) {
+                    System.out.println("[" + labels[k] + "] index " + targetIdx + ": cannot pick target.");
+                    continue;
+                }
             }
             final int[] idxLin = {-1};
             final int[] idxHash = {-1};
-            double linBest = Timer.benchmark(() -> idxLin[0] = phonebook.searchLinearByPhone(phone));
-            double hashBest = Timer.benchmark(() -> idxHash[0] = phonebook.searchHashByPhone(phone));
+            final int[] idxBin = {-1};
+            final String fPhone = phone;
+            double linBest = Timer.benchmark(() -> idxLin[0] = phonebook.searchLinearByPhone(fPhone));
+            double hashBest = Timer.benchmark(() -> idxHash[0] = phonebook.searchHashByPhone(fPhone));
+            double binBest = Timer.benchmark(() -> idxBin[0] = phonebook.searchBinaryByPhone(fPhone));
 
             System.out.println("[" + labels[k] + " index " + targetIdx + " phone " + phone + "]");
             System.out.println("  Linear best of 5: " + linBest + "ms. (index " + idxLin[0] + ")");
             System.out.println("  Hash best of 5: " + hashBest + "ms. (index " + idxHash[0] + ", position-independent)");
+            System.out.println("  Binary best of 5: " + binBest + "ms. (index " + idxBin[0] + ", sorted index, position-independent)");
         }
-        System.out.println("Linear: first=best, last=worst. Hash: ~constant regardless of position.");
+        System.out.println("Linear: first=best, last/miss=worst. Hash/binary: ~constant; miss is worst (full chain / log n probes).");
     }
 
     static String csvEscape(String v) {
@@ -79,7 +85,8 @@ public class Main {
         return v;
     }
 
-    // Batch benchmark: every run to CSV (30 rows). Seeded RNG (42).
+    // Batch benchmark: every run to CSV (60 rows). `miss` uses phone
+    // "0000000000" (not in dataset) for true worst case of hash/binary.
     static int runSearchBenchmarkBatch(PhoneBook phonebook, String csvInput,
                                        String outCsv, boolean append) {
         int loaded = phonebook.loadfromCSV(csvInput);
@@ -92,13 +99,12 @@ public class Main {
             System.err.println("No contacts to benchmark.");
             return 1;
         }
-        String[] cases = {"first", "random", "last"};
-        int[] indices = {0, n - 1, n - 1};
+        String[] cases = {"first", "middle", "last", "miss"};
+        int[] indices = {0, n / 2, n - 1, -1};
         indices[0] = 0;
+        indices[1] = n / 2;
         indices[2] = n - 1;
-        if (n > 2) {
-            indices[1] = new Random(42).nextInt(n);
-        }
+        indices[3] = -1;
 
         boolean needHeader = true;
         Path outPath = Paths.get(outCsv);
@@ -120,21 +126,28 @@ public class Main {
         }
         String timestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS).toString();
         String toolchain = "javac " + System.getProperty("java.version", "?");
-        for (int k = 0; k < 3; k++) {
-            String phone = phonebook.getPhoneAt(indices[k]);
-            if (phone.isEmpty()) {
-                continue;
+        for (int k = 0; k < 4; k++) {
+            String phone;
+            if (k == 3) {
+                phone = "0000000000";
+            } else {
+                phone = phonebook.getPhoneAt(indices[k]);
+                if (phone.isEmpty()) {
+                    continue;
+                }
             }
             final String fPhone = phone;
-            for (int a = 0; a < 2; a++) {
-                String algo = (a == 0) ? "linear" : "hash";
+            for (int a = 0; a < 3; a++) {
+                String algo = (a == 0) ? "linear" : (a == 1) ? "hash" : "binary";
                 final int which = a;
                 for (int r = 1; r <= 5; r++) {
                     double t;
                     if (which == 0) {
                         t = Timer.timeIt(() -> phonebook.searchLinearByPhone(fPhone));
-                    } else {
+                    } else if (which == 1) {
                         t = Timer.timeIt(() -> phonebook.searchHashByPhone(fPhone));
+                    } else {
+                        t = Timer.timeIt(() -> phonebook.searchBinaryByPhone(fPhone));
                     }
                     rows.add("java," + csvEscape(csvInput) + "," + n + "," + cases[k] + ","
                             + algo + "," + r + "," + t + "," + timestamp + ","
@@ -153,7 +166,7 @@ public class Main {
             System.err.println("Cannot open output file: " + outCsv);
             return 1;
         }
-        System.out.println("Wrote 30 rows -> " + outCsv + " (" + n + " contacts).");
+        System.out.println("Wrote 60 rows -> " + outCsv + " (" + n + " contacts).");
         return 0;
     }
 
@@ -260,8 +273,10 @@ public class Main {
                 System.out.println("========== Search ==========");
                 System.out.println("1. Search phone - Linear Search");
                 System.out.println("2. Search phone - Hash Search");
-                System.out.println("3. Search name - Linear Search");
-                System.out.println("4. Back");
+                System.out.println("3. Search phone - Binary Search (sorted index)");
+                System.out.println("4. Search name - Linear Search");
+                System.out.println("5. Prefix phone search");
+                System.out.println("6. Back");
                 System.out.println("============================");
                 System.out.print("Enter your choice: ");
                 if (!sc.hasNext()) {
@@ -324,6 +339,25 @@ public class Main {
                         phonebook.printContact(index[0]);
                     }
                 } else if (searchChoice == 3) {
+                    System.out.print("Enter phone number: ");
+                    String phone;
+                    try {
+                        phone = sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    final String fPhone3 = phone;
+                    final int[] index = {-1};
+                    Timer.printTaskDuration(() -> index[0] = phonebook.searchBinaryByPhone(fPhone3));
+                    if (index[0] == -1) {
+                        System.out.println("Phone number not found.");
+                    } else {
+                        System.out.println("Phone number found using Binary Search (sorted index).");
+                        System.out.println("Contact index: " + index[0]);
+                        phonebook.printContact(index[0]);
+                    }
+                } else if (searchChoice == 4) {
                     System.out.print("Enter name: ");
                     String name;
                     try {
@@ -342,7 +376,28 @@ public class Main {
                         System.out.println("Contact index: " + index[0]);
                         phonebook.printContact(index[0]);
                     }
-                } else if (searchChoice == 4) {
+                } else if (searchChoice == 5) {
+                    System.out.print("Enter phone number: ");
+                    String phone;
+                    try {
+                        phone = sc.nextLine();
+                    } catch (NoSuchElementException e) {
+                        System.out.println("\nGoodbye");
+                        return;
+                    }
+                    final String fPhone5 = phone;
+                    final AtomicReference<List<Integer>> results = new AtomicReference<>();
+                    Timer.printTaskDuration(() -> results.set(phonebook.searchPrefixByPhone(fPhone5, 10)));
+                    if (results.get().isEmpty()) {
+                        System.out.println("This does not match any phone prefix.");
+                    } else {
+                        System.out.println("Found, here is the first 10 results (sorted index). ");
+                        for (int idx : results.get()) {
+                            System.out.println("Contact index: " + idx);
+                            phonebook.printContact(idx);
+                        }
+                    }
+                } else if (searchChoice == 6) {
                     System.out.println("Back to main menu.");
                 } else {
                     System.out.println("Invalid search choice.");
