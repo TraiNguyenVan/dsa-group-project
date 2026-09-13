@@ -1,7 +1,7 @@
 // binarySearch.hpp — iterative binary search on a sorted int array
 // Author:  @Alex75762107
-// Source:  n/a
-// AI use:  Gemini pro
+// Source:  https://www.geeksforgeeks.org/dsa/search-insert-position-of-k-in-a-sorted-array/
+// AI use:  n/a
 #ifndef BINARY_SEARCH_HPP
 #define BINARY_SEARCH_HPP
 
