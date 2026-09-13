@@ -80,9 +80,11 @@ run-memory: $(TARGET)
 clean:
 	rm -rf $(BUILDDIR)
 
-# Export report/report.md -> report/report.pdf (headless Chromium, no deps)
+# Export report/report.md -> report.pdf
+# marked + KaTeX + highlight.js (report/package.json) -> headless Chromium.
+# First run: cd report && npm install
 pdf:
-	python3 report/export_pdf.py
+	cd report && node export_pdf.mjs
 
 .PHONY: all run run-50 run-100k run-200k run-1m run-benchmark run-benchmark-sizes run-memory pdf clean
 

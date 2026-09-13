@@ -1,0 +1,16 @@
+{
+    "name": "report-export",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Export report/report.md -> report.pdf via marked + KaTeX + highlight.js + headless Chromium",
+    "type": "module",
+    "scripts": {
+        "pdf": "node export_pdf.mjs"
+    },
+    "dependencies": {
+        "highlight.js": "^11.11.1",
+        "katex": "^0.16.22",
+        "marked": "^15.0.7",
+        "marked-highlight": "^2.2.1"
+    }
+}
