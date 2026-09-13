@@ -30,7 +30,7 @@ Refs: course syllabus `3-Data Structure and Algorithm-CLC.pdf` (INT1306_CLC, 202
 * **Architectural Role:** Serves as the conceptual foundation for advanced tree-based indexing structures (e.g., BST, B-Trees).
 * **Limitations:** 
   * Inefficient for unsorted data when one-off lookup costs are lower than sorting costs.
-  * Poorly suited for write-heavy workloads with frequent mutations due to the $O(n)$ insertion overhead (where Hash Tables achieve $O(1)$).
+  * Poorly suited for write-heavy workloads with frequent mutations due to the $O(n)$ insertion overhead (where Hash Tables achieve O(1)).
   * Suboptimal for pure exact-match lookups where order is irrelevant.
 **Interpolation Search**
 
@@ -72,14 +72,36 @@ Demo implements linear, binary (sorted phone index), and hash table; interpolati
 
 ### B.2 Implementation notes (C++ source)
 
-* **CSV** `phonebook.cpp:30-83`: quoted `"Do, Thanh Tuan"` with `""` escapes, unquoted split on last comma, trim/strip quotes/`\r`, skip blank/empty-name/non-digit-phone.
-* **Insert** `143-164`: reject empty/non-digit/duplicate phone (hash check), store `CapitalizeFirst(ToLower(name))` + hash index.
-* **Delete** (opt 8): $O(n)$ vector erase + full hash rebuild; missing phone → `Phone number not found`.
-* **Search:** `searchLinearByPhone` exact scan; `searchHashByPhone` chain lookup; `searchBinaryByPhone` binary search on sorted index ($O(\log n)$ → hash resolve); `searchLinearByName` case-insensitive scan.
-* **Sorted index** `buildSortedIndex`: bulk load then merge-sort once $O(n \log n)$; per-insert `lowerBound` $O(\log n)$+shift $O(n)$ with split `hash / sorted-index` timing; delete rebuilds.
-* **Hash** `hashtable.cpp`: poly hash 64-bit wrap `% numBuckets`; 101→nextPrime; rehash 0.75→nextPrime(2×); `isPrime` $6k \pm 1$.
-* **Timer** `timer.hpp`: `timeIt` ms, `benchmark(work,5)` best-of-5, `printTaskDuration` → `\nTook: Xms.`
-* **Benchmark** `main.cpp:11-63` opt 0: auto-loads CSV, picks `first/middle/last/miss` phones (`miss=0000000000` true worst for hash/binary), times linear/hash/binary ×5.
+### B.2 Implementation Details (C++ Source)
+
+* **CSV Parsing (`phonebook.cpp:30-83`):**
+  * Handles quotes (`"Do, Thanh Tuan"`), escaped quotes (`""`), and removes trailing `\r`.
+  * Splits by the last comma for unquoted lines; skips empty names or invalid phone numbers.
+
+* **Insert (`phonebook.cpp:143-164`):**
+  * Checks for duplicates using the hash table; rejects non-digit or empty inputs.
+  * Formats names via `CapitalizeFirst(ToLower(name))` before storing and indexing.
+
+* **Delete (Option 8):**
+  * Erases from the vector ($O(n)$) and rebuilds the hash table. Prints "Phone number not found" if missing.
+
+* **Search:**
+  * `searchLinearByPhone`: Exact scan without an index.
+  * `searchHashByPhone`: Finds the bucket and scans the chain ($O(1)$ average).
+  * `searchBinaryByPhone`: Binary search on the sorted index array ($O(\log n)$).
+  * `searchLinearByName`: Case-insensitive linear scan.
+
+* **Sorted Index (`phonebook.cpp:177`):**
+  * Builds the index once using merge sort ($O(n \log n)$).
+  * For single inserts: finds position via `lowerBound` ($O(\log n)$), then shifts elements in `std::vector` ($O(n)$). Rebuilds completely on delete.
+
+* **Hash Table (`hashtable.cpp`):**
+  * 64-bit polynomial hash (`hash * 31 + (c - '0')`) with modulo `% numBuckets`.
+  * Starts at 101 buckets; rehashes to `nextPrime(2×)` when load factor $> 0.75$. Uses $6k \pm 1$ for `isPrime`.
+
+* **Timer & Benchmark (`timer.hpp`, `main.cpp:11-63`):**
+  * Measures execution time in ms; runs 5 times and picks the best result (`best-of-5`).
+  * Option 0 auto-tests 4 cases: first, middle, last, and a missing key (`0000000000`) across linear, binary, and hash search.
 
 ---
 
