@@ -36,6 +36,12 @@ make
 
 Compiles `src/*.cpp` with `-std=c++17 -Wall -O2 -Iinclude` → `build/cpp/demo`.
 
+No `make`/CMake? Just the compiler:
+
+```sh
+g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.cpp -o build/cpp/demo
+```
+
 ### `make run-benchmark` — single size (100k)
 
 ```sh
