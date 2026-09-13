@@ -109,6 +109,10 @@ make run-100k    # 100k rows
 make run-200k    # 200k rows
 make run-1m       # 1M rows
 
+# Manual (no make/CMake — just the compiler)
+g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.cpp -o build/cpp/demo
+./build/cpp/demo data/contacts_50.csv
+
 # CMake (mirrors the Makefile targets)
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
@@ -211,6 +215,14 @@ See `data/README.md` — `Name,Phone` per line, no header; regenerate with
 report appendix.
 
 ## Machine & toolchain used for measurements
+
+> **Platform support:** the benchmark harness (`make run-benchmark` /
+> `run-benchmark-sizes` / `run-memory`) was **tested on Linux only** —
+> Windows/macOS are not yet tested. The C++ program is verified on Windows
+> via `cmake --preset mingw-release` (MSYS2 MinGW, manual build flags and
+> CMake preset both checked); the Python/Go/JS/Java ports are expected to
+> work on any OS with the runtime installed. Numbers from an untested
+> platform are not comparable to the tables below.
 
 | Component | Value |
 | --- | --- |
