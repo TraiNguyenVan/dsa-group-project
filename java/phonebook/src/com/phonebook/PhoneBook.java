@@ -13,6 +13,80 @@ import java.util.List;
 public class PhoneBook {
     private final List<Contact> contacts = new ArrayList<>();
     private final HashTable hashtable;
+    // Sorted copy of phone numbers (kept sorted incrementally) so binary
+    // search is O(log n). The main list + hash table are untouched.
+    private final List<String> sortedPhones = new ArrayList<>();
+
+    // Hand-written binary search: first index where v[i] >= target.
+    private static int lowerBound(List<String> v, String target) {
+        int lo = 0, hi = v.size();
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+            if (v.get(mid).compareTo(target) < 0) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        return lo;
+    }
+
+    // mix merges a[left..middle] and a[middle+1..right] into a sorted run.
+    private static void mix(List<String> a, int left, int middle, int right) {
+        List<String> temp = new ArrayList<>(right - left + 1);
+        for (int t = 0; t < right - left + 1; t++) {
+            temp.add("");
+        }
+        int i = left;
+        int j = middle + 1;
+        int k = 0;
+        while (i <= middle && j <= right) {
+            if (a.get(i).compareTo(a.get(j)) <= 0) {
+                temp.set(k, a.get(i));
+                k++;
+                i++;
+            } else {
+                temp.set(k, a.get(j));
+                k++;
+                j++;
+            }
+        }
+        while (i <= middle) {
+            temp.set(k, a.get(i));
+            k++;
+            i++;
+        }
+        while (j <= right) {
+            temp.set(k, a.get(j));
+            k++;
+            j++;
+        }
+        for (int x = left; x <= right; x++) {
+            a.set(x, temp.get(x - left));
+        }
+    }
+
+    // split/divide
+    private static void divide(List<String> a, int left, int right) {
+        int middle = (left + right) / 2;
+        if (left < right) {
+            divide(a, left, middle);
+            divide(a, middle + 1, right);
+            mix(a, left, middle, right);
+        }
+    }
+
+    // Rebuild the sorted index from scratch (O(n log n)); called once after load.
+    public void buildSortedIndex() {
+        sortedPhones.clear();
+        for (Contact c : contacts) {
+            sortedPhones.add(c.phone);
+        }
+        // Guard: mirrors C++ size_t underflow protection; 0/1 elements need no sort.
+        if (sortedPhones.size() >= 2) {
+            divide(sortedPhones, 0, sortedPhones.size() - 1);
+        }
+    }
 
     public PhoneBook() {
         this(HashTable.DEFAULT_TABLE_SIZE);
@@ -151,8 +225,22 @@ public class PhoneBook {
             return false;
         }
         String normalized = capitalizeFirst(toLower(name));
-        contacts.add(new Contact(normalized, phone));
-        hashtable.hashInsert(phone, contacts.size() - 1);
+        // add contact to list + hashtable (O(1))
+        final String fNormalized = normalized;
+        final String fPhone = phone;
+        double tHash = Timer.timeIt(() -> {
+            contacts.add(new Contact(fNormalized, fPhone));
+            hashtable.hashInsert(fPhone, contacts.size() - 1);
+        });
+
+        // keep the sorted index sorted: binary-search the spot (O(log n)) + shift (O(n))
+        double tIndex = Timer.timeIt(() -> {
+            int pos = lowerBound(sortedPhones, fPhone);
+            sortedPhones.add(pos, fPhone);
+        });
+
+        System.out.println("  hash insert: " + tHash + "ms, sorted-index insert: " + tIndex
+                + "ms (the cost of keeping binary search possible)");
         return true;
     }
 
@@ -169,6 +257,25 @@ public class PhoneBook {
         return hashtable.hashSearch(phone);
     }
 
+    // Binary search by phone on the sorted index (O(log n)).
+    // Returns the contact index via the hash table, or -1 if not found.
+    public int searchBinaryByPhone(String phone) {
+        int lo = 0, hi = sortedPhones.size();
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+            int cmp = sortedPhones.get(mid).compareTo(phone);
+            if (cmp == 0) {
+                return hashtable.hashSearch(phone);
+            }
+            if (cmp < 0) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        return -1;
+    }
+
     public boolean deleteContactByPhone(String phone) {
         // O(n): list erase shifts tail + full hash rebuild preserves order.
         int idx = searchHashByPhone(phone);
@@ -181,6 +288,7 @@ public class PhoneBook {
         for (int i = 0; i < contacts.size(); i++) {
             hashtable.hashInsert(contacts.get(i).phone, i);
         }
+        buildSortedIndex(); // delete is O(n) anyway; rebuild the sorted index
         return true;
     }
 
@@ -192,6 +300,23 @@ public class PhoneBook {
             }
         }
         return -1;
+    }
+
+    // Prefix search using lower_bound + linear for first k results.
+    public List<Integer> searchPrefixByPhone(String phone, int k) {
+        List<Integer> result = new ArrayList<>();
+        int pos = lowerBound(sortedPhones, phone);
+        for (int i = pos; i < pos + k && i < sortedPhones.size(); i++) {
+            // stop as soon as the sorted phone no longer starts with the prefix
+            if (!sortedPhones.get(i).startsWith(phone)) {
+                break;
+            }
+            int index = hashtable.hashSearch(sortedPhones.get(i));
+            if (index != -1) {
+                result.add(index);
+            }
+        }
+        return result;
     }
 
     public void printAll() {
@@ -245,13 +370,20 @@ public class PhoneBook {
                 if (name.isEmpty() || !isAllDigits(phone)) {
                     continue;
                 }
-                if (insertContact(name, phone)) {
-                    count++;
+                if (searchHashByPhone(phone) != -1) {
+                    continue;
                 }
+                // Push directly (no per-row index maintenance — that would be O(n^2));
+                // the sorted index is built once below.
+                String normalized = capitalizeFirst(toLower(name));
+                contacts.add(new Contact(normalized, phone));
+                hashtable.hashInsert(phone, contacts.size() - 1);
+                count++;
             }
         } catch (IOException e) {
             // fall through, return what we have
         }
+        buildSortedIndex();
         return count;
     }
 

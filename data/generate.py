@@ -9,8 +9,10 @@ Usage:
 
 Output:
     data/contacts_50.csv      (50 rows)
+    data/contacts_10k.csv     (10,000 rows)
     data/contacts_100k.csv    (100,000 rows)
     data/contacts_200k.csv    (200,000 rows)
+    data/contacts_500k.csv    (500,000 rows)
     data/contacts_1m.csv      (1,000,000 rows)
 
 Format: Name,Phone per line. Phones are unique 10-digit strings (digits only) starting with one of the
@@ -53,8 +55,10 @@ GIVEN_NAMES = [
 # (filename, rows) — kept in ascending order so each file is a prefix of the next.
 DATASETS = [
     ("contacts_50.csv", 50),
+    ("contacts_10k.csv", 10_000),
     ("contacts_100k.csv", 100_000),
     ("contacts_200k.csv", 200_000),
+    ("contacts_500k.csv", 500_000),
     ("contacts_1m.csv", 1_000_000),
 ]
 

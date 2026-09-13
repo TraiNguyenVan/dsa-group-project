@@ -1,4 +1,6 @@
 #include "../include/phonebook.hpp"
+#include "../include/timer.hpp"
+#include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <fstream>
@@ -107,10 +109,17 @@ int PhoneBook::loadfromCSV(const std::string& path) {
         if (name.empty() || !isAllDigits(phone)) {
             continue;
         }
-        if (insertContact(name, phone)) {
-            ++count;
+        // Skip duplicates (phones are unique in the dataset, but be safe)
+        if (searchHashByPhone(phone) != -1) {
+            continue;
         }
+        // Push directly (no per-row index maintenance — that would be O(n^2));
+        // the sorted index is built once below.
+        contacts.push_back({capitalizeFirst(toLower(name)), phone});
+        hashtable.hashInsert(phone, static_cast<int>(contacts.size()) - 1);
+        ++count;
     }
+    buildSortedIndex();
     return count;
 }
 
@@ -155,11 +164,22 @@ bool PhoneBook::insertContact(const std::string& name, const std::string& phone)
     }
     // Normalized Name
     std::string normalizedName = capitalizeFirst(toLower(name));
-    // add contact to vector
-    contacts.push_back({normalizedName, phone});
-    // add contact to hashtable
-    int contactIndex = static_cast<int>(contacts.size()) - 1;
-    hashtable.hashInsert(phone, contactIndex);
+
+    // add contact to vector + hashtable (O(1))
+    double tHash = timeIt([&]() {
+        contacts.push_back({normalizedName, phone});
+        int contactIndex = static_cast<int>(contacts.size()) - 1;
+        hashtable.hashInsert(phone, contactIndex);
+    });
+
+    // keep the sorted index sorted: binary-search the spot (O(log n)) + shift (O(n))
+    double tIndex = timeIt([&]() {
+        std::size_t pos = lowerBound(sortedPhones, phone);
+        sortedPhones.insert(sortedPhones.begin() + pos, phone);
+    });
+
+    std::cout << "  hash insert: " << tHash << "ms, sorted-index insert: " << tIndex
+              << "ms (the cost of keeping binary search possible)\n";
     return true;
 };
 
@@ -176,6 +196,7 @@ bool PhoneBook::deleteContactByPhone(const std::string& phone) {
     for (int i = 0; i < static_cast<int>(contacts.size()); ++i) {
         hashtable.hashInsert(contacts[static_cast<std::size_t>(i)].phone, i);
     }
+    buildSortedIndex();  // delete is O(n) anyway; rebuild the sorted index
     return true;
 };
 
@@ -237,6 +258,97 @@ int PhoneBook::searchLinearByPhone(const std::string& phone) const {
 // hash search phone
 int PhoneBook::searchHashByPhone(const std::string& phone) const {
     return hashtable.hashSearch(phone);
+}
+// first index where v[i] >= target.
+std::size_t PhoneBook::lowerBound(const std::vector<std::string>& v,
+                                  const std::string& target) {
+    std::size_t lo = 0, hi = v.size();
+    while (lo < hi) {
+        std::size_t mid = lo + (hi - lo) / 2;
+        if (v[mid] < target) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    return lo;
+}
+// Binary search by phone on the sorted index (O(log n)).
+// Returns the contact index via the hash table, or -1 if not found.
+int PhoneBook::searchBinaryByPhone(const std::string& phone) const {
+    std::size_t lo = 0, hi = sortedPhones.size();
+    while (lo < hi) {
+        std::size_t mid = lo + (hi - lo) / 2;
+        if (sortedPhones[mid] == phone) {
+            return hashtable.hashSearch(phone);
+        }
+        if (sortedPhones[mid] < phone) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    return -1;
+}
+// Prefix search using lower_bound + linear for first k results
+std::vector<std::size_t> PhoneBook::searchPrefixByPhone(const std::string& phone, std::size_t k) const {
+    std::vector<std::size_t> result;
+    std::size_t pos = lowerBound(sortedPhones, phone);
+    for (std::size_t i = pos; (i < pos + k) && (i < sortedPhones.size()); ++i) {
+        // stop as soon as the sorted phone no longer starts with the prefix
+        if (sortedPhones[i].compare(0, phone.size(), phone) != 0) break;
+        int index = hashtable.hashSearch(sortedPhones[i]);
+        if (index != -1) result.push_back(static_cast<std::size_t>(index));
+    }
+    return result;
+}
+
+void mix(std::vector<std::string>& a, int left, int middle, int right) {
+    std::vector<std::string> temp(right - left + 1);
+    int i = left;
+    int j = middle + 1;
+    int k = 0;
+    while (i <= middle && j <= right) {
+        if (a[i] <= a[j]) {
+            temp[k++] = a[i++];
+        } else {
+            temp[k++] = a[j++];
+        }
+    }
+    while (i <= middle) {
+        temp[k++] = a[i++];
+    }
+    while (j <= right) {
+        temp[k++] = a[j++];
+    }
+    for (int x = left; x <= right; x++) {
+        a[x] = temp[x - left];
+    }
+}
+
+// split/divide
+void divide(std::vector<std::string>& a, int left, int right) {
+    int middle = (left + right) / 2;
+    if (left < right) {
+        divide(a, left, middle);
+        divide(a, middle + 1, right);
+        mix(a, left, middle, right);
+    }
+}
+
+
+// Rebuild the sorted index from scratch (O(n log n)); called once after load.
+void PhoneBook::buildSortedIndex() {
+    sortedPhones.clear(); // drop old sorted phone numbers so the index starts fresh
+    sortedPhones.reserve(contacts.size()); // pre-allocate for the current contact count
+    for (const auto& c : contacts) {
+        sortedPhones.push_back(c.phone);
+    }
+    // Guard: size_t underflows on an empty vector (0 - 1 wraps to a huge
+    // number), which would make divide recurse forever. 0/1 elements need no sort.
+    if (sortedPhones.size() >= 2) {
+        divide(sortedPhones, 0, static_cast<int>(sortedPhones.size()) - 1);
+    }
 }
 // linear search name (enter full name to search)
 int PhoneBook::searchLinearByName(const std::string& name) const {

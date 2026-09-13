@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phonebook Benchmark Gallery — results.csv</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --page-bg: #f7f8fb;
+      --panel-bg: #ffffff;
+      --soft: #eef3f8;
+      --text: #182238;
+      --muted: #60708b;
+      --muted-2: #96a3b8;
+      --border: #ccd8e6;
+      --shadow: rgba(20, 45, 80, 0.12);
+      --font: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--page-bg);
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 22px 16px 60px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(30px, 4vw, 42px);
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    p {
+      color: var(--muted);
+    }
+
+    pre {
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 12px;
+      overflow-x: auto;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 12px;
+      background: var(--panel-bg);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px var(--shadow);
+      margin: 14px 0 18px;
+    }
+
+    .controls label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .controls select,
+    .controls button {
+      height: 34px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+
+    .langs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .langs label {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      gap: 4px;
+      flex-direction: row !important;
+    }
+
+    .page-switch {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 12px;
+    }
+
+    .page-tab {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--soft);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .page-tab.active {
+      background: var(--text);
+      color: var(--panel-bg);
+      border-color: var(--text);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+
+    .kpi {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .kpi .value {
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .section-card {
+      background: var(--panel-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px var(--shadow);
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .page-panel {
+      display: none;
+    }
+
+    .page-panel.active {
+      display: block;
+    }
+
+    .control-page {
+      display: none;
+    }
+
+    .control-page.active {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 12px;
+    }
+
+    section {
+      margin-top: 16px;
+    }
+
+    canvas {
+      max-height: 380px;
+      width: 100%;
+      min-height: 320px;
+    }
+
+    .chart-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(450px, 1fr));
+      gap: 16px;
+    }
+
+    .chart-wrap {
+      height: 380px;
+    }
+
+    .chart-wrap.tall {
+      height: 420px;
+    }
+
+    .chart-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chart-title select {
+      height: 32px;
+    }
+
+    .chart-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      text-align: right;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    .warn {
+      background: #fff8e1;
+      padding: 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #tableWrap {
+      overflow-x: auto;
+    }
+
+    .chart-actions {
+      display: flex;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .chart-actions button {
+      height: 36px;
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--soft);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .chart-actions button:hover {
+      background: var(--panel-bg);
+    }
+
+    .spec {
+      color: var(--muted-2);
+      font-size: 11px;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        max-width: none;
+        width: 100%;
+        padding: 12px 10px 40px;
+        overflow-x: hidden;
+      }
+
+      h1 {
+        font-size: clamp(30px, 12vw, 36px);
+        line-height: 1.1;
+      }
+
+      h2 {
+        font-size: 17px;
+      }
+
+      .controls {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .controls label {
+        width: 100%;
+      }
+
+      .controls select,
+      .controls button {
+        width: 100%;
+      }
+
+      .control-page.active {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .page-switch {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+      }
+
+      .page-tab {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+      }
+
+      .kpi {
+        padding: 10px 12px;
+      }
+
+      .kpi .value {
+        font-size: 20px;
+      }
+
+      .section-card {
+        padding: 10px;
+      }
+
+      .chart-title {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .chart-layout {
+        display: block;
+      }
+
+      .chart-wrap {
+        height: 310px;
+      }
+
+      .chart-wrap.tall {
+        height: 350px;
+      }
+
+      canvas {
+        width: 100% !important;
+        min-height: 260px;
+      }
+
+      .chart-actions {
+        flex-wrap: wrap;
+      }
+
+      .chart-actions button {
+        flex: 1 1 100%;
+      }
+
+      #tableWrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Phonebook Benchmark Gallery</h1>
+  <div id="status">Loading results.csv…</div>
+
+  <div class="page-switch">
+    <button class="page-tab active" data-page-target="overview">1. Overview</button>
+    <button class="page-tab" data-page-target="grouped">2. Cases × algos</button>
+    <button class="page-tab" data-page-target="growth">3. Runtime vs n</button>
+    <button class="page-tab" data-page-target="memory">4. Peak memory</button>
+  </div>
+
+  <div class="controls">
+    <div class="control-page active" data-control-page="overview">
+      <label>Runtime CSV
+        <input type="file" id="runtimeCsvInput" accept=".csv,text/csv">
+      </label>
+      <label>Memory CSV
+        <input type="file" id="memoryCsvInput" accept=".csv,text/csv">
+      </label>
+      <button id="loadCustomCsv">Import 2 CSVs</button>
+      <label>Dataset size (n)
+        <select id="selN"></select>
+      </label>
+      <label>Case
+        <select id="selCase"></select>
+      </label>
+      <label>Algo
+        <select id="selAlgo"></select>
+      </label>
+    </div>
+
+    <div class="control-page" data-control-page="grouped">
+      <label>Dataset size (n)
+        <select id="selN2"></select>
+      </label>
+      <label>Language (chart 2)
+        <select id="selLang2"></select>
+      </label>
+    </div>
+
+    <div class="control-page" data-control-page="growth">
+      <label>Case
+        <select id="selCaseGrowth"></select>
+      </label>
+      <label>Algo
+        <select id="selAlgoGrowth"></select>
+      </label>
+      <label>Language
+        <select id="selLangGrowth"></select>
+      </label>
+    </div>
+
+    <div class="control-page" data-control-page="memory">
+      <label>Language display
+        <select id="selMemoryLang">
+          <option value="all">All languages</option>
+          <option value="cpp">cpp</option>
+          <option value="python">python</option>
+          <option value="go">go</option>
+          <option value="js">js</option>
+          <option value="java">java</option>
+        </select>
+      </label>
+      <label>Language filters</label>
+      <div class="langs" id="langToggles"></div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="kpi">
+      <div class="label">Rows loaded</div>
+      <div id="kpiRows" class="value">0</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Best cells</div>
+      <div id="kpiBest" class="value">0</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Languages</div>
+      <div id="kpiLangs" class="value">0</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Dataset sizes</div>
+      <div id="kpiSizes" class="value">0</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Memory rows</div>
+      <div id="kpiMem" class="value">0</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Skipped</div>
+      <div id="kpiSkipped" class="value">0</div>
+    </div>
+  </div>
+
+  <section class="section-card page-panel active" data-page-panel="overview">
+    <div class="chart-title">
+      <h2>1. Overview — best ms per language</h2>
+      <span id="overviewLabel">n / case / algo</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chartOverview"></canvas></div>
+    <section class="section-card">
+      <div class="chart-title">
+        <h2>Best-of-5 table (selected n)</h2>
+      </div>
+      <div id="tableWrap"></div>
+    </section>
+  </section>
+
+  <section class="section-card page-panel" data-page-panel="grouped">
+    <div class="chart-title">
+      <h2>2. Cases × algos — selected language</h2>
+      <span id="groupedLabel">language</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chartGrouped"></canvas></div>
+  </section>
+
+  <section class="section-card page-panel" data-page-panel="growth">
+    <div class="chart-title">
+      <h2>3. Runtime vs n — selected case + algo</h2>
+      <span id="growthLabel">selected language</span>
+    </div>
+    <div class="chart-wrap tall"><canvas id="chartGrowth"></canvas></div>
+  </section>
+
+  <section class="section-card page-panel" data-page-panel="memory">
+    <div class="chart-title">
+      <h2>4. Peak memory profile — heap and RSS</h2>
+      <span id="memoryLabel">memory CSV</span>
+    </div>
+    <div class="chart-wrap tall"><canvas id="chartMemory"></canvas></div>
+  </section>
+
+  <div class="chart-actions">
+    <button id="zoomReset">Reset zoom</button>
+    <button id="downloadCsv">Download visible CSV</button>
+  </div>
+
+  <script>
+    const LANG_ORDER = ["cpp", "python", "go", "js", "java"];
+    const CASE_ORDER = ["first", "middle", "last", "miss"];
+    const ALGO_ORDER = ["linear", "hash", "binary"];
+    const MEMORY_METRICS = ["profiler_heap", "peak_rss"];
+    const COLORS = { cpp: "#1f77b4", python: "#ff7f0e", go: "#2ca02c", js: "#d62728", java: "#9467bd" };
+    const MEMORY_COLORS = { profiler_heap: "#2a9d8f", peak_rss: "#e76f51" };
+    const MEMORY_SERIES_COLORS = {
+      "cpp/profiler_heap": "#1f77b4",
+      "cpp/peak_rss": "#aec7e8",
+      "python/profiler_heap": "#ff7f0e",
+      "python/peak_rss": "#ffbb78",
+      "go/profiler_heap": "#2ca02c",
+      "go/peak_rss": "#98df8a",
+      "js/profiler_heap": "#d62728",
+      "js/peak_rss": "#ff9896",
+      "java/profiler_heap": "#9467bd",
+      "java/peak_rss": "#c5b0d5"
+    };
+
+    let runtimeRows = [];
+    let memoryRows = [];
+    let best = new Map();
+    let memoryMap = new Map();
+    let nList = [];
+    let skipped = 0;
+    let datasetNames = new Set();
+    let memoryDataset = null;
+    let c1, c2, c3, c4;
+
+    function baseName(p) { return String(p || "").split(/[\\/]/).pop(); }
+    function key(l, c, a, n) { return [l, c, a, String(n)].join("|"); }
+    function memKey(lang, n, metric) { return [lang, String(n), metric].join("|"); }
+
+    function parseMs(raw) {
+      if (raw == null) return null;
+      const s = String(raw).trim().replace(/^"|"$/g, "").trim();
+      if (!s) return null;
+      const v = Number(s);
+      if (!Number.isFinite(v) || v < 0) return null;
+      return v;
+    }
+
+    function miniParse(text) {
+      const out = []; let row = [], cur = "", q = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (q) {
+          if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+          else cur += ch;
+        } else {
+          if (ch === '"') q = true;
+          else if (ch === ",") { row.push(cur); cur = ""; }
+          else if (ch === "\n") { row.push(cur); out.push(row); row = []; cur = ""; }
+          else if (ch === "\r") { }
+          else cur += ch;
+        }
+      }
+      row.push(cur); out.push(row);
+      const head = out.shift().map(h => h.trim());
+      return out.filter(r => r.length === head.length).map(r => {
+        const o = {}; head.forEach((h, i) => o[h] = r[i]); return o;
+      });
+    }
+
+    function parseRuntimeRows(parsedRows) {
+      runtimeRows = parsedRows;
+      best = new Map(); skipped = 0;
+      const nSet = new Set();
+      for (const r of runtimeRows) {
+        const lang = (r.language || "").trim();
+        const c = (r.case || "").trim();
+        const a = (r.algo || "").trim();
+        const n = (r.n || "").trim();
+        if (!LANG_ORDER.includes(lang) || !CASE_ORDER.includes(c) || !ALGO_ORDER.includes(a)) { skipped++; continue; }
+        const v = parseMs(r.ms);
+        if (v === null) { skipped++; continue; }
+        const k = key(lang, c, a, n);
+        if (!best.has(k) || v < best.get(k)) best.set(k, v);
+        nSet.add(Number(n));
+      }
+      nList = [...nSet].filter(Number.isFinite).sort((x, y) => x - y).map(String);
+    }
+
+    function parseMemoryRows(parsedRows) {
+      memoryRows = parsedRows;
+      memoryMap = new Map();
+      for (const r of memoryRows) {
+        const lang = (r.language || "").trim();
+        const n = (r.n || "").trim();
+        const metric = (r.metric || "").trim();
+        const mb = parseFloat(r.mb);
+        if (!LANG_ORDER.includes(lang) || !MEMORY_METRICS.includes(metric) || !Number.isFinite(mb)) continue;
+        const k = memKey(lang, n, metric);
+        memoryMap.set(k, mb);
+      }
+    }
+
+    function fillControls() {
+      const selN = document.getElementById("selN");
+      const selN2 = document.getElementById("selN2");
+      const selCase = document.getElementById("selCase");
+      const selCaseGrowth = document.getElementById("selCaseGrowth");
+      const selAlgo = document.getElementById("selAlgo");
+      const selAlgoGrowth = document.getElementById("selAlgoGrowth");
+      const selLang2 = document.getElementById("selLang2");
+      const selLangGrowth = document.getElementById("selLangGrowth");
+      const selMemoryLang = document.getElementById("selMemoryLang");
+
+      selN.innerHTML = nList.map(n => `<option value="${n}">${n}</option>`).join("");
+      selN2.innerHTML = nList.map(n => `<option value="${n}">${n}</option>`).join("");
+      selCase.innerHTML = CASE_ORDER.map(c => `<option value="${c}">${c}</option>`).join("");
+      selCaseGrowth.innerHTML = CASE_ORDER.map(c => `<option value="${c}">${c}</option>`).join("");
+      selAlgo.innerHTML = ALGO_ORDER.map(a => `<option value="${a}">${a}</option>`).join("");
+      selAlgoGrowth.innerHTML = ALGO_ORDER.map(a => `<option value="${a}">${a}</option>`).join("");
+      selLang2.innerHTML = `<option value="all">All languages</option>` + LANG_ORDER.map(l => `<option value="${l}">${l}</option>`).join("");
+      selLangGrowth.innerHTML = `<option value="all">All languages</option>` + LANG_ORDER.map(l => `<option value="${l}">${l}</option>`).join("");
+      selMemoryLang.value = "all";
+
+      selN.value = nList.includes("100000") ? "100000" : nList[0];
+      selN2.value = nList.includes("100000") ? "100000" : nList[0];
+      selCase.value = "last";
+      selCaseGrowth.value = "last";
+      selAlgo.value = "linear";
+      selAlgoGrowth.value = "linear";
+      selLang2.value = "all";
+      selLangGrowth.value = "all";
+
+      const tg = document.getElementById("langToggles");
+      tg.innerHTML = LANG_ORDER.map(l => `<label><input type="checkbox" data-lang="${l}" checked> ${l}</label>`).join("");
+      tg.querySelectorAll("input").forEach(cb => cb.addEventListener("change", () => {
+        const selected = enabledLangs();
+        if (selected.length === LANG_ORDER.length) selMemoryLang.value = "all";
+        else selMemoryLang.value = "";
+        renderAll();
+      }));
+
+      selMemoryLang.addEventListener("change", () => {
+        const selectedLang = selMemoryLang.value;
+        tg.querySelectorAll("input").forEach(cb => {
+          cb.checked = selectedLang === "all" || cb.dataset.lang === selectedLang;
+        });
+        renderAll();
+      });
+
+      [selN, selCase, selAlgo].forEach(s => s.addEventListener("change", renderAll));
+      [selN2, selLang2].forEach(s => s.addEventListener("change", renderGroupedByCasesFromControls));
+      [selCaseGrowth, selAlgoGrowth, selLangGrowth].forEach(s => s.addEventListener("change", renderGrowthFromControls));
+    }
+
+    const enabledLangs = () =>
+      [...document.querySelectorAll("#langToggles input:checked")].map(cb => cb.dataset.lang);
+
+    function updateDashboardCounts() {
+      const rows = runtimeRows.length;
+      const bestCells = best.size;
+      const langs = LANG_ORDER.length;
+      const sizes = Array.from(new Set(runtimeRows.map(r => String(r.n)))).length;
+      const memoryRowsCount = memoryRows.length;
+
+      document.getElementById("kpiRows").textContent = rows;
+      document.getElementById("kpiBest").textContent = bestCells;
+      document.getElementById("kpiLangs").textContent = langs;
+      document.getElementById("kpiSizes").textContent = sizes;
+      document.getElementById("kpiMem").textContent = memoryRowsCount;
+      document.getElementById("kpiSkipped").textContent = skipped;
+    }
+
+    function buildRuntimeTable(n, langs) {
+      let html = "<table><tr><th>lang \\ case|algo</th>" + CASE_ORDER.flatMap(cc => ALGO_ORDER.map(aa => `<th>${cc}/${aa}</th>`)).join("") + "</tr>";
+      for (const l of langs) {
+        html += `<tr><td>${l}</td>` + CASE_ORDER.flatMap(cc => ALGO_ORDER.map(aa => {
+          const v = best.get(key(l, cc, aa, n));
+          return `<td>${v == null ? "—" : v.toPrecision(4)}</td>`;
+        })).join("") + "</tr>";
+      }
+      html += "</table>";
+      document.getElementById("tableWrap").innerHTML = html;
+    }
+
+    function renderRuntimeOverview(n, c, a, langs) {
+      const values = langs.map(l => best.get(key(l, c, a, n)) ?? null);
+      c1.data.labels = langs;
+      c1.data.datasets = [{
+        label: `${a} / ${c} / n=${n} (best-of-5 ms)`,
+        data: values,
+        backgroundColor: langs.map(l => COLORS[l]),
+        borderRadius: 6,
+        borderSkipped: false
+      }];
+      c1.options.plugins.title = { display: true, text: `${a} / ${c} / selected language best of 5` };
+      c1.update();
+    }
+
+    function renderGroupedByCases(lang, n) {
+      c2.data.labels = CASE_ORDER;
+      const langs = enabledLangs();
+      const selectedLangs = lang === 'all' ? langs : langs.filter(l => l === lang);
+
+      if (lang === 'all') {
+        c2.data.datasets = [];
+        for (const l of selectedLangs) {
+          for (const algo of ALGO_ORDER) {
+            c2.data.datasets.push({
+              label: `${l}/${algo}`,
+              data: CASE_ORDER.map(cc => best.get(key(l, cc, algo, n)) ?? null),
+              backgroundColor: COLORS[l] + 'aa',
+              borderColor: COLORS[l],
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false,
+              type: 'bar'
+            });
+          }
+        }
+      } else {
+        c2.data.datasets = ALGO_ORDER.map(algo => ({
+          label: algo,
+          data: CASE_ORDER.map(cc => best.get(key(lang, cc, algo, n)) ?? null),
+          backgroundColor: COLORS[lang],
+          borderColor: COLORS[lang],
+          borderWidth: 1,
+          borderRadius: 4
+        }));
+      }
+      c2.update();
+    }
+
+    function renderGroupedByCasesFromControls() {
+      const lang = document.getElementById("selLang2").value;
+      const n = document.getElementById("selN2").value;
+      renderGroupedByCases(lang, n);
+      document.getElementById("groupedLabel").textContent = lang === 'all' ? 'all languages' : `${lang}`;
+      document.getElementById("overviewLabel").textContent = `${n} / ${"last"} / ${"linear"}`;
+    }
+
+    function renderRuntimeGrowth(c, a, langs) {
+      c3.data.labels = nList;
+      c3.data.datasets = langs.map(l => ({
+        label: l,
+        borderColor: COLORS[l],
+        backgroundColor: COLORS[l] + "33",
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: false,
+        tension: 0.12,
+        data: nList.map(nn => best.get(key(l, c, a, nn)) ?? null)
+      }));
+      c3.update();
+    }
+
+    function renderGrowthFromControls() {
+      const c = document.getElementById("selCaseGrowth").value;
+      const a = document.getElementById("selAlgoGrowth").value;
+      const lang = document.getElementById("selLangGrowth").value;
+      const langs = enabledLangs();
+      const selectedLangs = lang === 'all' ? langs : langs.filter(l => l === lang);
+      renderRuntimeGrowth(c, a, selectedLangs);
+      document.getElementById("growthLabel").textContent = `${c} + ${a} / ${lang === 'all' ? 'all languages' : lang}`;
+    }
+
+    function renderMemoryChart(langs) {
+      const labels = nList;
+      const datasets = [];
+
+      for (const l of langs) {
+        for (const metric of MEMORY_METRICS) {
+          const seriesKey = `${l}/${metric}`;
+          const color = MEMORY_SERIES_COLORS[seriesKey] || COLORS[l];
+          datasets.push({
+            label: `${l} / ${metric}`,
+            type: "bar",
+            data: labels.map(nn => memoryMap.get(memKey(l, nn, metric)) ?? null),
+            borderColor: color,
+            backgroundColor: color + "aa",
+            borderWidth: 1,
+            order: metric === "profiler_heap" ? 0 : 1
+          });
+        }
+      }
+
+      c4.data.labels = labels;
+      c4.data.datasets = datasets;
+      c4.update();
+    }
+
+    function renderAll() {
+      const n = document.getElementById("selN").value;
+      const c = document.getElementById("selCase").value;
+      const a = document.getElementById("selAlgo").value;
+      const lang = document.getElementById("selLang2").value;
+      const langs = enabledLangs();
+
+      if (langs.length === 0) {
+        c1.data.labels = [];
+        c1.data.datasets = [];
+        c1.update();
+        renderMemoryChart([]);
+        buildRuntimeTable(n, []);
+        return;
+      }
+
+      renderRuntimeOverview(n, c, a, langs);
+      renderGroupedByCases(lang, n);
+      renderRuntimeGrowth(c, a, langs);
+      renderMemoryChart(langs);
+      buildRuntimeTable(n, langs);
+
+      document.getElementById("overviewLabel").textContent = `${n} / ${c} / ${a}`;
+      document.getElementById("groupedLabel").textContent = `${lang}`;
+      document.getElementById("growthLabel").textContent = `${c} + ${a}`;
+    }
+
+    function initCharts() {
+      c1 = new Chart(document.getElementById("chartOverview"), {
+        type: "bar",
+        data: { labels: [], datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            title: { display: true },
+            zoom: {
+              zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" },
+              pan: { enabled: true, mode: "x" }
+            }
+          },
+          scales: { y: { beginAtZero: false, title: { display: true, text: "best-of-5 ms" } } }
+        }
+      });
+
+      c2 = new Chart(document.getElementById("chartGrouped"), {
+        type: "bar",
+        data: { labels: CASE_ORDER, datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            title: { display: true },
+            zoom: {
+              zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" },
+              pan: { enabled: true, mode: "x" }
+            }
+          },
+          scales: { y: { beginAtZero: false, title: { display: true, text: "best-of-5 ms" } } }
+        }
+      });
+
+      c3 = new Chart(document.getElementById("chartGrowth"), {
+        type: "line",
+        data: { labels: nList, datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            tooltip: { mode: "index", intersect: false },
+            zoom: {
+              zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" },
+              pan: { enabled: true, mode: "x" }
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: "n (rows)" }, type: "linear", ticks: { autoSkip: true } },
+            y: { type: "logarithmic", title: { display: true, text: "best-of-5 ms (log)" }, ticks: { callback: value => value } }
+          }
+        }
+      });
+
+      c4 = new Chart(document.getElementById("chartMemory"), {
+        type: "bar",
+        data: { labels: nList, datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            zoom: {
+              zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" },
+              pan: { enabled: true, mode: "x" }
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: "n (rows)" } },
+            y: { beginAtZero: false, title: { display: true, text: "average MB" } }
+          }
+        }
+      });
+    }
+
+    async function loadCsv(path) {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error(`HTTP ${res.status} while loading ${path}`);
+      const text = await res.text();
+      return (window.Papa ? Papa.parse(text, { header: true, skipEmptyLines: true }).data : miniParse(text));
+    }
+
+    async function loadCsvFromFile(file) {
+      const text = await file.text();
+      return (window.Papa ? Papa.parse(text, { header: true, skipEmptyLines: true }).data : miniParse(text));
+    }
+
+    async function reloadDashboardWithOptionalImports(runtimeFile, memoryFile) {
+      try {
+        const runtimeParsed = runtimeFile ? await loadCsvFromFile(runtimeFile) : await loadCsv("./results.csv");
+        const memoryParsed = memoryFile ? await loadCsvFromFile(memoryFile) : await loadCsv("./mem/results.csv");
+
+        parseRuntimeRows(runtimeParsed);
+        parseMemoryRows(memoryParsed);
+
+        memoryDataset = new Set(memoryRows.map(r => baseName(r.dataset)));
+        datasetNames = new Set(runtimeRows.map(r => baseName(r.dataset)));
+
+        fillControls();
+        renderAll();
+        updateDashboardCounts();
+        activatePage('overview');
+
+        document.getElementById("status").innerHTML = `<span class="warn">Ready</span>`;
+      } catch (e) {
+        document.getElementById("status").textContent = "Could not load benchmark CSVs (" + e.message + "). Serve over HTTP: python -m http.server 8000 from benchmark/.";
+        console.error(e);
+      }
+    }
+
+    async function main() {
+      initCharts();
+      await reloadDashboardWithOptionalImports(null, null);
+    }
+
+    function activatePage(page) {
+      document.querySelectorAll('[data-page-panel]').forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.pagePanel === page);
+      });
+      document.querySelectorAll('[data-control-page]').forEach(control => {
+        control.classList.toggle('active', control.dataset.controlPage === page);
+      });
+      document.querySelectorAll('[data-page-target]').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.pageTarget === page);
+      });
+    }
+
+    document.querySelectorAll('[data-page-target]').forEach(tab => {
+      tab.addEventListener('click', () => activatePage(tab.dataset.pageTarget));
+    });
+
+    document.getElementById('loadCustomCsv').addEventListener('click', async () => {
+      const runtimeFile = document.getElementById('runtimeCsvInput').files?.[0] || null;
+      const memoryFile = document.getElementById('memoryCsvInput').files?.[0] || null;
+      await reloadDashboardWithOptionalImports(runtimeFile, memoryFile);
+    });
+
+    document.getElementById('zoomReset').addEventListener('click', () => {
+      c1.resetZoom(); c2.resetZoom(); c3.resetZoom(); c4.resetZoom();
+    });
+
+    document.getElementById('downloadCsv').addEventListener('click', () => {
+      const n = document.getElementById('selN').value;
+      const c = document.getElementById('selCase').value;
+      const algo = document.getElementById('selAlgo').value;
+      const langs = enabledLangs();
+      const rows = runtimeRows.filter(r => r.n === String(n) && LANG_ORDER.includes(r.language) && langs.includes(r.language) && r.case === c && r.algo === algo);
+      const csv = ['language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone'];
+      rows.forEach(r => csv.push([r.language, r.dataset, r.n, r.case, r.algo, r.run, r.ms, r.timestamp, r.toolchain, r.target_index, r.phone].join(',')));
+      const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a'); anchor.href = url; anchor.download = `phonebook-${n}-${c}-${algo}.csv`;
+      document.body.appendChild(anchor); anchor.click(); document.body.removeChild(anchor); URL.revokeObjectURL(url);
+    });
+
+    main();
+  </script>
+</body>
+
+</html>
