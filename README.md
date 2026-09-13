@@ -125,7 +125,7 @@ Menu (`src/main.cpp`):
 1. Load contacts from CSV
 2. Save contacts to CSV
 3. Insert contact
-4. Search contact (1=phone linear, 2=phone hash, 3=phone binary, 4=name linear, 5=back)
+4. Search contact (1=phone linear, 2=phone hash, 3=phone binary, 4=name linear, 5=phone prefix(lower_bound), 6=back)
 5. Print all contacts
 6. Print contact by index
 7. Show number of contacts
