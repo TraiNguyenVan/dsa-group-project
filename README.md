@@ -109,6 +109,10 @@ make run-100k    # 100k rows
 make run-200k    # 200k rows
 make run-1m       # 1M rows
 
+# Manual (no make/CMake — just the compiler)
+g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.cpp -o build/cpp/demo
+./build/cpp/demo data/contacts_50.csv
+
 # CMake (mirrors the Makefile targets)
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
