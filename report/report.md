@@ -23,11 +23,34 @@ Refs: course syllabus `3-Data Structure and Algorithm-CLC.pdf` (INT1306_CLC, 202
 
 **Linear search** — finds a record with no order/index by scanning until `phone==target` (`phonebook.cpp:250`). Fine for dozens, unusable at 100k (up to 100k compares per lookup). Baseline every other structure improves on; survives as hash-chain scan (`hashtable.cpp:hashSearch`). Wrong when lookups are frequent/large or data is sorted (binary dominates).
 
-**Binary search** — exploits order: each probe halves the range, so 100k needs ≤17 compares vs 100k. Wastes sorted order if you scan linearly. Built on sorted array (`buildSortedIndex()` O(n log n) once; `lowerBound` O(log n)+`vector::insert` shift O(n) per insert, `phonebook.cpp:177`). Ancestor of tree indexes. Wrong when unsorted (sorting cost > scan), frequently mutated (O(n) insert to keep order vs hash O(1)), or keys have no order (exact phone match → hash better).
+**Binary Search**
 
-**Interpolation search** — probes by value proportion, O(log log n) expected on uniform keys vs binary O(log n). Binary's indifference to value is wasteful when target is near an end. Built on sorted uniform keys (binary's smarter cousin). Wrong on skewed data (degenerates O(n) probing one-by-one) — phone strings are not uniform, so demo covers it only in theory (§2.2.4, no code in `src/` or ports) — and on small n where binary's constants win.
+* **Mechanism & Efficiency:** Exploits the sorted order of the dataset by halving the search space with each comparison. For a dataset of 100,000 records, binary search requires at most 17 comparisons, compared to 100,000 in linear search.
+* **Underlying Structure & Overhead:** Implemented on a sorted contiguous array. The initial sorted index requires a one-time build cost of $O(n \log n)$ via `buildSortedIndex()`. Subsequent insertions incur an $O(n)$ overhead due to `std::vector` element shifting (`phonebook.cpp:177`), despite finding the position in $O(\log n)$ via `lowerBound()`.
+* **Architectural Role:** Serves as the conceptual foundation for advanced tree-based indexing structures (e.g., BST, B-Trees).
+* **Limitations:** 
+  * Inefficient for unsorted data when one-off lookup costs are lower than sorting costs.
+  * Poorly suited for write-heavy workloads with frequent mutations due to the $O(n)$ insertion overhead (where Hash Tables achieve $O(1)$).
+  * Suboptimal for pure exact-match lookups where order is irrelevant.
+**Interpolation Search**
 
-**Hashing & collisions** — maps each key directly to a bucket, so lookup, insert and delete are O(1) expected at any n — no scan, no halving, no sorted order to maintain. Linear costs O(n) per lookup; binary costs O(log n) per lookup but O(n) per insert to keep order. Neither scales when a phonebook grows by thousands per day. Built on a bucket array with one linked list per bucket (chaining): 64-bit polynomial hash `hash*31+(c-'0')` with wrap, `% numBuckets` (`hashtable.cpp:HashForSize`), starting at 101 → nextPrime and rehashing at load > 0.75 to nextPrime(2×) (`isPrime` via 6k±1). Colliding keys share a chain that is scanned linearly. This underpins dicts, caches and DB hash indexes. Avoid it for range queries ("phones starting with 09" needs a sorted array or BST), when a hard worst-case guarantee is required (a pathological collision pattern collapses to an O(n) chain, while a balanced BST guarantees O(log n)), or when memory is tight (a low load factor wastes buckets).
+* **Mechanism & Expected Complexity:** Probes positions based on the numerical value of the target relative to the range bounds, achieving an expected time complexity of $O(\log \log n)$ on uniformly distributed keys (outperforming Binary Search's $O(\log n)$). It addresses Binary Search's limitation of dividing the search space strictly in half regardless of the target's value.
+* **Limitations & Degeneracy:**
+  * **Data Distribution Sensitivity:** On non-uniform or highly skewed distributions, the search space reduction degrades to $O(n)$, probing elements one by one.
+  * **Computational Overhead:** On small datasets ($n$), the constant factor required to compute the interpolation formula outweighs the simpler midpoint operations of Binary Search.
+* **Project Scope Note:** Because real-world phone number strings do not follow a uniform distribution, Interpolation Search is evaluated strictly from a theoretical standpoint (see §2.2.4) and is omitted from the implementation in `src/`.
+
+**Hash Table & Collision Resolution**
+
+* **Performance & Scalability:** Provides expected $O(1)$ time complexity for lookup, insertion, and deletion regardless of dataset size $n$. Unlike linear search ($O(n)$ lookups) or binary search (which incurs an $O(n)$ insertion penalty to maintain array order), a hash table efficiently handles high-write workloads where records are added continuously.
+* **Implementation Details (`hashtable.cpp`):**
+  * **Collision Resolution:** Implements separate chaining using a dynamically resized bucket array, where each bucket points to a singly linked list. Collisions are resolved by linear traversal within the individual chain.
+  * **Hash Function:** Utilizes a 64-bit polynomial rolling hash (`hash * 31 + (c - '0')` with standard unsigned integer overflow wrapping) mapped via modulo arithmetic: `% numBuckets` (`HashForSize`).
+  * **Dynamic Resizing:** Initializes at size 101. When the load factor exceeds 0.75, the table rehashes to the next prime number approximately double its capacity (`nextPrime(2 * currentSize)`), utilizing a $6k \pm 1$ primality test (`isPrime`).
+* **Architectural Trade-offs & Limitations:**
+  * **Prefix & Range Queries:** Incapable of ordered traversals or prefix searches (e.g., retrieving phone numbers starting with "09"); such operations require a sorted array, Trie, or balanced BST.
+  * **Worst-Case Degradation:** Pathological collision patterns can degrade lookup performance from $O(1)$ to $O(n)$, whereas self-balancing search trees strictly guarantee $O(\log n)$.
+  * **Memory Overhead:** Maintaining a low load factor to minimize collisions results in unused bucket allocations and pointer overhead from linked list nodes.
 
 ---
 
