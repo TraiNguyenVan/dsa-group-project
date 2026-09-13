@@ -39,6 +39,7 @@ git checkout -b feature/<your-branch>
 - [x] Compiles and runs (C++ demo: `make && ./demo`)
 - [x] Runs on the shared dataset (n ≥ 100 000)
 - [x] Measurements recorded **with conditions** (CPU/RAM, OS, compiler + flags, dataset) — a measurement without its conditions is not a measurement
+- [x] Platform stated: the benchmark harness is **tested on Linux only** (Windows/macOS untested). The C++ program is verified on Windows via `cmake --preset mingw-release` (MSYS2 MinGW); the other language ports are expected to work on any OS with the runtime installed. Don't report numbers from an untested platform as comparable.
 - [x] Relevant docs updated (`report/report.pdf`)
 - [x] Sources cited — textbook chapter/page or URL + access date; adapted code cited in a comment at the point of use
 - [x] AI use declared

@@ -247,6 +247,8 @@ Dataset `contacts_100k.csv`, seed 42, toolchains in D.10.
 | Dataset | `data/contacts_100k.csv` (n=100k), seed 42 |
 | Commit | `adc54407393a2d8b82260a8af5695ad077df7641` |
 
+> **Platform coverage:** the benchmark harness was **tested on Linux only** — Windows/macOS are not yet tested. The C++ program is verified on Windows via `cmake --preset mingw-release` (MSYS2 MinGW, manual build flags and CMake preset both checked); the Python/Go/JS/Java ports are expected to work on any OS with the runtime installed, but their numbers here are Linux-only. Do not treat results from an untested platform as comparable.
+
 ---
 
 ## Appendix
