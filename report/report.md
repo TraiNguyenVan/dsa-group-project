@@ -257,7 +257,7 @@ Dataset `contacts_100k.csv`, seed 42, toolchains in D.10.
 
 | Deliverable | Name | Student Code |
 | --- | --- | --- |
-| C++ core | Nguyễn Văn Trãi<br>Trương Quang Tuấn | N25DECE085<br>N25DECE074 |
+| C++ core | Nguyễn Văn Trãi<br>Trương Quang Tuấn<br> Nguyễn Phương Quốc Vương| N25DECE085<br>N25DECE074<br>N25DECE086 |
 | Linear Search | Trần Quốc Anh<br>Nguyễn Quốc Toàn | N25DECE077<br>N25DECE070 |
 | Binary Search | Trần Quốc Anh<br>Nguyễn Quốc Toàn | N25DECE077<br>N25DECE070 |
 | Interpolation Search | Nguyễn Quốc Toàn | N25DECE070 |
