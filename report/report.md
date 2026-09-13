@@ -164,7 +164,7 @@ Representative at n=1M (`last` = linear worst, same phone every lang), ms `mean 
 
 Cold-start `first` n=1M `run1/best`: JS 58.5×/46.6×/25.9×, Java 11.8×/79.1×/5.3×, Python 11.1×/5.6×/3.6×, C++ 11.2×/22.4×/20.5×, Go 17.3×/18.1×/19.4×. Full 60-cell table generated from CSV (not hand-copied).
 
-*Why Java slow on run 1:* JVM interpreted + class-load/G1, then C1/C2 compile hot loop after ~10k iters — one 100k scan triggers it (`middle-linear` 39→17 ms runs 1–5; tiny hash ops 66× after compile). V8 same (Ignition→TurboFan, settled by run 3–5; `first` coldest as it runs first). C++/Go AOT (`-O2`/`go build`) run-1 excess is cache/branch + sub-µs timer floor (CV 1.4–1.8 on hash/binary). Python no JIT; large linear most stable (CV 0.02–0.04 at 1M).
+*Why Java slow on run 1:* JVM interpreted + class-load/G1, then C1/C2 compile hot loop after ~10k iters — one 100k scan triggers it (`middle-linear` 8.0→0.85 ms runs 1–5; tiny hash ops up to ~96× after compile, e.g. `last` 0.0113→0.00042 ms). V8 same (Ignition→TurboFan, settled by run 3–5; `first` coldest as it runs first). C++/Go AOT (`-O2`/`go build`) run-1 excess is cache/branch + sub-µs timer floor (CV 1.4–2.1 on hash/binary at 1M). Python no JIT; large linear most stable (CV 0.02–0.04 at 1M).
 
 *Fairness:* best-of-5 mitigates JIT but ≠ discarded warm-up. Fix: 3 untimed discarded searches (same phone, sink assignment) before timed `r=1..5` in `java/.../Main.java:~150` and `javascript/.../main.js:~76`; keep CSV header/seed 42/`miss=0000000000`. Until then compare `min(best)` or `mean(runs 2–5)` for Java/JS and state which.
 
@@ -245,7 +245,7 @@ Dataset `contacts_100k.csv`, seed 42, toolchains in D.10.
 | Node | v26.7.0 |
 | Java | javac 27 (JDK 27) |
 | Dataset | `data/contacts_100k.csv` (n=100k), seed 42 |
-| Commit | `adc54407393a2d8b82260a8af5695ad077df7641` |
+| Commit | `f4c9b7b5f1a744495508fb981dac9a0f14f30f1a` |
 
 > **Platform coverage:** the benchmark harness was **tested on Linux only** — Windows/macOS are not yet tested. The C++ program is verified on Windows via `cmake --preset mingw-release` (MSYS2 MinGW, manual build flags and CMake preset both checked); the Python/Go/JS/Java ports are expected to work on any OS with the runtime installed, but their numbers here are Linux-only. Do not treat results from an untested platform as comparable.
 

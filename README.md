@@ -209,7 +209,7 @@ report appendix.
 | Node | v26.7.0 |
 | Java | javac 27 (JDK 27) |
 | Dataset | `data/contacts_100k.csv` (n=100000), seed 42 |
-| Commit | `adc54407393a2d8b82260a8af5695ad077df7641` |
+| Commit | `f4c9b7b5f1a744495508fb981dac9a0f14f30f1a` |
 
 The full measurement method, charts, and comparison tables are in
 [`report/report.md`](report/report.md) (Part D). For the benchmark harness
