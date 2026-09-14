@@ -349,7 +349,7 @@ int main(int argc, char* argv[]) {
                 if (results.empty()) {
                     cout << "This does not match any phone prefix.\n";
                 } else {
-                    cout << "Found, here is the first " << numResults << " results (sorted index). \n";
+                    cout << "Found, here is the first " << results.size() << " results (sorted index). \n";
                     for (size_t i = 0; i < results.size(); ++i) {
                         cout << "Contact index: " << results[i] << "\n";
                         phonebook.printContact(results[i]);
