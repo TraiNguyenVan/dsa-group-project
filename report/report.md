@@ -58,7 +58,7 @@ Refs: course syllabus `3-Data Structure and Algorithm-CLC.pdf` (INT1306_CLC, 202
 
 ### B.1 Operation table
 
-Demo implements linear, binary (sorted phone index), and hash table; interpolation is topic (§2.2.4) included for completeness but not implemented (needs uniform keys). A number without justification scores nothing.
+Demo implements linear, binary (sorted phone index), and hash table; interpolation is topic (§2.2.4) included for completeness but not implemented (needs uniform keys).
 
 | Operation | Best | Avg | Worst | Space | Why |
 | --- | --- | --- | --- | --- | --- |
