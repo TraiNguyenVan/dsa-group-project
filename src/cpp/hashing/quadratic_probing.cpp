@@ -55,8 +55,8 @@ void quadProbing(vector<int>& table, int tsize, vector<int>& arr) {
 }
 
 int main() {
-    vector<int> arr = { 21, 10, 32, 43, 54, 65, 87, 76 };
-    int tsize = 11;
+    vector<int> arr = { 5, 10, 15, 20, 25 };
+    int tsize =7;
     vector<int> table(tsize, -1);
     quadProbing(table, tsize, arr);
 
