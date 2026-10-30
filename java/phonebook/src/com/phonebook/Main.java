@@ -189,7 +189,7 @@ public class Main {
                 positionals.add(args[i]);
             }
         }
-        String csvInput = positionals.size() > 0 ? positionals.get(0) : "data/contacts_100k.csv";
+        String csvInput = positionals.size() > 0 ? positionals.get(0) : "data/contacts_50.csv";
         String csvOutput = positionals.size() > 1 ? positionals.get(1) : csvInput;
         PhoneBook phonebook = new PhoneBook();
 

@@ -13,11 +13,12 @@ java/phonebook/out/
 /tmp/jout/
 
 # Data (generated or large)
-# data/*.csv
+data/*.csv
 data/*.bin
 data/*.dat
 !data/README.md
 !data/generate.py
+!data/contacts_50.csv
 
 # Report/slides binaries
 report/*.pdf

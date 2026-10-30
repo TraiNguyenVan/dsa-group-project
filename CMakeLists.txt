@@ -5,7 +5,7 @@
 #   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release  # configure once
 #   cmake --build build                             # build the demo binary
 #   cmake --build build --target run-50             # build + run on 50-row CSV
-#   ./build/demo data/contacts_100k.csv             # run manually (build/demo.exe on Windows)
+#   ./build/demo data/contacts_50.csv               # run manually (build/demo.exe on Windows)
 #
 # This file mirrors the old Makefile (TARGET=build/cpp/demo,
 # SOURCES=src/*.cpp, INCLUDES=include/, STD=c++17).
@@ -87,7 +87,7 @@ function(add_demo_run_target target_name csv_relpath)
 endfunction()
 
 # One shortcut per dataset, same names as `make run-50` etc.
-add_demo_run_target(run data/contacts_100k.csv)
+add_demo_run_target(run data/contacts_50.csv)
 add_demo_run_target(run-50 data/contacts_50.csv)
 add_demo_run_target(run-100k data/contacts_100k.csv)
 add_demo_run_target(run-200k data/contacts_200k.csv)
@@ -98,6 +98,7 @@ add_demo_run_target(run-1m data/contacts_1m.csv)
 # gracefully instead). The full 5-language matrix lives in `make run-benchmark`.
 add_custom_target(run-benchmark-cpp
   COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/benchmark"
+  COMMAND python3 "${CMAKE_SOURCE_DIR}/data/generate.py" --seed 42
   COMMAND $<TARGET_FILE:demo> --benchmark-csv "${CMAKE_SOURCE_DIR}/benchmark/results-cpp.csv" "${CMAKE_SOURCE_DIR}/data/contacts_100k.csv"
   COMMAND ${CMAKE_COMMAND} -E env python3 "${CMAKE_SOURCE_DIR}/benchmark/plot.py" "${CMAKE_SOURCE_DIR}/benchmark/results-cpp.csv" "${CMAKE_SOURCE_DIR}/benchmark/plot-cpp.png"
   DEPENDS demo

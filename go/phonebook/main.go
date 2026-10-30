@@ -200,7 +200,7 @@ func readRawLine(r *bufio.Reader) (string, bool) {
 }
 
 func main() {
-	csvInput := "data/contacts_100k.csv"
+	csvInput := "data/contacts_50.csv"
 	csvOutput := ""
 	benchCsv := ""
 	benchAppend := false

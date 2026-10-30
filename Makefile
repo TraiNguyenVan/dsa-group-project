@@ -18,18 +18,21 @@ $(TARGET): $(SRC) $(HEADERS) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
 
 run: $(TARGET)
-	./$(TARGET) data/contacts_100k.csv
+	./$(TARGET) data/contacts_50.csv
 
 run-50: $(TARGET)
 	./$(TARGET) data/contacts_50.csv
 
 run-100k: $(TARGET)
+	python3 data/generate.py --seed 42
 	./$(TARGET) data/contacts_100k.csv
 
 run-200k: $(TARGET)
+	python3 data/generate.py --seed 42
 	./$(TARGET) data/contacts_200k.csv
 
 run-1m: $(TARGET)
+	python3 data/generate.py --seed 42
 	./$(TARGET) data/contacts_1m.csv
 
 # Full 5-language benchmark matrix: every run (not just best) -> benchmark/results.csv
@@ -40,6 +43,7 @@ BENCHDATA := data/contacts_100k.csv
 
 run-benchmark: $(TARGET)
 	mkdir -p benchmark
+	python3 data/generate.py --seed 42
 	rm -f $(BENCHCSV)
 	./$(TARGET) --benchmark-csv $(BENCHCSV) $(BENCHDATA)
 	python3 python/phonebook/main.py --benchmark-csv $(BENCHCSV) --append $(BENCHDATA)

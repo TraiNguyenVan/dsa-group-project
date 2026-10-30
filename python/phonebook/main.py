@@ -164,7 +164,7 @@ def main() -> int:
         else:
             positionals.append(args[i])
             i += 1
-    csv_input = positionals[0] if len(positionals) > 0 else "data/contacts_100k.csv"
+    csv_input = positionals[0] if len(positionals) > 0 else "data/contacts_50.csv"
     csv_output = positionals[1] if len(positionals) > 1 else csv_input
     phonebook = PhoneBook()
 

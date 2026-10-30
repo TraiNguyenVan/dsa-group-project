@@ -32,19 +32,20 @@ Prereqs: `g++` with C++17, or CMake 3.16+.
 make
 ./build/cpp/demo data/contacts_50.csv
 make run-50      # 50 rows
-make run-100k    # 100k rows
+make run-100k    # generates ignored data, then runs 100k rows
 make run-200k
 make run-1m
 
 # CMake
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
+python3 data/generate.py --seed 42  # required for datasets above 50 rows
 ./build/demo data/contacts_100k.csv
 cmake --build build --target run-50
 ```
 
 CLI args: `demo [csvInput] [csvOutput]`.
-Default `csvInput = data/contacts_100k.csv`, `csvOutput = csvInput`.
+Default `csvInput = data/contacts_50.csv`, `csvOutput = csvInput`.
 
 Menu (`src/main.cpp:65-83`):
 
@@ -104,6 +105,7 @@ what the runtime forces (64-bit wrap, stdin, timing API).
 Prereq: `python3` (stdlib only, no deps).
 
 ```sh
+python3 data/generate.py --seed 42  # run once before selecting data above 50 rows
 python3 python/phonebook/main.py data/contacts_50.csv
 python3 python/phonebook/main.py data/contacts_100k.csv [csvOutput]
 ```
@@ -119,6 +121,7 @@ Prereq: `go 1.21+`.
 ```sh
 cd go/phonebook
 go vet ./...
+python3 ../../data/generate.py --seed 42  # run once before selecting data above 50 rows
 go run . ../../data/contacts_50.csv
 go run . ../../data/contacts_100k.csv ../../out.csv
 ```
@@ -132,6 +135,7 @@ Prereq: `node >=18`, no `npm install` needed.
 
 ```sh
 cd javascript/phonebook
+python3 ../../data/generate.py --seed 42  # run once before selecting data above 50 rows
 node src/main.js ../../data/contacts_50.csv
 node src/main.js ../../data/contacts_100k.csv ../../out.csv
 ```
@@ -147,6 +151,7 @@ Prereq: JDK 17. In this workspace: `nix-shell -p openjdk17`.
 ```sh
 cd java/phonebook
 javac -d out src/com/phonebook/*.java
+python3 ../../data/generate.py --seed 42  # run once before selecting data above 50 rows
 java -cp out com.phonebook.Main ../../data/contacts_50.csv
 java -cp out com.phonebook.Main ../../data/contacts_100k.csv ../../out.csv
 ```
@@ -157,9 +162,9 @@ Notes: `System.nanoTime()/1e6`, `java.util.Random`, `Scanner`
 
 ## Datasets
 
-See `data/README.md`. `Name,Phone` per line, no header. Regenerate with
-`python3 data/generate.py --seed 42`. Use `contacts_50.csv` for demos,
-`100k/200k/1m` for scaling.
+Only `contacts_50.csv` is checked in. Larger datasets are generated on demand
+with `python3 data/generate.py --seed 42` and ignored by Git. Benchmarks
+generate them when run. See `data/README.md` for details.
 
 ## Perf claims — method + data (no invented numbers)
 
