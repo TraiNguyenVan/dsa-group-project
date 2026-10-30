@@ -24,6 +24,7 @@ git checkout -b feature/<your-branch>
 - Small commits, one logical change each.
 - Message: short imperative — `add merge sort demo`, `fix off-by-one in quicksort`.
 - No build artifacts, binaries, or raw datasets in git. Datasets come from the generator in `data/` (`.gitignore` handles the rest).
+- **Report edits:** change `report/report.md` (the source), then run `make pdf` and commit **both** — `report.pdf` at the repo root is the copy people read, so it must never be behind the Markdown.
 
 ## 3. Issues & PRs
 
@@ -40,7 +41,7 @@ git checkout -b feature/<your-branch>
 - [x] Runs on the shared dataset (n ≥ 100 000)
 - [x] Measurements recorded **with conditions** (CPU/RAM, OS, compiler + flags, dataset) — a measurement without its conditions is not a measurement
 - [x] Platform stated: the benchmark harness is **tested on Linux only** (Windows/macOS untested). The C++ program is verified on Windows via `cmake --preset mingw-release` (MSYS2 MinGW); the other language ports are expected to work on any OS with the runtime installed. Don't report numbers from an untested platform as comparable.
-- [x] Relevant docs updated (`report/report.pdf`)
+- [x] Relevant docs updated (`report.pdf` + `report/report.md`)
 - [x] Sources cited — textbook chapter/page or URL + access date; adapted code cited in a comment at the point of use
 - [x] AI use declared
 
