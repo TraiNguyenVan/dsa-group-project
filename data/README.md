@@ -1,33 +1,25 @@
-# Datasets
+# Benchmark datasets
 
-Benchmark datasets for the phonebook lookup CLI. All files share the same
-schema and are nested prefixes of one seeded 1M-row stream, so scaling
-results are comparable (`contacts_50` ⊂ `contacts_10k` ⊂ `contacts_100k` ⊂ `contacts_200k` ⊂ `contacts_500k` ⊂ `contacts_1m`).
+Only `contacts_50.csv` is checked into Git for quick demos and examples. The
+larger benchmark datasets are generated locally when needed and are ignored by
+Git, so they do not add weight to clones or commits.
 
-| File               | Rows      | Approx. size |
-| ------------------ | --------- | ------------ |
-| `contacts_50.csv`  | 50        | ~1 KB        |
-| `contacts_10k.csv` | 10,000    | ~250 KB      |
-| `contacts_100k.csv`| 100,000   | ~2.6 MB      |
-| `contacts_200k.csv`| 200,000   | ~5.1 MB      |
-| `contacts_500k.csv`| 500,000   | ~13 MB       |
-| `contacts_1m.csv`  | 1,000,000 | ~26 MB       |
-
-Format: `Name,Phone` per line (no header, LF line endings). `Phone` is a
-unique 10-digit string (digits only): one of the Vietnamese mobile prefixes
-below plus 7 random digits (e.g. `0981234567`). Names are plain Vietnamese
-`Family Middle Given` (e.g. `Nguyen Van An`), no commas or quotes.
-
-Valid prefixes: `096, 097, 098, 086, 032, 033, 034, 035, 036, 037, 038,
-039, 091, 094, 088, 081, 082, 083, 084, 085, 090, 093, 089, 070, 076,
-077, 078, 079`.
-
-## Regenerate
+## Generate datasets
 
 ```sh
 python3 data/generate.py --seed 42
 ```
 
-`--seed` controls the RNG (default `42`); `--out-dir` controls the output
-directory (default `data`). Re-running with the same seed reproduces
-identical files.
+This writes nested-prefix CSVs for 50, 10k, 100k, 200k, 500k, and 1m contacts.
+The 50 row file is tracked; the other CSVs are generated on demand. Use
+`--out-dir` to write them elsewhere. Re-running with the same seed reproduces
+the same rows.
+
+The benchmark and memory profiling targets run the generator when needed. For
+manual runs on datasets larger than 50 rows, generate them first.
+
+## Format
+
+Each row is `Name,Phone` with no header and LF line endings. Phone numbers are
+unique 10 digit values using Vietnamese mobile prefixes; names use the form
+`Family Middle Given`.

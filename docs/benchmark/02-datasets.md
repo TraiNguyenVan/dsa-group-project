@@ -29,6 +29,9 @@ Phones are unique — address space is `28 × 10⁷ = 280M`, so 1M unique rows g
 
 ## Files
 
+Only `data/contacts_50.csv` is tracked in Git. Larger CSVs are generated
+locally with `data/generate.py` and ignored by Git.
+
 | File | Rows | Approx. size |
 |------|------|-------------|
 | `data/contacts_50.csv` | 50 | ~1 KB |
@@ -58,7 +61,9 @@ python3 data/generate.py --seed 123 --out-dir benchmark/output
 
 - `--seed` controls the RNG (default `42`). Same seed → identical files, byte-for-byte, across runs and Python versions (phones are appended in RNG order, not via `set` iteration).
 - `--out-dir` controls the output directory (default `data`).
-- The generator is called automatically by `make run-benchmark-sizes` and `benchmark/mem_profile.py`, so you rarely need to run it by hand.
+- The generator is called automatically by `make run-benchmark`,
+  `make run-benchmark-sizes`, and `benchmark/mem_profile.py`. Run it manually
+  before a CMake or language CLI command that selects a dataset above 50 rows.
 
 ### How it works (simplified)
 
@@ -84,9 +89,10 @@ rows = [(f"{rng.choice(FAMILY)} {rng.choice(MIDDLE)} {rng.choice(GIVEN)}", phone
 ./build/cpp/demo data/contacts_50.csv
 python3 python/phonebook/main.py data/contacts_50.csv
 
-# Scaling (100k — the default if you omit the arg)
+# Scaling (generate larger datasets first)
+python3 data/generate.py --seed 42
 ./build/cpp/demo data/contacts_100k.csv
-./build/cpp/demo                          # same as above
+./build/cpp/demo                          # defaults to the tracked 50-row sample
 
 # Custom output file (second positional arg)
 ./build/cpp/demo data/contacts_100k.csv benchmark/results.csv

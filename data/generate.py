@@ -2,7 +2,8 @@
 """Generate phonebook benchmark datasets (reproducible, seeded).
 
 Datasets are nested prefixes of a single 1M-row master stream so scaling
-benchmarks are comparable: contacts_50 ⊂ contacts_100k ⊂ contacts_200k ⊂ 1m.
+benchmarks are comparable: contacts_50 ⊂ contacts_10k ⊂ contacts_100k ⊂
+contacts_200k ⊂ contacts_500k ⊂ contacts_1m.
 
 Usage:
     python3 data/generate.py [--seed 42] [--out-dir data]

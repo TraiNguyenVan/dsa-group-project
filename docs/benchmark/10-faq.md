@@ -11,7 +11,7 @@ Quick answers, troubleshooting, and copy-paste recipes.
 | `g++: command not found` | No compiler | `sudo pacman -S gcc` / `sudo apt install g++` |
 | `make: command not found` | No make | `sudo pacman -S make` |
 | `cmake: command not found` | No CMake | `sudo pacman -S cmake` (or just use `make`) |
-| `Cannot open file: data/contacts_100k.csv` | Datasets not generated | `python3 data/generate.py --seed 42` |
+| `Cannot open file: data/contacts_100k.csv` | The large datasets are generated locally, not tracked | `python3 data/generate.py --seed 42` |
 | `Invalid input.` loop | Typed a letter at the menu | Type a number `0`–`9` |
 | `Goodbye` immediately | EOF (piped empty input) | Run without piping, or `printf '0\n9\n' \| ./build/cpp/demo …` |
 

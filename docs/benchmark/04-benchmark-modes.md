@@ -57,6 +57,7 @@ Source: `src/main.cpp:runSearchBenchmark()` and its ports (`python/phonebook/mai
 Headless, machine-readable, for plotting and analysis:
 
 ```sh
+python3 data/generate.py --seed 42  # create the ignored 100k dataset first
 ./build/cpp/demo --benchmark-csv benchmark/results.csv data/contacts_100k.csv
 python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append data/contacts_100k.csv
 (cd go/phonebook && go run . --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv)

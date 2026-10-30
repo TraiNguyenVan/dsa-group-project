@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
             positionals.push_back(a);
         }
     }
-    csvInput = (!positionals.empty()) ? positionals[0] : "data/contacts_100k.csv";
+    csvInput = (!positionals.empty()) ? positionals[0] : "data/contacts_50.csv";
     csvOutput = (positionals.size() > 1) ? positionals[1] : csvInput;
     PhoneBook phonebook;
 

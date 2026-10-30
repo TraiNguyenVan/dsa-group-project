@@ -90,9 +90,9 @@ underneath, so you need CMake 3.16+ **and** a C++17 compiler.
 make
 ./build/cpp/demo data/contacts_50.csv
 make run-50      # 50 rows
-make run-100k    # 100k rows
-make run-200k    # 200k rows
-make run-1m       # 1M rows
+make run-100k    # generates ignored data, then runs 100k rows
+make run-200k    # generates ignored data, then runs 200k rows
+make run-1m      # generates ignored data, then runs 1M rows
 
 # Manual (no make/CMake — just the compiler)
 g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.cpp -o build/cpp/demo
@@ -107,6 +107,9 @@ cmake --build build --target run-100k
 cmake --build build --target run-200k
 cmake --build build --target run-1m
 ```
+
+The CMake targets above 50 rows need generated files first. Run
+`python3 data/generate.py --seed 42` once; generated CSVs are ignored by Git.
 
 ### CMake presets (`CMakePresets.json`, needs CMake 3.21+)
 
@@ -127,7 +130,7 @@ cmake --build --preset default
 ```
 
 CLI args: `demo [csvInput] [csvOutput]`.
-Default `csvInput = data/contacts_100k.csv`, `csvOutput = csvInput`.
+Default `csvInput = data/contacts_50.csv`, `csvOutput = csvInput`.
 
 Menu (`src/main.cpp`):
 
@@ -157,6 +160,7 @@ Prereq: `python3` (stdlib only, no deps).
 
 ```sh
 python3 python/phonebook/main.py data/contacts_50.csv
+python3 data/generate.py --seed 42  # needed before selecting datasets above 50 rows
 python3 python/phonebook/main.py data/contacts_100k.csv [csvOutput]
 ```
 
@@ -168,6 +172,7 @@ Prereq: `go 1.21+`.
 cd go/phonebook
 go vet ./...
 go run . ../../data/contacts_50.csv
+python3 ../../data/generate.py --seed 42  # run once before selecting datasets above 50 rows
 go run . ../../data/contacts_100k.csv ../../out.csv
 ```
 
@@ -178,6 +183,7 @@ Prereq: `node >=18`, no `npm install` needed.
 ```sh
 cd javascript/phonebook
 node src/main.js ../../data/contacts_50.csv
+python3 ../../data/generate.py --seed 42  # run once before selecting datasets above 50 rows
 node src/main.js ../../data/contacts_100k.csv ../../out.csv
 ```
 
@@ -189,15 +195,16 @@ Prereq: JDK 17. eg: `openjdk17`.
 cd java/phonebook
 javac -d out src/com/phonebook/*.java
 java -cp out com.phonebook.Main ../../data/contacts_50.csv
+python3 ../../data/generate.py --seed 42  # run once before selecting datasets above 50 rows
 java -cp out com.phonebook.Main ../../data/contacts_100k.csv ../../out.csv
 ```
 
 ## Datasets
 
-See `data/README.md` — `Name,Phone` per line, no header; regenerate with
-`python3 data/generate.py --seed 42`. Use `contacts_50.csv` for demos,
-`100k/200k/1m` for scaling. Schema and generation are documented in the
-report appendix.
+Only `data/contacts_50.csv` is checked in. Larger nested-prefix datasets are
+generated on demand with `python3 data/generate.py --seed 42`; the generated
+CSVs are ignored by Git. The benchmark and profiling targets generate them
+when run. See `data/README.md` for sizes and the CSV schema.
 
 ## Machine & toolchain used for measurements
 
@@ -219,7 +226,7 @@ report appendix.
 | Go | go1.27.1 linux/amd64 |
 | Node | v26.7.0 |
 | Java | javac 27 (JDK 27) |
-| Dataset | `data/contacts_100k.csv` (n=100000), seed 42 |
+| Dataset | `data/contacts_100k.csv` (n=100000), generated with seed 42 |
 | Commit | `f673f1e7157fd09133d9a76d152e4a20f1c8f12b` |
 
 The full measurement method, charts, and comparison tables are in

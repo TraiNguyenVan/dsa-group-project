@@ -175,7 +175,7 @@ async function main() {
       positionals.push(args[i]);
     }
   }
-  const csvInput = positionals.length > 0 ? positionals[0] : 'data/contacts_100k.csv';
+  const csvInput = positionals.length > 0 ? positionals[0] : 'data/contacts_50.csv';
   const csvOutput = positionals.length > 1 ? positionals[1] : csvInput;
   const phonebook = new PhoneBook();
 

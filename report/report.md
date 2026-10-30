@@ -213,6 +213,7 @@ Batch mode (60 rows/lang: 4 cases×3 algos×5 runs, `target_index,phone` auditab
 
 ```sh
 make  # builds ./build/cpp/demo
+python3 data/generate.py --seed 42  # generate ignored datasets first
 ./build/cpp/demo --benchmark-csv benchmark/results.csv data/contacts_100k.csv
 python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append data/contacts_100k.csv
 (cd go/phonebook && go run . --benchmark-csv ../../benchmark/results.csv --append ../../data/contacts_100k.csv)

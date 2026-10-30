@@ -15,6 +15,10 @@ This page is the **hands-on manual**: prerequisites, every `make` target, manual
 
 Without `matplotlib` the pipeline still works — the plot step prints `plot skipped: pip install matplotlib` and CSVs are produced normally.
 
+Only the 50-row CSV is tracked. The benchmark targets generate the larger
+datasets on demand; manual commands using datasets above 50 rows need
+`python3 data/generate.py --seed 42` first.
+
 Check yours:
 
 ```sh
@@ -48,7 +52,9 @@ g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.
 make run-benchmark
 ```
 
-Runs **all 5 languages** on `data/contacts_100k.csv` (60 rows each → 300 rows) → `benchmark/results.csv`, then `benchmark/plot.py` → `benchmark/plot.png` + 12 per-case PNGs.
+Generates the ignored CSVs, then runs **all 5 languages** on
+`data/contacts_100k.csv` (60 rows each → 300 rows) → `benchmark/results.csv`,
+then `benchmark/plot.py` → `benchmark/plot.png` + 12 per-case PNGs.
 
 ```
 benchmark/results.csv   300 rows (5 langs × 4 cases × 3 algos × 5 runs)
@@ -102,6 +108,10 @@ make pdf                                                # report/report.md → r
 make clean                                              # rm -rf build/cpp
 ```
 
+`run-100k`, `run-200k`, and `run-1m` generate the datasets before running.
+The CMake run targets above 50 rows require a prior
+`python3 data/generate.py --seed 42`.
+
 ## Manual commands (without `make`)
 
 Batch mode is just a CLI flag — you can run any language alone:
@@ -109,6 +119,7 @@ Batch mode is just a CLI flag — you can run any language alone:
 ```sh
 # C++ (build first)
 make
+python3 data/generate.py --seed 42
 ./build/cpp/demo --benchmark-csv benchmark/results.csv data/contacts_100k.csv
 ./build/cpp/demo --benchmark-csv benchmark/results.csv --append data/contacts_200k.csv  # append
 
