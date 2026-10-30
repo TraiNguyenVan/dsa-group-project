@@ -63,7 +63,7 @@ void doSearch(const PhoneBook& book) {
 int main(int argc, char* argv[]) {
     PhoneBook book;
 
-    string csvPath = (argc > 1) ? argv[1] : "data/contacts_200k.csv";
+    string csvPath = (argc > 1) ? argv[1] : "data/contacts_50.csv";
     auto load = timing::measure([&] { return book.loadFromCSV(csvPath); });
     if (load.value >= 0) {
         cout << "Loaded " << load.value << " contact(s) from " << csvPath << ".\n";

@@ -1,8 +1,8 @@
 # Datasets
 
-Benchmark datasets for the phonebook lookup CLI. All files share the same
-schema and are nested prefixes of one seeded 1M-row stream, so scaling
-results are comparable (`contacts_50` ⊂ `contacts_100k` ⊂ `contacts_200k` ⊂ `contacts_1m`).
+Only `contacts_50.csv` is checked in. Larger datasets are generated on demand
+with `data/generate.py` and ignored by Git, so they do not add weight to clones.
+All files share the same schema and are nested prefixes of a seeded stream.
 
 | File               | Rows      | Approx. size |
 | ------------------ | --------- | ------------ |
