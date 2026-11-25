@@ -94,3 +94,9 @@ pdf:
 	cd report && node export_pdf.mjs
 
 .PHONY: all run run-50 run-100k run-200k run-1m run-benchmark run-benchmark-sizes run-memory pdf clean
+
+# Five implementations share the same interactive and benchmark contract.
+test: $(TARGET)
+	$(PYTHON) tests/phonebook_smoke.py --cpp-binary "$(TARGET)" $(LANGUAGES)
+
+.PHONY: test
