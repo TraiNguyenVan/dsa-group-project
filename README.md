@@ -2,8 +2,8 @@
 
 A PTIT Data Structures and Algorithms group project comparing **linear, hash,
 and binary search** on the same phonebook data in C++, Python, Go, JavaScript,
-and Java. The demo supports loading, editing, and searching contacts; the
-benchmark records both runtime and memory measurements.
+and Java. The demo can load and save contact lists and add, delete, and
+search contacts. The benchmark records runtime and memory measurements.
 
 | Looking for | Start here |
 | --- | --- |
