@@ -80,6 +80,20 @@ static string utcTimestamp() {
     return string(buf);
 }
 
+static string escapeCsvField(const string& field) {
+    if (field.find_first_of(",\"\r\n") == string::npos) {
+        return field;
+    }
+    string quoted = "\"";
+    for (char ch : field) {
+        if (ch == '"') {
+            quoted += '"';
+        }
+        quoted += ch;
+    }
+    return quoted + '"';
+}
+
 // Batch benchmark: first/middle/last/miss x linear/hash/binary targets,
 // writes EVERY run (4 cases x 3 algos x 5 = 60 rows) to CSV. `miss` uses
 // phone "0000000000" (not in dataset) to capture true worst case for
@@ -124,7 +138,8 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
         out << "language,dataset,n,case,algo,run,ms,timestamp,toolchain,target_index,phone\n";
     }
     string timestamp = utcTimestamp();
-    string toolchain = string("g++ ") + __VERSION__;
+    const string datasetField = escapeCsvField(csvInput);
+    const string toolchainField = escapeCsvField(string("g++ ") + __VERSION__);
     const int repeats = 5;
     for (int k = 0; k < 4; ++k) {
         long long targetIdx = indices[k];
@@ -148,13 +163,17 @@ int runSearchBenchmarkBatch(PhoneBook& phonebook, const string& csvInput,
                 } else {
                     t = timeIt([&]() { phonebook.searchBinaryByPhone(phone); });
                 }
-                out << "cpp," << csvInput << "," << n << "," << cases[k] << "," << algo
+                out << "cpp," << datasetField << "," << n << "," << cases[k] << "," << algo
                     << "," << r << "," << std::setprecision(17) << t << "," << timestamp
-                    << ",\"" << toolchain << "\"," << targetIdx << "," << phone << "\n";
+                    << "," << toolchainField << "," << targetIdx << "," << phone << "\n";
             }
         }
     }
     out.close();
+    if (!out) {
+        cerr << "Cannot write benchmark output: " << outCsv << "\n";
+        return 1;
+    }
     cout << "Wrote 60 rows -> " << outCsv << " (" << n << " contacts).\n";
     return 0;
 }
