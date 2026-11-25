@@ -38,6 +38,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # change the build without editing this file.
 add_executable(demo
   src/main.cpp
+  src/cli.cpp
+  src/benchmark.cpp
   src/phonebook.cpp
   src/hashtable.cpp
 )
