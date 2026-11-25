@@ -40,6 +40,7 @@ add_executable(demo
   src/main.cpp
   src/cli.cpp
   src/benchmark.cpp
+  src/contact_csv.cpp
   src/phonebook.cpp
   src/hashtable.cpp
 )

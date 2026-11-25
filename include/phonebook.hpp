@@ -13,6 +13,8 @@ private:
     // Sorted copy of phone numbers (kept sorted incrementally) so binary
     // search is O(log n). The main vector + hash table are untouched.
     std::vector<std::string> sortedPhones;
+    // Keep the primary vector and hash index in sync.
+    void appendContact(const std::string& normalizedName, const std::string& phone);
     // string processing
     static std::string toLower(const std::string& s);
     static std::string capitalizeFirst(const std::string& s);

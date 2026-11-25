@@ -1,4 +1,5 @@
 #include "benchmark.hpp"
+#include "csv.hpp"
 #include "phonebook.hpp"
 #include "timer.hpp"
 
@@ -91,20 +92,6 @@ std::string compilerLabel() {
 #endif
 }
 
-std::string escapeCsvField(const std::string& field) {
-    if (field.find_first_of(",\"\r\n") == std::string::npos) {
-        return field;
-    }
-    std::string quoted = "\"";
-    for (char ch : field) {
-        if (ch == '"') {
-            quoted += '"';
-        }
-        quoted += ch;
-    }
-    return quoted + '"';
-}
-
 bool hasCsvHeader(const std::string& path) {
     std::ifstream input(path);
     std::string firstLine;
@@ -176,8 +163,8 @@ int runSearchBenchmarkBatch(const std::string& inputPath,
     out << std::setprecision(17);
 
     const auto timestamp = utcTimestamp();
-    const auto datasetField = escapeCsvField(inputPath);
-    const auto toolchainField = escapeCsvField(compilerLabel());
+    const auto datasetField = csv::escapeField(inputPath);
+    const auto toolchainField = csv::escapeField(compilerLabel());
     std::size_t rows = 0;
     for (const auto& target : makeTargets(book)) {
         if (target.phone.empty()) {
