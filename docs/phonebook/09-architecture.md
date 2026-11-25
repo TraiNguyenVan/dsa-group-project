@@ -17,23 +17,26 @@ How the harness is organized, how data flows, and where benchmark code lives vs 
 │   ├── hashtable.hpp                # HashTable interface (no benchmark code)
 │   └── phonebook.hpp                # PhoneBook interface (no benchmark code)
 ├── src/
-│   ├── main.cpp                     # CLI menu + runSearchBenchmark (opt 0) + runSearchBenchmarkBatch (--benchmark-csv)
-│   ├── phonebook.cpp                # CSV, insert, linear/hash/binary search, sorted index
+│   ├── main.cpp                     # parse arguments and choose interactive or batch mode
+│   ├── cli.cpp                      # interactive menus and commands
+│   ├── benchmark.cpp                # shared targets and timing for interactive and batch
+│   ├── contact_csv.cpp              # contact CSV I/O and field escaping
+│   ├── phonebook.cpp                # contact operations and search indexes
 │   └── hashtable.cpp                # chained hash, prime sizing, rehash at 0.75
 ├── python/phonebook/
-│   ├── main.py                      # faithful port of src/main.cpp (menu + both benchmark modes)
+│   ├── main.py                      # menu and both benchmark modes
 │   ├── phonebook.py / hashtable.py / contact.py / timer.py
 ├── go/phonebook/
-│   ├── main.go                      # faithful port of src/main.cpp
+│   ├── main.go                      # menu and both benchmark modes
 │   ├── phonebook.go / hashtable.go / contact.go / timer.go
 │   ├── memprofile_test.go           # env-gated TestMemProfile (pprof, GC on live HeapAlloc)
 │   └── go.mod
 ├── javascript/phonebook/
-│   ├── src/main.js                  # faithful port of src/main.cpp
+│   ├── src/main.js                  # menu and both benchmark modes
 │   ├── src/phonebook.js / hashtable.js / contact.js / timer.js
 │   └── package.json
 ├── java/phonebook/
-│   ├── src/com/phonebook/Main.java  # faithful port of src/main.cpp
+│   ├── src/com/phonebook/Main.java  # menu and both benchmark modes
 │   ├── src/com/phonebook/PhoneBook.java / HashTable.java / Contact.java / Timer.java
 │   ├── src/com/phonebook/MemProfile.java  # JFR + polled heap (compiled with app)
 │   └── out/                         # compiled classes (git-ignored)
@@ -130,14 +133,19 @@ A common question: "is benchmark code mixed with user code?"
 |----------|-----------|-------|
 | `include/contact.hpp`, `hashtable.hpp`, `phonebook.hpp` | ❌ clean | Zero benchmark code |
 | `include/timer.hpp` | dual-use | `printTaskDuration` = menu; `timeIt`/`benchmark` = benchmark (but `phonebook.cpp:insertContact` uses `timeIt` for split timing) |
-| `src/main.cpp` | dual | Menu + `runSearchBenchmark` (opt 0) + `runSearchBenchmarkBatch` (--benchmark-csv) — ~30-45% of file |
-| `python/phonebook/main.py`, `go/phonebook/main.go`, `javascript/phonebook/src/main.js`, `java/phonebook/src/com/phonebook/Main.java` | dual | Faithful ports of `src/main.cpp` — same split, by design |
+| `src/main.cpp` | dispatch | Parses arguments, then selects the CLI or batch benchmark |
+| `src/cli.cpp` | interactive | Menu commands; option 0 calls the benchmark |
+| `src/benchmark.cpp` | both modes | One implementation of target selection and timing. The CLI displays the minimum; batch CSV records every run. |
+| `src/contact_csv.cpp` | shared input | Reads and writes contact records; both benchmark modes use the same loader. |
+| `python/phonebook/main.py`, `go/phonebook/main.go`, `javascript/phonebook/src/main.js`, `java/phonebook/src/com/phonebook/Main.java` | dual | Same CLI and benchmark contract, with each runtime’s own implementation |
 | `go/phonebook/memprofile_test.go` | ✅ benchmark-only | Env-gated `TestMemProfile` (`MEMPROFILE_CSV`/`OUT`) |
 | `java/.../MemProfile.java` | ✅ benchmark-only | Compiled with app via `javac *.java`, run separately |
 | `benchmark/mem/profile_python.py`, `profile_js.js` | ✅ benchmark-only | Wrappers that load the real `PhoneBook` under a profiler |
 | `benchmark/mem_profile.py`, `benchmark/plot.py`, `benchmark/gallery.html` | ✅ benchmark-only | Orchestration + visualization |
 
-> **Duplication is intentional.** Every `main.*` is a line-by-line faithful port of `src/main.cpp` so the five languages run the same work. The Makefile's `run-benchmark` and `run-benchmark-sizes` duplicate the 5-lang command list for the same reason — same work, different `n`.
+> **Compare behavior, not file layout.** The five implementations use
+> the same dataset, cases, algorithms, and repetitions. Run `make test`
+> to check that behavior across languages.
 
 ## Build & orchestration duplication
 

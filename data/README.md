@@ -11,9 +11,13 @@ python3 data/generate.py --seed 42
 ```
 
 This writes nested-prefix CSVs for 50, 10k, 100k, 200k, 500k, and 1m contacts.
-The 50 row file is tracked; the other CSVs are generated on demand. Use
-`--out-dir` to write them elsewhere. Re-running with the same seed reproduces
-the same rows.
+The 50-row file is tracked, so use `--sizes` to leave it alone, or
+`--out-dir` to write into a separate directory. Selecting specific sizes
+does not change the rows the seed produces.
+
+```sh
+python3 data/generate.py --seed 42 --sizes 100k 200k
+```
 
 The benchmark and memory profiling targets run the generator when needed. For
 manual runs on datasets larger than 50 rows, generate them first.

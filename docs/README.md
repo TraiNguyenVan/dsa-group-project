@@ -42,7 +42,7 @@ How the phonebook is measured — same algorithms, same data, five languages.
 |-----|----------------|
 | [01 — Language Comparison](languages/01-language-comparison.md) | Ports, clocks, JIT/GC, trade-offs, recommendation |
 
-## 30-second quickstart
+## Benchmark workflow
 
 ```sh
 # 1. Build + single-size benchmark (100k) → benchmark/results.csv + plot
@@ -55,11 +55,13 @@ make run-benchmark-sizes
 make run-memory
 
 # 4. Open the interactive gallery
-cd benchmark && python -m http.server 8000
+cd benchmark && python3 -m http.server 8000
 # → http://localhost:8000/gallery.html
 ```
 
-> All three `make` targets are idempotent. Re-running overwrites the CSVs. Without `matplotlib` the plot step prints `plot skipped` but CSVs are still produced.
+> These targets can overwrite the checked-in benchmark CSVs and charts. Use
+> a separate worktree if you want to preserve published results while
+> measuring your machine. The scaling plots require `matplotlib`.
 
 > **Platform support:** the harness is tested on **Linux only** (Windows/macOS untested) — see [`README.md`](../README.md) and [05 — Running Benchmarks](benchmark/05-running-benchmarks.md).
 
@@ -68,7 +70,10 @@ cd benchmark && python -m http.server 8000
 ```
 data/generate.py              dataset generator (seed 42)
 include/timer.hpp             timing primitive (ported to 4 langs)
-src/main.cpp                  C++ CLI + benchmark (option 0 + --benchmark-csv)
+src/main.cpp                  parse CLI arguments and choose a mode
+src/cli.cpp                   C++ interactive menus and commands
+src/benchmark.cpp             C++ benchmark cases shared by both modes
+src/contact_csv.cpp           C++ contact loading, saving, and CSV escaping
 python/phonebook/             Python port — same menu, same benchmark
 go/phonebook/                 Go port — same menu, same benchmark
 javascript/phonebook/         JavaScript port — same menu, same benchmark

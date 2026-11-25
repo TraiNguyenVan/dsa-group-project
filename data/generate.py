@@ -6,7 +6,7 @@ benchmarks are comparable: contacts_50 ⊂ contacts_10k ⊂ contacts_100k ⊂
 contacts_200k ⊂ contacts_500k ⊂ contacts_1m.
 
 Usage:
-    python3 data/generate.py [--seed 42] [--out-dir data]
+    python3 data/generate.py [--seed 42] [--out-dir data] [--sizes 100k 200k]
 
 Output:
     data/contacts_50.csv      (50 rows)
@@ -68,13 +68,21 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Generate phonebook datasets.")
     ap.add_argument("--seed", type=int, default=42, help="RNG seed (default: 42)")
     ap.add_argument("--out-dir", default="data", help="Output directory (default: data)")
+    by_size = {Path(filename).stem[len("contacts_"):]: (filename, n)
+               for filename, n in DATASETS}
+    ap.add_argument("--sizes", nargs="+", choices=by_size, default=list(by_size),
+                    help="write only these dataset sizes (default: all)")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     rng = random.Random(args.seed)
+    # Keep the master stream at 1M even for one output size. Names are drawn
+    # after the phone pass, so reducing max_n would change historical rows.
     max_n = max(n for _, n in DATASETS)
+    selected = [by_size[size] for size in dict.fromkeys(args.sizes)]
+    written_n = max(n for _, n in selected)
 
     # Unique 10-digit phones: uniform-random VN prefix + 7 random digits.
     # Address space is 28 * 10^7 = 280M, so 1M unique rows resolve fast.
@@ -89,14 +97,14 @@ def main() -> None:
             phone_list.append(p)
 
     rows: list[tuple[str, str]] = []
-    for i in range(max_n):
+    for i in range(written_n):
         family = rng.choice(FAMILY_NAMES)
         middle = rng.choice(MIDDLE_NAMES)
         given = rng.choice(GIVEN_NAMES)
         name = f"{family} {middle} {given}"
         rows.append((name, phone_list[i]))
 
-    for filename, n in DATASETS:
+    for filename, n in selected:
         path = out_dir / filename
         with open(path, "w", newline="") as f:
             writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")

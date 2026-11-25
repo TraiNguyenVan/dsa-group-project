@@ -13,7 +13,7 @@ This page is the **hands-on manual**: prerequisites, every `make` target, manual
 | Java | JDK 17+ (`javac` + `java`) | same | — |
 | Memory profiling | — | `valgrind` + `ms_print`, `go`, `jfr` (JDK) | `matplotlib` |
 
-Without `matplotlib` the pipeline still works — the plot step prints `plot skipped: pip install matplotlib` and CSVs are produced normally.
+Single-size and memory runs still produce CSVs without `matplotlib`. Install it to generate scaling charts.
 
 Only the 50-row CSV is tracked. The benchmark targets generate the larger
 datasets on demand; manual commands using datasets above 50 rows need
@@ -29,7 +29,8 @@ g++ --version; python3 --version; go version; node --version; javac -version; va
 
 ## Make targets (the easy way)
 
-All targets are idempotent — re-running overwrites the CSVs.
+These targets can replace the checked-in results and plots. Use a separate
+worktree or copy the published artifacts first if you want to keep both.
 
 ### `make` — build only
 
@@ -43,7 +44,8 @@ Compiles `src/*.cpp` with `-std=c++17 -Wall -O2 -Iinclude` → `build/cpp/demo`.
 No `make`/CMake? Just the compiler:
 
 ```sh
-g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.cpp -o build/cpp/demo
+mkdir -p build/cpp
+g++ -std=c++17 -Wall -O2 -Iinclude src/*.cpp -o build/cpp/demo
 ```
 
 ### `make run-benchmark` — single size (100k)
@@ -52,7 +54,7 @@ g++ -std=c++17 -Wall -O2 -Iinclude src/main.cpp src/phonebook.cpp src/hashtable.
 make run-benchmark
 ```
 
-Generates the ignored CSVs, then runs **all 5 languages** on
+Generates the 100k CSV if needed, then runs **all 5 languages** on
 `data/contacts_100k.csv` (60 rows each → 300 rows) → `benchmark/results.csv`,
 then `benchmark/plot.py` → `benchmark/plot.png` + 12 per-case PNGs.
 
@@ -68,7 +70,7 @@ benchmark/plot-first-linear.png … plot-miss-binary.png  (12 splits)
 make run-benchmark-sizes
 ```
 
-Regenerates datasets (`python3 data/generate.py --seed 42`), then loops `50, 10k, 100k, 200k, 500k, 1M` × 5 langs → one appended `benchmark/results.csv` (1800 rows), then three plot families:
+Generates missing datasets, then loops `50, 10k, 100k, 200k, 500k, 1M` × 5 langs → one appended `benchmark/results.csv` (1800 rows), then three plot families:
 
 ```
 benchmark/results.csv              1800 rows (6 sizes × 300)

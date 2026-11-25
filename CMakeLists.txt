@@ -38,6 +38,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # change the build without editing this file.
 add_executable(demo
   src/main.cpp
+  src/cli.cpp
+  src/benchmark.cpp
+  src/contact_csv.cpp
   src/phonebook.cpp
   src/hashtable.cpp
 )
@@ -79,9 +82,10 @@ set_target_properties(demo PROPERTIES
 #   DEPENDS demo .......... ensure the binary is rebuilt before running.
 #   VERBATIM .............. quote arguments safely on every shell.
 function(add_demo_run_target target_name csv_relpath)
+  set(csv_path "${CMAKE_SOURCE_DIR}/${csv_relpath}")
   add_custom_target(${target_name}
-    COMMAND $<TARGET_FILE:demo> "${CMAKE_SOURCE_DIR}/${csv_relpath}"
-    DEPENDS demo
+    COMMAND $<TARGET_FILE:demo> "${csv_path}"
+    DEPENDS demo "${csv_path}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Running demo with ${csv_relpath}"
     VERBATIM
@@ -89,6 +93,24 @@ function(add_demo_run_target target_name csv_relpath)
 endfunction()
 
 # One shortcut per dataset, same names as `make run-50` etc.
+find_package(Python3 QUIET COMPONENTS Interpreter)
+if(NOT Python3_Interpreter_FOUND)
+  # The compiler-only demo needs no Python; dataset targets explain what to install.
+  set(Python3_EXECUTABLE python3)
+  message(STATUS "Install Python 3 to use generated dataset and benchmark targets")
+endif()
+
+foreach(dataset_size IN ITEMS 100k 200k 1m)
+  add_custom_command(
+    OUTPUT "${CMAKE_SOURCE_DIR}/data/contacts_${dataset_size}.csv"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/data/generate.py"
+            --seed 42 --out-dir "${CMAKE_SOURCE_DIR}/data" --sizes "${dataset_size}"
+    DEPENDS "${CMAKE_SOURCE_DIR}/data/generate.py"
+    COMMENT "Generating the ${dataset_size}-contact dataset"
+    VERBATIM
+  )
+endforeach()
+
 add_demo_run_target(run data/contacts_50.csv)
 add_demo_run_target(run-50 data/contacts_50.csv)
 add_demo_run_target(run-100k data/contacts_100k.csv)
@@ -100,10 +122,9 @@ add_demo_run_target(run-1m data/contacts_1m.csv)
 # gracefully instead). The full 5-language matrix lives in `make run-benchmark`.
 add_custom_target(run-benchmark-cpp
   COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_SOURCE_DIR}/benchmark"
-  COMMAND python3 "${CMAKE_SOURCE_DIR}/data/generate.py" --seed 42
   COMMAND $<TARGET_FILE:demo> --benchmark-csv "${CMAKE_SOURCE_DIR}/benchmark/results-cpp.csv" "${CMAKE_SOURCE_DIR}/data/contacts_100k.csv"
-  COMMAND ${CMAKE_COMMAND} -E env python3 "${CMAKE_SOURCE_DIR}/benchmark/plot.py" "${CMAKE_SOURCE_DIR}/benchmark/results-cpp.csv" "${CMAKE_SOURCE_DIR}/benchmark/plot-cpp.png"
-  DEPENDS demo
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/benchmark/plot.py" "${CMAKE_SOURCE_DIR}/benchmark/results-cpp.csv" "${CMAKE_SOURCE_DIR}/benchmark/plot-cpp.png"
+  DEPENDS demo "${CMAKE_SOURCE_DIR}/data/contacts_100k.csv"
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   COMMENT "Writing C++ benchmark rows to benchmark/results-cpp.csv"
   VERBATIM

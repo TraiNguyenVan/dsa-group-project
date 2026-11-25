@@ -1,6 +1,6 @@
 # Contributing — DSA Group Project
 
-How we work together. Read this once, then read `README.md` (project, deliverables, timeline).
+Start with the [project README](README.md) for setup and deliverables.
 
 ## 1. Setup
 
@@ -12,7 +12,7 @@ git checkout -b feature/<your-branch>
 
 - **Never commit on `main`.** Every change lives on a branch.
 - Branch naming — pick the prefix that matches the work:
-  - `feature/<lang>-<thing>` — new functionality (e.g. `feature/cpp-quicksort`)
+  - `feature/<lang>-<thing>` — new functionality (e.g. `feature/cpp-prefix-search`)
   - `experiment/<thing>` — throwaway experiments, benchmarks, or spikes (e.g. `experiment/pivot-strategy-benchmark`)
   - `fix/<thing>` — bug fixes (e.g. `fix/interpolation-edge-case`)
   - `docs/<thing>` — documentation-only changes (e.g. `docs/part-a-position`)
@@ -22,8 +22,8 @@ git checkout -b feature/<your-branch>
 ## 2. Commit style
 
 - Small commits, one logical change each.
-- Message: short imperative — `add merge sort demo`, `fix off-by-one in quicksort`.
-- No build artifacts, binaries, or raw datasets in git. Datasets come from the generator in `data/` (`.gitignore` handles the rest).
+- Message: short imperative — `Add prefix search`, `Fix duplicate phone handling`.
+- Do not commit local builds or generated datasets. The checked-in example dataset, benchmark evidence, report, and slides are intentional deliverables.
 - **Report edits:** change `report/report.md` (the source), then run `make pdf` and commit **both** — `report.pdf` at the repo root is the copy people read, so it must never be behind the Markdown.
 
 ## 3. Issues & PRs
@@ -31,13 +31,13 @@ git checkout -b feature/<your-branch>
 - Every task starts as an issue. No issue = no work.
 - Claim it: comment "I'll take this" — one person per issue at a time.
 - Work on your branch, push, open a PR that says `Fixes #N`.
-- A PR is done when: 1 approving review **and** it compiles/runs.
+- A PR is ready to merge after one approval and passing checks. Run `make test` locally, or list the toolchains you could verify.
 - Reviewer: actually run the code before approving. Never approve blind.
 - Author merges after approval, then deletes the branch.
 
 ## 4. Definition of done (this project)
 
-- [x] Compiles and runs (C++ demo: `make && ./demo`)
+- [x] Compiles and runs (C++ demo: `make run-50`; phonebook checks: `make test`)
 - [x] Runs on the shared dataset (n ≥ 100 000)
 - [x] Measurements recorded **with conditions** (CPU/RAM, OS, compiler + flags, dataset) — a measurement without its conditions is not a measurement
 - [x] Platform stated: the benchmark harness is **tested on Linux only** (Windows/macOS untested). The C++ program is verified on Windows via `cmake --preset mingw-release` (MSYS2 MinGW); the other language ports are expected to work on any OS with the runtime installed. Don't report numbers from an untested platform as comparable.
@@ -49,14 +49,10 @@ git checkout -b feature/<your-branch>
 
 - **GitHub issues/PRs** Write questions in English in issues so everyone sees the answer.
 
-## 6. Rules (enforced, from README)
+## 6. Assignment rules
 
 1. Cite everything.
 2. AI is a tool, not an author — declare where it was used; be able to explain every line on request.
 3. No shared code between groups.
 4. Real measurements only — fabricated timings = zero for parts C and D.
 5. Everyone contributes — free riders marked individually in the contribution statement.
-
-## 7. Roles
-
-- Flexible right now, things change too fast..
