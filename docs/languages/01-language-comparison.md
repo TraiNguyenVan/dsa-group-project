@@ -16,7 +16,7 @@ Same algorithm, same input, same machine:
 | Timer | `include/timer.hpp` | `timer.py` | `timer.go` | `src/timer.js` | `Timer.java` |
 | Contact | `include/contact.hpp` | `contact.py` | `contact.go` | `src/contact.js` | `Contact.java` |
 
-All five are **faithful ports** of `src/main.cpp` — same menu, same `option 0` interactive benchmark, same `--benchmark-csv [--append]` batch mode, same seed 42, same `miss=0000000000`. Differences are only runtime-forced: 64-bit wrap, stdin handling, timing API.
+All five implement the same CLI and benchmark contract — same menu, same `option 0` interactive benchmark, same `--benchmark-csv [--append]` batch mode, same seed 42, same `miss=0000000000`. Differences are only runtime-forced: 64-bit wrap, stdin handling, timing API.
 
 **What this comparison is NOT:** C++ vs Python's built-in `dict`, or C++ vs Java's `HashMap`. Those are different questions (implemented vs stdlib). Here every port implements the same chained hash table — so the gap you measure is the *language + runtime*, not the algorithm.
 

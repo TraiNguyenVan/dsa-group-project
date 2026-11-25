@@ -50,7 +50,7 @@ Benchmarking phone search (linear: first=best / middle / last,miss=worst;
 - Calls `benchmark()` (best-of-5) per cell and **prints only the best**.
 - Good for: **live demos, quick sanity checks, showing the class the cost**.
 
-Source: `src/main.cpp:runSearchBenchmark()` and its ports (`python/phonebook/main.py:run_search_benchmark`, `go/phonebook/main.go:runSearchBenchmark`, etc.).
+Source: `src/benchmark.cpp:runSearchBenchmark()` and its ports (`python/phonebook/main.py:run_search_benchmark`, `go/phonebook/main.go:runSearchBenchmark`, etc.).
 
 ## Mode 2 — Batch (`--benchmark-csv`)
 
@@ -69,7 +69,7 @@ python3 python/phonebook/main.py --benchmark-csv benchmark/results.csv --append 
 - `--append` — append to existing CSV (first writer creates header, rest append). Without it, the file is truncated.
 - Good for: **reproducible measurements, plotting, statistics**.
 
-Source: `src/main.cpp:runSearchBenchmarkBatch()` and ports.
+Source: `src/benchmark.cpp:runSearchBenchmarkBatch()` and ports.
 
 ### CSV schema (`benchmark/results.csv`)
 

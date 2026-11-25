@@ -55,7 +55,8 @@ include/hashtable.hpp     HashTable interface (chained, prime sizing, rehash)
 include/phonebook.hpp     PhoneBook interface (search, insert, delete, CSV)
 src/hashtable.cpp         hash function, insert/search/delete, rehash
 src/phonebook.cpp         CSV, insert/delete, 3 searches, prefix, sorted index
-src/main.cpp              CLI menu (options 0–9)
+src/cli.cpp               CLI menu (options 0–9)
+src/contact_csv.cpp       load and save contacts
 ```
 
 Every other language (`python/`, `go/`, `javascript/`, `java/`) is a **faithful port** of this C++ core — see [Language Comparison](../languages/01-language-comparison.md).
